@@ -1,15 +1,36 @@
 import Head from "next/head";
 import { useState } from "react";
 import { useChain } from "@/hooks/useChain";
+import { WalletHistory } from '@/components/WalletHistory';
 import { Card, StatCard } from "@/components/Card";
 import { Plus, Leaf, Clock, CheckCircle2 } from 'lucide-react';
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export default function FarmerDashboard() {
-  const { batches, isLoading, logHarvestBatch } = useChain();
+  const { batches, isLoading, logHarvestBatch, account } = useChain();
+  const router = useRouter();
+  const [userData, setUserData] = useState<{name: string, email: string} | null>(null);
   
-  // Filter batches for the mock farmer (hardcoded for demo)
-  const myBatches = batches.filter(b => b.farmer.name === "Ramesh Patil");
+  useEffect(() => {
+    // Authenticate user session with PostgreSQL DB
+    fetch('/api/auth/me')
+      .then(res => {
+        if (!res.ok) throw new Error('Not logged in');
+        return res.json();
+      })
+      .then(data => setUserData(data.user))
+      .catch(() => router.push('/login'));
+  }, [router]);
+  
+  // Filter batches for the connected farmer
+  // Mock data uses "Ramesh Patil", Live blockchain assigns "Verified Farmer". 
+  const myBatches = batches.filter(b => 
+    b.farmer.name === "Ramesh Patil" || 
+    b.farmer.name === "Verified Farmer" ||
+    (account && b.farmer.address.toLowerCase() === account.toLowerCase())
+  );
   
   const [showForm, setShowForm] = useState(false);
   
@@ -21,7 +42,7 @@ export default function FarmerDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await logHarvestBatch({ cropType, weightKg, gps, pricePerKg });
+    await logHarvestBatch(cropType, Number(weightKg), gps, Number(pricePerKg));
     setShowForm(false);
     alert("Batch registered on-chain successfully! (Demo Simulation)");
   };
@@ -36,7 +57,10 @@ export default function FarmerDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Farmer Dashboard</h1>
-            <p className="text-gray-500 mt-1">Welcome back, Ramesh Patil. Connected via 0x1234...5678</p>
+            <p className="text-gray-800 mt-1">
+              Welcome back, {userData ? userData.name : 'Loading...'}. 
+              {account ? ` Connected via ${account.slice(0, 6)}...${account.slice(-4)}` : ' (Wallet Disconnected)'}
+            </p>
           </div>
           <button 
             onClick={() => setShowForm(!showForm)}
@@ -74,20 +98,20 @@ export default function FarmerDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Crop Type</label>
-                  <input type="text" required value={cropType} onChange={e => setCropType(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green" placeholder="e.g. Organic Toor Dal" />
+                  <input type="text" required value={cropType} onChange={e => setCropType(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green text-black" placeholder="e.g. Organic Toor Dal" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-                  <input type="number" required value={weightKg} onChange={e => setWeightKg(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green" placeholder="500" />
+                  <input type="number" required value={weightKg} onChange={e => setWeightKg(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green text-black" placeholder="500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Farm Gate Price (₹ per kg)</label>
-                  <input type="number" required value={pricePerKg} onChange={e => setPricePerKg(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green" placeholder="60" />
+                  <input type="number" required value={pricePerKg} onChange={e => setPricePerKg(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green text-black" placeholder="60" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">GPS Origin</label>
-                  <input type="text" required value={gps} onChange={e => setGps(e.target.value)} className="w-full px-4 py-2 border border-agri-green-800 bg-gray-50 text-gray-600 rounded-md" readOnly />
-                  <p className="text-xs text-gray-500 mt-1">Auto-detected from registered farm profile</p>
+                  <input type="text" required value={gps} onChange={e => setGps(e.target.value)} className="w-full px-4 py-2 border border-agri-green-800 bg-gray-50 text-black rounded-md" readOnly />
+                  <p className="text-xs text-gray-800 mt-1">Auto-detected from registered farm profile</p>
                 </div>
               </div>
               <div className="flex justify-end border-t pt-4">
@@ -102,18 +126,18 @@ export default function FarmerDashboard() {
         {/* Batch History */}
         <Card title="My Harvest Batches">
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500 animate-pulse">Fetching on-chain data...</div>
+            <div className="text-center py-8 text-gray-800 animate-pulse">Fetching on-chain data...</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Batch ID</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Crop</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Weight</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">My Price</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-gray-600">Status</th>
-                    <th className="px-6 py-4 text-sm font-semibold text-gray-600 text-right">Action</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-black">Batch ID</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-black">Crop</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-black">Weight</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-black">My Price</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-black">Status</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-black text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -139,13 +163,15 @@ export default function FarmerDashboard() {
                     </tr>
                   ))}
                   {myBatches.length === 0 && (
-                    <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">No batches logged yet.</td></tr>
+                    <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-800">No batches logged yet.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           )}
         </Card>
+        
+        <WalletHistory />
       </div>
     </>
   );

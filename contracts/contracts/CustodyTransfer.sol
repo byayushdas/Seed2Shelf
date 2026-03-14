@@ -15,7 +15,7 @@ contract CustodyTransfer is Ownable {
     enum Role { None, Processor, Distributor, Retailer }
 
     struct Handoff {
-        uint256 batchId;
+        bytes32 batchId;
         address from;
         address to;
         Role toRole;
@@ -28,11 +28,11 @@ contract CustodyTransfer is Ownable {
     mapping(address => Role) public stakeholderRoles;
 
     // Track custody
-    mapping(uint256 => address) public currentCustodian;
-    mapping(uint256 => Handoff[]) public batchHandoffs;
+    mapping(bytes32 => address) public currentCustodian;
+    mapping(bytes32 => Handoff[]) public batchHandoffs;
 
     event CustodyTransferred(
-        uint256 indexed batchId,
+        bytes32 indexed batchId,
         address indexed from,
         address indexed to,
         Role toRole,
@@ -73,7 +73,7 @@ contract CustodyTransfer is Ownable {
      * @dev Initial transfer from farmer to processor
      */
     function initialTransfer(
-        uint256 _batchId,
+        bytes32 _batchId,
         address _processor,
         uint256 _price,
         string memory _remarks
@@ -90,7 +90,7 @@ contract CustodyTransfer is Ownable {
      * @dev Transfer custody to the next stakeholder
      */
     function transferCustody(
-        uint256 _batchId,
+        bytes32 _batchId,
         address _to,
         uint256 _price,
         string memory _remarks
@@ -118,7 +118,7 @@ contract CustodyTransfer is Ownable {
      * @dev Internal function to record the transfer
      */
     function _transferCustody(
-        uint256 _batchId,
+        bytes32 _batchId,
         address _from,
         address _to,
         Role _toRole,
@@ -143,7 +143,7 @@ contract CustodyTransfer is Ownable {
     /**
      * @dev Get all handoffs for a batch
      */
-    function getHandoffs(uint256 _batchId) external view returns (Handoff[] memory) {
+    function getHandoffs(bytes32 _batchId) external view returns (Handoff[] memory) {
         return batchHandoffs[_batchId];
     }
 }

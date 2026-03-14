@@ -26,7 +26,7 @@ export function StatCard({ label, value, icon, trend }: { label: string, value: 
     <Card className="hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{label}</p>
+          <p className="text-sm font-medium text-gray-800 mb-1">{label}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
           {trend && (
             <p className="text-sm font-medium text-agri-green mt-2 flex items-center gap-1">

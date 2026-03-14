@@ -17,7 +17,7 @@ contract PaymentEscrow is Ownable {
     enum EscrowStatus { Pending, Locked, Released, Disputed, Refunded }
 
     struct Escrow {
-        uint256 batchId;
+        bytes32 batchId;
         address farmer;
         address buyer;
         uint256 amount;
@@ -25,14 +25,14 @@ contract PaymentEscrow is Ownable {
         EscrowStatus status;
     }
 
-    mapping(uint256 => Escrow) public batchEscrows;
+    mapping(bytes32 => Escrow) public batchEscrows;
 
     uint256 public constant DISPUTE_TIMEOUT = 48 hours;
 
-    event PaymentLocked(uint256 indexed batchId, address indexed buyer, uint256 amount);
-    event PaymentReleased(uint256 indexed batchId, address indexed farmer, uint256 amount);
-    event DisputeFlagged(uint256 indexed batchId);
-    event PaymentRefunded(uint256 indexed batchId, address indexed buyer, uint256 amount);
+    event PaymentLocked(bytes32 indexed batchId, address indexed buyer, uint256 amount);
+    event PaymentReleased(bytes32 indexed batchId, address indexed farmer, uint256 amount);
+    event DisputeFlagged(bytes32 indexed batchId);
+    event PaymentRefunded(bytes32 indexed batchId, address indexed buyer, uint256 amount);
 
     constructor(address _batchRegistryAddress, address _custodyTransferAddress) Ownable(msg.sender) {
         batchRegistry = BatchRegistry(_batchRegistryAddress);
@@ -42,7 +42,7 @@ contract PaymentEscrow is Ownable {
     /**
      * @dev Buyer locks payment in escrow for a batch
      */
-    function lockPayment(uint256 _batchId) external payable {
+    function lockPayment(bytes32 _batchId) external payable {
         BatchRegistry.Batch memory batch = batchRegistry.getBatch(_batchId);
         
         require(batch.exists, "Batch does not exist");
@@ -64,7 +64,7 @@ contract PaymentEscrow is Ownable {
     /**
      * @dev Release payment to farmer upon successful delivery confirmation
      */
-    function releasePayment(uint256 _batchId) external {
+    function releasePayment(bytes32 _batchId) external {
         Escrow storage escrow = batchEscrows[_batchId];
         require(escrow.status == EscrowStatus.Locked, "Escrow is not locked");
         
@@ -80,7 +80,7 @@ contract PaymentEscrow is Ownable {
     /**
      * @dev Flag a dispute if there is an issue with the batch
      */
-    function flagDispute(uint256 _batchId) external {
+    function flagDispute(bytes32 _batchId) external {
         Escrow storage escrow = batchEscrows[_batchId];
         require(escrow.status == EscrowStatus.Locked, "Escrow is not locked");
         require(msg.sender == escrow.buyer || msg.sender == escrow.farmer, "Only buyer or farmer can flag dispute");
@@ -93,7 +93,7 @@ contract PaymentEscrow is Ownable {
     /**
      * @dev Admin resolves dispute and refunds the buyer
      */
-    function resolveDisputeRefund(uint256 _batchId) external onlyOwner {
+    function resolveDisputeRefund(bytes32 _batchId) external onlyOwner {
         Escrow storage escrow = batchEscrows[_batchId];
         require(escrow.status == EscrowStatus.Disputed || block.timestamp > escrow.lockTimestamp + DISPUTE_TIMEOUT, "Cannot refund yet");
 
@@ -106,7 +106,7 @@ contract PaymentEscrow is Ownable {
     /**
      * @dev Admin resolves dispute and releases payment to the farmer
      */
-    function resolveDisputeRelease(uint256 _batchId) external onlyOwner {
+    function resolveDisputeRelease(bytes32 _batchId) external onlyOwner {
         Escrow storage escrow = batchEscrows[_batchId];
         require(escrow.status == EscrowStatus.Disputed, "Escrow is not disputed");
 

@@ -11,17 +11,18 @@ const config: Config = {
       colors: {
         agri: {
           green: {
-            900: '#14301B', // Deep forest green
-            800: '#1F472B', // Medium rich green
-            DEFAULT: '#276239', // Base green
-            100: '#E6F0E9', // Light green background
+            900: '#344E41', // Darkest Forest
+            800: '#3A5A40', // Deep Moss
+            DEFAULT: '#588157', // Base Earthy Green
+            100: '#A3B18A', // Light Sage
+            50: '#DAD7CD', // Cream / Light Sand
           },
           gold: {
-            DEFAULT: '#D4AF37', // Agricultural golden accents
-            light: '#EED971',
+            DEFAULT: '#A3B18A', // Mapping Gold to Sage for accents to maintain structural integrity
+            light: '#DAD7CD',
           },
           earth: {
-            DEFAULT: '#8B5A2B', // Soil tones
+            DEFAULT: '#3A5A40', 
           }
         }
       },

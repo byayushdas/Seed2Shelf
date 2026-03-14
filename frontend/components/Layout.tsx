@@ -1,13 +1,26 @@
 import React from 'react';
 import Navbar from './Navbar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/router';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-agri-green-100/30 flex flex-col font-sans">
       <Navbar />
-      <main className="flex-grow flex flex-col pt-8 pb-16">
-        {children}
-      </main>
+      <AnimatePresence mode="wait">
+        <motion.main 
+          key={router.pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+          className="flex-grow flex flex-col pt-8 pb-16"
+        >
+          {children}
+        </motion.main>
+      </AnimatePresence>
       <footer className="bg-agri-green-900 text-white py-6 border-t border-agri-green-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <p className="text-sm text-gray-300">© 2026 Seed2Shelf. Transparent Agriculture.</p>

@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract BatchRegistry is Ownable {
     
     struct Batch {
-        uint256 id;
+        bytes32 id;
         address farmer;
         string cropType;
         uint256 weightKg;
@@ -20,14 +20,13 @@ contract BatchRegistry is Ownable {
         bool exists;
     }
 
-    uint256 private _currentBatchId;
-    mapping(uint256 => Batch) public batches;
+    mapping(bytes32 => Batch) public batches;
     
     // Farmers who are authorized to log batches
     mapping(address => bool) public authorizedFarmers;
 
     event BatchRegistered(
-        uint256 indexed batchId,
+        bytes32 indexed batchId,
         address indexed farmer,
         string cropType,
         uint256 weightKg,
@@ -43,9 +42,7 @@ contract BatchRegistry is Ownable {
         _;
     }
 
-    constructor() Ownable(msg.sender) {
-        _currentBatchId = 1;
-    }
+    constructor() Ownable(msg.sender) {}
 
     /**
      * @dev Authorize a farmer to register batches
@@ -71,8 +68,9 @@ contract BatchRegistry is Ownable {
         uint256 _weightKg,
         string memory _gpsCoordinates,
         uint256 _farmGatePrice
-    ) external onlyAuthorizedFarmer returns (uint256) {
-        uint256 batchId = _currentBatchId++;
+    ) external onlyAuthorizedFarmer returns (bytes32) {
+        bytes32 batchId = keccak256(abi.encodePacked(msg.sender, block.timestamp, _cropType));
+        require(!batches[batchId].exists, "Hash collision");
         
         batches[batchId] = Batch({
             id: batchId,
@@ -100,7 +98,7 @@ contract BatchRegistry is Ownable {
     /**
      * @dev Get batch details
      */
-    function getBatch(uint256 _batchId) external view returns (Batch memory) {
+    function getBatch(bytes32 _batchId) external view returns (Batch memory) {
         require(batches[_batchId].exists, "Batch does not exist");
         return batches[_batchId];
     }

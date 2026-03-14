@@ -10,8 +10,8 @@ export default function TraceBatch() {
   const { batchId } = router.query;
   const { getBatchById, isLoading } = useChain();
 
-  const id = Number(batchId);
-  const batch = !isNaN(id) ? getBatchById(id) : undefined;
+  const id = typeof batchId === 'string' ? batchId : Array.isArray(batchId) ? batchId[0] : undefined;
+  const batch = id ? getBatchById(id) : undefined;
 
   if (isLoading) {
     return (
@@ -25,9 +25,9 @@ export default function TraceBatch() {
   if (!batch) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
-        <HelpCircle className="w-16 h-16 text-gray-400 mb-4" />
+        <HelpCircle className="w-16 h-16 text-gray-700 mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Batch Not Found</h1>
-        <p className="text-gray-500 mb-6 max-w-md">We couldn&apos;t find this batch ID on the Seed2Shelf network. It may be invalid or not yet processed.</p>
+        <p className="text-gray-800 mb-6 max-w-md">We couldn&apos;t find this batch ID on the Seed2Shelf network. It may be invalid or not yet processed.</p>
         <Link href="/" className="px-6 py-3 bg-agri-green text-white rounded-lg hover:bg-agri-green-800 transition-colors">
           Return Home
         </Link>
@@ -61,9 +61,9 @@ export default function TraceBatch() {
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Grown By</p>
+              <p className="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-1">Grown By</p>
               <h2 className="text-2xl font-bold text-gray-900">{batch.farmer.name}</h2>
-              <p className="text-gray-600 mt-1 flex items-center gap-1">
+              <p className="text-black mt-1 flex items-center gap-1">
                 <span className="text-xs">📍</span> {batch.gpsCoordinates}
               </p>
             </div>
@@ -102,11 +102,11 @@ export default function TraceBatch() {
                 <h4 className="text-lg font-bold text-gray-900">1. Harvested securely at source</h4>
                 <div className="text-xs text-agri-green-900 font-mono bg-agri-green-100 px-2 pl-3 py-1 rounded-full">{batch.farmer.address.slice(0,10)}...</div>
               </div>
-              <p className="text-sm text-gray-500 mb-3">{new Date(batch.farmer.timestamp * 1000).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+              <p className="text-sm text-gray-800 mb-3">{new Date(batch.farmer.timestamp * 1000).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
               <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                 <p className="font-medium text-gray-900 mb-2">{batch.farmer.name}</p>
                 <div className="flex justify-between items-center text-sm border-t border-gray-50 pt-2 mt-2">
-                  <span className="text-gray-500">Farm Gate Price logged:</span>
+                  <span className="text-gray-800">Farm Gate Price logged:</span>
                   <span className="font-bold text-agri-green">₹{batch.farmer.pricePerKg}/kg</span>
                 </div>
               </div>
@@ -124,12 +124,12 @@ export default function TraceBatch() {
                   <h4 className="text-lg font-bold text-gray-900">2. Quality Graded & Processed</h4>
                   <div className="text-xs text-agri-green-900 font-mono bg-agri-green-100 px-2 pl-3 py-1 rounded-full">{batch.processor.address.slice(0,10)}...</div>
                 </div>
-                <p className="text-sm text-gray-500 mb-3">{new Date(batch.processor.timestamp * 1000).toLocaleDateString('en-IN')}</p>
+                <p className="text-sm text-gray-800 mb-3">{new Date(batch.processor.timestamp * 1000).toLocaleDateString('en-IN')}</p>
                 <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                   <p className="font-medium text-gray-900 mb-2">{batch.processor.name}</p>
-                  <p className="text-sm text-gray-600 mb-3 pb-3 border-b border-gray-50 italic">"{batch.processor.remarks}"</p>
+                  <p className="text-sm text-black mb-3 pb-3 border-b border-gray-50 italic">"{batch.processor.remarks}"</p>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Processor Markup Price:</span>
+                    <span className="text-gray-800">Processor Markup Price:</span>
                     <span className="font-bold text-gray-800">₹{batch.processor.pricePerKg}/kg</span>
                   </div>
                 </div>
@@ -148,12 +148,12 @@ export default function TraceBatch() {
                   <h4 className="text-lg font-bold text-gray-900">3. Transport & Logistics Logging</h4>
                   <div className="text-xs text-agri-green-900 font-mono bg-agri-green-100 px-2 pl-3 py-1 rounded-full">{batch.distributor.address.slice(0,10)}...</div>
                 </div>
-                <p className="text-sm text-gray-500 mb-3">{new Date(batch.distributor.timestamp * 1000).toLocaleDateString('en-IN')}</p>
+                <p className="text-sm text-gray-800 mb-3">{new Date(batch.distributor.timestamp * 1000).toLocaleDateString('en-IN')}</p>
                 <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                   <p className="font-medium text-gray-900 mb-2">{batch.distributor.name}</p>
-                  <p className="text-sm text-gray-600 mb-3 pb-3 border-b border-gray-50 italic">"{batch.distributor.remarks}"</p>
+                  <p className="text-sm text-black mb-3 pb-3 border-b border-gray-50 italic">"{batch.distributor.remarks}"</p>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500">Distributor Transfer Price:</span>
+                    <span className="text-gray-800">Distributor Transfer Price:</span>
                     <span className="font-bold text-gray-800">₹{batch.distributor.pricePerKg}/kg</span>
                   </div>
                 </div>
@@ -172,12 +172,12 @@ export default function TraceBatch() {
                    <h4 className="text-lg font-bold text-gray-900">4. Shelf Arrival & Escrow Release</h4>
                    <div className="text-xs text-agri-green-900 font-mono bg-agri-gold/20 border border-agri-gold/50 px-2 pl-3 py-1 rounded-full">{batch.retailer.address.slice(0,10)}...</div>
                  </div>
-                 <p className="text-sm text-gray-500 mb-3">{new Date(batch.retailer.timestamp * 1000).toLocaleDateString('en-IN')}</p>
+                 <p className="text-sm text-gray-800 mb-3">{new Date(batch.retailer.timestamp * 1000).toLocaleDateString('en-IN')}</p>
                  <div className="bg-gradient-to-br from-white to-agri-gold/5 p-5 rounded-lg border border-agri-gold/30 shadow-md">
                    <p className="font-medium text-gray-900 mb-2 text-lg">{batch.retailer.name}</p>
-                   <p className="text-sm text-gray-600 mb-4 italic">"{batch.retailer.remarks}"</p>
+                   <p className="text-sm text-black mb-4 italic">"{batch.retailer.remarks}"</p>
                    <div className="flex justify-between items-center bg-white p-3 rounded border border-gray-100">
-                     <span className="text-gray-600 font-medium">Final Consumer Price:</span>
+                     <span className="text-black font-medium">Final Consumer Price:</span>
                      <span className="font-extrabold text-2xl text-agri-green-900">₹{batch.retailer.pricePerKg}</span>
                    </div>
                    
@@ -193,7 +193,7 @@ export default function TraceBatch() {
            {!batch.retailer && (
              <div className="relative pl-6 opacity-50">
                 <div className="absolute -left-[27px] sm:-left-[35px] top-1 w-4 h-4 rounded-full bg-gray-300 z-10"></div>
-                <h4 className="text-lg font-medium text-gray-500">Awaiting further supply chain updates...</h4>
+                <h4 className="text-lg font-medium text-gray-800">Awaiting further supply chain updates...</h4>
              </div>
            )}
 

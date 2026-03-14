@@ -1,8 +1,9 @@
 import Head from "next/head";
 import { useState } from "react";
 import { useChain } from "@/hooks/useChain";
+import { WalletHistory } from "@/components/WalletHistory";
 import { Card, StatCard } from "@/components/Card";
-import { Store, QrCode, Tag, CheckCircle2 } from 'lucide-react';
+import { Store, QrCode, Tag, CheckCircle2, Truck } from 'lucide-react';
 import Link from "next/link";
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -12,10 +13,10 @@ export default function RetailerDashboard() {
   const incomingBatches = batches.filter(b => b.status === "With Distributor" || b.status === "Dispatched by Distributor");
   const shelfBatches = batches.filter(b => b.retailer?.address === "0xdef1234567890abcdef1234567890abcdef12345");
 
-  const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
   const [remarks, setRemarks] = useState("");
   const [shelfPrice, setShelfPrice] = useState("");
-  const [showQRFor, setShowQRFor] = useState<number | null>(null);
+  const [showQRFor, setShowQRFor] = useState<string | null>(null);
 
   const handleReceive = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +44,7 @@ export default function RetailerDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Retailer Dashboard</h1>
-          <p className="text-gray-500 mt-1">FreshMart Supermarket. Connected via 0xdef1...2345</p>
+          <p className="text-gray-800 mt-1">FreshMart Supermarket. Connected via 0xdef1...2345</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -67,7 +68,7 @@ export default function RetailerDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
            <Card title="Receive Shipments (Releases Escrow)">
              {isLoading ? (
-               <div className="text-center py-4 text-gray-500 animate-pulse">Fetching on-chain data...</div>
+               <div className="text-center py-4 text-gray-800 animate-pulse">Fetching on-chain data...</div>
              ) : (
                <div className="space-y-4">
                  {incomingBatches.map(batch => (
@@ -75,7 +76,7 @@ export default function RetailerDashboard() {
                      <div className="flex justify-between items-start mb-2">
                        <div>
                          <span className="text-sm font-bold text-agri-green">Batch #{batch.id}</span>
-                         <h4 className="font-medium text-gray-900">{batch.cropType} <span className="text-sm font-normal text-gray-500">({batch.weightKg} kg)</span></h4>
+                         <h4 className="font-medium text-gray-900">{batch.cropType} <span className="text-sm font-normal text-gray-800">({batch.weightKg} kg)</span></h4>
                        </div>
                        <button 
                          onClick={() => setSelectedBatch(batch.id)}
@@ -84,11 +85,11 @@ export default function RetailerDashboard() {
                          Confirm Receipt
                        </button>
                      </div>
-                     <p className="text-xs text-gray-500">Logistics by: {batch.distributor?.name}</p>
+                     <p className="text-xs text-gray-800">Logistics by: {batch.distributor?.name}</p>
                    </div>
                  ))}
                  {incomingBatches.length === 0 && (
-                   <div className="text-center py-8 text-gray-500">No pending shipments.</div>
+                   <div className="text-center py-8 text-gray-800">No pending shipments.</div>
                  )}
                </div>
              )}
@@ -106,11 +107,11 @@ export default function RetailerDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Remarks (Quality Check)</label>
-                    <textarea required value={remarks} onChange={e => setRemarks(e.target.value)} rows={2} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green" placeholder="e.g. Received in good condition. Packaged for retail 1kg bags." />
+                    <textarea required value={remarks} onChange={e => setRemarks(e.target.value)} rows={2} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green text-black" placeholder="e.g. Received in good condition. Packaged for retail 1kg bags." />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Final Shelf Price (₹ per kg)</label>
-                    <input type="number" required value={shelfPrice} onChange={e => setShelfPrice(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green" placeholder="Final consumer price" />
+                    <input type="number" required value={shelfPrice} onChange={e => setShelfPrice(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-agri-green focus:border-agri-green text-black" placeholder="Final consumer price" />
                   </div>
                   <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
                     <button type="button" onClick={() => setSelectedBatch(null)} className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -118,7 +119,7 @@ export default function RetailerDashboard() {
                   </div>
                 </form>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-400">
+                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-700">
                   <Store className="w-12 h-12 mb-4 opacity-20" />
                   <p>Select a shipment to confirm receipt and set pricing</p>
                 </div>
@@ -133,14 +134,14 @@ export default function RetailerDashboard() {
                    <div className="flex justify-between items-start mb-4">
                      <div>
                        <h3 className="font-bold text-gray-900">{batch.cropType}</h3>
-                       <p className="text-sm text-gray-500">Batch #{batch.id}</p>
+                       <p className="text-sm text-gray-800">Batch #{batch.id}</p>
                      </div>
                      <span className="bg-agri-green-100 text-agri-green-900 text-xs font-bold px-2.5 py-1 rounded">
                        ₹{batch.retailer?.pricePerKg}/kg
                      </span>
                    </div>
                    
-                   <p className="text-xs text-gray-600 mb-4 line-clamp-2">Origin: {batch.farmer.name}</p>
+                   <p className="text-xs text-black mb-4 line-clamp-2">Origin: {batch.farmer.name}</p>
                    
                    {showQRFor === batch.id ? (
                      <div className="flex flex-col items-center p-4 bg-white border-2 border-dashed border-gray-300 rounded-lg">
@@ -162,7 +163,7 @@ export default function RetailerDashboard() {
                 </div>
               ))}
               {shelfBatches.length === 0 && (
-                <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-lg">No active inventory on shelves.</div>
+                <div className="col-span-full text-center py-12 text-gray-800 bg-gray-50 rounded-lg">No active inventory on shelves.</div>
               )}
            </div>
         </Card>
@@ -170,6 +171,3 @@ export default function RetailerDashboard() {
     </>
   );
 }
-
-// Ensure Truck is imported since I realized I missed it at the top level
-import { Truck } from 'lucide-react';

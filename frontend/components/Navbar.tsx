@@ -1,15 +1,17 @@
 import Link from 'next/link';
 import { Sprout } from 'lucide-react';
 import { useRouter } from 'next/router';
+import { useChain } from '@/hooks/useChain';
 
 export default function Navbar() {
   const router = useRouter();
+  const { account, connectWallet } = useChain();
 
   // Simple active link styling helper
   const isActive = (path: string) => router.pathname === path;
 
   return (
-    <nav className="bg-agri-green-900 border-b border-agri-green-800 sticky top-0 z-50">
+    <nav className="bg-agri-green-900/80 backdrop-blur-md border-b border-agri-green-800/50 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -45,12 +47,18 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center">
-             <Link 
-                href="/login"
-                className="ml-4 px-4 py-2 border border-agri-gold text-agri-gold rounded-md text-sm font-medium hover:bg-agri-gold hover:text-agri-green-900 transition-colors"
-             >
-                Connect Wallet
-             </Link>
+             {account ? (
+                <div className="ml-4 px-4 py-2 bg-agri-gold text-agri-green-900 rounded-md text-sm font-medium border border-agri-gold shadow-md">
+                   {account.slice(0, 6)}...{account.slice(-4)}
+                </div>
+             ) : (
+                <button 
+                  onClick={connectWallet}
+                  className="ml-4 px-4 py-2 border border-agri-gold text-agri-gold rounded-md text-sm font-medium hover:bg-agri-gold hover:text-agri-green-900 transition-colors cursor-pointer"
+                >
+                  Connect Wallet
+                </button>
+             )}
           </div>
         </div>
       </div>
