@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id               String    @id @default(uuid())
+  name             String
+  email            String    @unique
+  password         String
+  role             String    // 'FARMER', 'PROCESSOR', 'DISTRIBUTOR', 'RETAILER', 'CUSTOMER'
+  walletAddress    String?   @unique
+
+  cropsOwned       Crop[]    @relation("CurrentOwner")
+  cropsHarvested   Crop[]    @relation("HarvestedBy")
+  
+  requestsSent     Request[] @relation("RequestSender")
+  requestsReceived Request[] @relation("RequestReceiver")
+
+  messagesSent     Message[] @relation("MessageSender")
+  messagesReceived Message[] @relation("MessageReceiver")
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Crop {
+  id               String    @id @default(uuid())
+  batchId          String?   @unique // On-chain batch ID
+  name             String
+  quantity         Float
+  harvestDate      DateTime
+  
+  farmerId         String
+  farmer           User      @relation("HarvestedBy", fields: [farmerId], references: [id])
+  
+  currentOwnerId   String
+  currentOwner     User      @relation("CurrentOwner", fields: [currentOwnerId], references: [id])
+
+  transactions     Transaction[]
+  requests         Request[]
+  batchHistory     BatchHistory[]
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Transaction {
+  id               String    @id @default(uuid())
+  crop             Crop      @relation(fields: [cropId], references: [id])
+  cropId           String
+
+  senderRole       String
+  receiverRole     String
+  
+  blockchainHash   String?
+  timestamp        DateTime  @default(now())
+}
+
+model Request {
+  id               String    @id @default(uuid())
+  sender           User      @relation("RequestSender", fields: [senderId], references: [id])
+  senderId         String
+  
+  receiver         User      @relation("RequestReceiver", fields: [receiverId], references: [id])
+  receiverId       String
+  
+  crop             Crop      @relation(fields: [cropId], references: [id])
+  cropId           String
+  
+  deliveryDate     DateTime
+  status           String    // 'PENDING', 'ACCEPTED', 'REJECTED', 'SHIPPED', 'DELIVERED'
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Message {
+  id               String    @id @default(uuid())
+  
+  sender           User      @relation("MessageSender", fields: [senderId], references: [id])
+  senderId         String
+  
+  receiver         User      @relation("MessageReceiver", fields: [receiverId], references: [id])
+  receiverId       String
+
+  content          String
+  timestamp        DateTime  @default(now())
+}
+
+model BatchHistory {
+  id               String    @id @default(uuid())
+  
+  crop             Crop      @relation(fields: [cropId], references: [id])
+  cropId           String
+
+  sender           String    // Storing names or roles for easy querying
+  receiver         String
+  
+  deliveryDate     DateTime
+  transactionHash  String?
+  
+  createdAt        DateTime  @default(now())
+}

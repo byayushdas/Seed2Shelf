@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl;
+  }
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/10 shadow-2xl;
+  }
+  .matte-glass {
+    @apply bg-stone-900/60 backdrop-blur-3xl border border-white/10 shadow-2xl;
+  }
+}
+
+body {
+  @apply bg-stone-50 text-stone-900 font-sans antialiased overflow-x-hidden;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
