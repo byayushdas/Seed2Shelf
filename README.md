@@ -6,7 +6,7 @@ Seed2Shelf is a blockchain-based agricultural supply chain transparency platform
 
 ---
 
-## The Problem
+## The Problem     
 
 A farmer sells tomatoes at ₹8/kg. The consumer buys them at ₹60/kg. Nobody in between is accountable for where that ₹52 went. Farmers have no visibility into what happens after they sell, payments are delayed 30–60 days with no recourse, weight and grade fraud happens silently at every node, and consumers have no way to verify origin or price fairness.
 
