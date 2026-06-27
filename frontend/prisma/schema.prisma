@@ -24,6 +24,9 @@ model User {
   messagesSent     Message[] @relation("MessageSender")
   messagesReceived Message[] @relation("MessageReceiver")
 
+  ratingsGiven     Rating[]  @relation("Reviewer")
+  ratingsReceived  Rating[]  @relation("Reviewee")
+
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
@@ -41,12 +44,17 @@ model Crop {
   currentOwnerId   String
   currentOwner     User      @relation("CurrentOwner", fields: [currentOwnerId], references: [id])
 
+  parentCropId     String?
+  parentCrop       Crop?     @relation("CropLineage", fields: [parentCropId], references: [id])
+  childCrops       Crop[]    @relation("CropLineage")
+
   transactions     Transaction[]
   requests         Request[]
   batchHistory     BatchHistory[]
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  isListed         Boolean   @default(true)
 }
 
 model Transaction {
@@ -77,6 +85,27 @@ model Request {
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  quantity         Float     @default(1)
+  ratings          Rating[]
+}
+
+model Rating {
+  id               String    @id @default(uuid())
+  value            Int
+  comment          String?
+  
+  reviewer         User      @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewerId       String
+  
+  reviewee         User      @relation("Reviewee", fields: [revieweeId], references: [id])
+  revieweeId       String
+
+  request          Request   @relation(fields: [requestId], references: [id])
+  requestId        String
+
+  createdAt        DateTime  @default(now())
+
+  @@unique([reviewerId, requestId])
 }
 
 model Message {

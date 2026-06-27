@@ -8,13 +8,12 @@ export default function Navbar() {
   const [wallet, setWallet] = useState<string | null>(null);
 
   const connectWallet = async () => {
-    if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
+    if (typeof window !== "undefined" && typeof (window as any).ethereum !== "undefined") {
       try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         if (accounts.length > 0) {
           setWallet(accounts[0]);
-          // Optionally send to backend to link wallet
         }
       } catch (err) {
         console.error("Wallet connection failed", err);
@@ -24,21 +23,51 @@ export default function Navbar() {
     }
   };
 
+  const role = session?.user?.role;
+
   return (
     <nav className="fixed top-0 w-full z-50 glass-dark text-white p-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold tracking-wider text-green-400">
-          Seed2Shelf
+        <Link 
+          href="/" 
+          className="text-3xl font-bold tracking-widest text-[#9CAF88]"
+          style={{ fontFamily: "'Yeseva One', serif" }}
+        >
+          SEED2SHELF
         </Link>
 
-        <div className="hidden md:flex flex-wrap gap-4 items-center text-sm font-medium">
-          <Link href="/" className="hover:text-green-300 transition">Home</Link>
-          <Link href="/farmer" className="hover:text-green-300 transition">Farmer</Link>
-          <Link href="/processor" className="hover:text-green-300 transition">Processor</Link>
-          <Link href="/distributor" className="hover:text-green-300 transition">Distributor</Link>
-          <Link href="/retailer" className="hover:text-green-300 transition">Retailer</Link>
-          <Link href="/customer/marketplace" className="hover:text-green-300 transition">Customer</Link>
-        </div>
+        {session ? (
+          <div className="hidden md:flex flex-wrap gap-6 items-center text-sm font-medium">
+            {role === "CUSTOMER" && (
+              <Link href="/customer/marketplace" className="hover:text-[#B2C29D] transition">Buy Products</Link>
+            )}
+            {role === "FARMER" && (
+              <Link href="/farmer" className="hover:text-[#B2C29D] transition">List Products</Link>
+            )}
+            {role === "PROCESSOR" && (
+              <>
+                <Link href="/buy" className="hover:text-[#B2C29D] transition">Buy Products</Link>
+                <Link href="/processor" className="hover:text-[#B2C29D] transition">List Products</Link>
+              </>
+            )}
+            {role === "DISTRIBUTOR" && (
+              <>
+                <Link href="/buy" className="hover:text-[#B2C29D] transition">Buy Products</Link>
+                <Link href="/distributor" className="hover:text-[#B2C29D] transition">List Products</Link>
+              </>
+            )}
+            {role === "RETAILER" && (
+              <>
+                <Link href="/buy" className="hover:text-[#B2C29D] transition">Buy Products</Link>
+                <Link href="/retailer" className="hover:text-[#B2C29D] transition">List Products</Link>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="hidden md:flex flex-wrap gap-4 items-center text-sm font-medium">
+            {/* Roles hidden when not logged in */}
+          </div>
+        )}
 
         <div className="flex gap-4 items-center">
           {session ? (
@@ -46,25 +75,27 @@ export default function Navbar() {
               <span className="text-sm opacity-80 border-r pr-4 border-white/20">
                 {session.user?.name}
               </span>
-              <button onClick={() => signOut()} className="text-sm hover:text-red-400">
+              <Link href={`/profile/${session.user.id}`} className="text-sm hover:text-[#B2C29D] font-medium border-r pr-4 border-white/20">
+                Profile
+              </Link>
+              <button onClick={() => signOut({ callbackUrl: '/' })} className="text-sm hover:text-red-400">
                 Logout
+              </button>
+              <button
+                onClick={connectWallet}
+                className="text-sm border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black px-4 py-2 rounded-full transition"
+              >
+                {wallet ? `${wallet.substring(0,6)}...${wallet.substring(38)}` : "Connect Wallet"}
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm hover:text-green-300">Login</Link>
-              <Link href="/signup" className="text-sm bg-green-600 hover:bg-green-500 px-4 py-2 rounded-full transition">
+              <Link href="/auth" className="text-sm hover:text-[#B2C29D] font-medium">Login</Link>
+              <Link href="/auth" className="text-sm bg-[#8A9A5B] hover:bg-[#9CAF88] px-5 py-2 rounded-full transition font-medium">
                 Sign Up
               </Link>
             </>
           )}
-
-          <button
-            onClick={connectWallet}
-            className="text-sm border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black px-4 py-2 rounded-full transition"
-          >
-            {wallet ? `${wallet.substring(0,6)}...${wallet.substring(38)}` : "Connect Wallet"}
-          </button>
         </div>
       </div>
     </nav>

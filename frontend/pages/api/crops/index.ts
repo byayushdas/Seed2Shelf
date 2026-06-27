@@ -5,18 +5,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === "GET") {
     try {
       // Return crops with optional filtering
-      const { role, ownerId } = req.query;
+      const { role, ownerId, ownerRole, isListed } = req.query;
       
-      let filter = {};
+      let filter: any = {};
       if (ownerId && typeof ownerId === "string") {
-        filter = { currentOwnerId: ownerId };
+        filter.currentOwnerId = ownerId;
+      }
+      if (ownerRole && typeof ownerRole === "string") {
+        filter.currentOwner = { role: ownerRole };
+      }
+      if (isListed === "true") {
+        filter.isListed = true;
+      } else if (isListed === "false") {
+        filter.isListed = false;
       }
 
       const crops = await prisma.crop.findMany({
         where: filter,
         include: {
           farmer: { select: { name: true, walletAddress: true } },
-          currentOwner: { select: { name: true, role: true } }
+          currentOwner: { select: { id: true, name: true, role: true } }
         },
         orderBy: { createdAt: 'desc' }
       });
@@ -35,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const crop = await prisma.crop.create({
         data: {
-          batchId: batchId || null,
+          batchId: batchId || `BATCH-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
           name,
           quantity: parseFloat(quantity),
           harvestDate: new Date(harvestDate),

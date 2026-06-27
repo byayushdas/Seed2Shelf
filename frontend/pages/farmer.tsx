@@ -8,6 +8,7 @@ interface Crop {
   quantity: number;
   harvestDate: string;
   currentOwner: { name: string; role: string };
+  isListed: boolean;
 }
 
 interface Request {
@@ -16,7 +17,9 @@ interface Request {
   sender: { id: string; name: string; role: string };
   receiver: { id: string; name: string; role: string };
   deliveryDate: string;
+  quantity: number;
   status: string;
+  ratings?: any[];
 }
 
 export default function FarmerDashboard({ user }: { user: any }) {
@@ -38,7 +41,8 @@ export default function FarmerDashboard({ user }: { user: any }) {
   const fetchRequests = async () => {
     const res = await fetch(`/api/requests?userId=${user.id}`);
     const data = await res.json();
-    setRequests(data.filter((r: any) => r.receiverId === user.id || r.senderId === user.id));
+    // Farmers only receive incoming requests (Sales)
+    setRequests(data.filter((r: any) => r.receiver.id === user.id));
   };
 
   const handleAddCrop = async (e: React.FormEvent) => {
@@ -56,10 +60,28 @@ export default function FarmerDashboard({ user }: { user: any }) {
     await fetch(`/api/requests/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status, userId: user.id })
     });
     fetchRequests();
     fetchCrops(); // Refresh crops in case ownership changed
+  };
+
+  const submitRating = async (requestId: string, revieweeId: string, value: number) => {
+    await fetch("/api/ratings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value, reviewerId: user.id, revieweeId, requestId })
+    });
+    fetchRequests();
+  };
+
+  const toggleListing = async (cropId: string, currentStatus: boolean) => {
+    await fetch(`/api/crops/${cropId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isListed: !currentStatus })
+    });
+    fetchCrops();
   };
 
   return (
@@ -114,7 +136,22 @@ export default function FarmerDashboard({ user }: { user: any }) {
                         <h3 className="font-bold text-green-400 text-lg">{crop.name}</h3>
                         <p className="text-sm text-stone-300">{crop.quantity} kg • Harvested: {new Date(crop.harvestDate).toLocaleDateString()}</p>
                       </div>
-                      <span className="text-xs bg-green-500/20 text-green-300 px-3 py-1 rounded-full font-bold border border-green-500/20">In Stock</span>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs px-3 py-1 rounded-full font-bold border ${crop.isListed ? 'bg-green-500/20 text-green-300 border-green-500/20' : 'bg-stone-500/20 text-stone-300 border-stone-500/20'}`}>
+                          {crop.isListed ? 'Listed' : 'Unlisted'}
+                        </span>
+                        {crop.quantity > 0 && (
+                          <button 
+                            onClick={() => toggleListing(crop.id, crop.isListed)}
+                            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg transition"
+                          >
+                            {crop.isListed ? 'Take Down' : 'List Product'}
+                          </button>
+                        )}
+                        {crop.quantity === 0 && (
+                           <span className="text-xs bg-red-500/20 text-red-300 px-3 py-1 rounded-full font-bold border border-red-500/20">Out of Stock</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -124,25 +161,25 @@ export default function FarmerDashboard({ user }: { user: any }) {
 
           {/* Incoming Requests */}
           <div className="md:col-span-2 matte-glass p-8 rounded-3xl shadow-2xl border border-white/10">
-            <h2 className="text-2xl font-bold mb-6 text-green-300">Transfer Requests & Shipments</h2>
+            <h2 className="text-2xl font-bold mb-6 text-green-300">Incoming Orders (Sales)</h2>
             {requests.length === 0 ? (
-               <p className="text-stone-400 italic">No active requests.</p>
+               <p className="text-stone-400 italic">No incoming orders yet.</p>
             ) : (
               <div className="space-y-5">
                 {requests.map(req => (
                   <div key={req.id} className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6 hover:bg-white/10 transition-colors">
                     <div className="flex-grow">
                       <p className="text-lg font-medium text-stone-100">
-                        <span className="text-green-400 font-bold">{req.sender?.name}</span> wants to buy <span className="font-bold text-white">{req.crop?.name}</span>
+                        <span className="text-green-400 font-bold">{req.sender?.name}</span> wants to buy <span className="font-bold text-white">{req.quantity} kg of {req.crop?.name}</span>
                       </p>
                       <div className="flex gap-4 mt-2">
                         <p className="text-sm text-stone-400 flex items-center gap-1">📅 {new Date(req.deliveryDate).toLocaleDateString()}</p>
                         <p className={`text-xs font-bold px-3 py-1 rounded-full border ${
                           req.status === "PENDING" ? "text-yellow-400 border-yellow-400/30 bg-yellow-400/10" :
-                          req.status === "ACCEPTED" ? "text-blue-400 border-blue-400/30 bg-blue-400/10" :
-                          "text-green-400 border-green-400/30 bg-green-400/10"
+                          req.status === "DELIVERED" ? "text-green-400 border-green-400/30 bg-green-400/10" :
+                          "text-blue-400 border-blue-400/30 bg-blue-400/10"
                         }`}>
-                          {req.status}
+                          {req.status === "SELLER_CONFIRMED" || req.status === "BUYER_CONFIRMED" ? "DELIVERY PENDING" : req.status}
                         </p>
                       </div>
                     </div>
@@ -154,11 +191,27 @@ export default function FarmerDashboard({ user }: { user: any }) {
                           <button onClick={() => updateRequestStatus(req.id, "REJECTED")} className="px-6 py-2 bg-red-600/20 text-red-400 rounded-xl border border-red-400/20 shadow-lg text-sm font-bold hover:bg-red-600/40 transition">Reject</button>
                         </>
                       )}
-                      {req.status === "ACCEPTED" && req.sender.name === user.name && ( 
-                        <button onClick={() => updateRequestStatus(req.id, "SHIPPED")} className="px-6 py-2 bg-blue-600 text-white rounded-xl shadow-lg text-sm font-bold hover:bg-blue-500 transition">Confirm Shipment</button>
+                      {(req.status === "ACCEPTED" || req.status === "BUYER_CONFIRMED") && ( 
+                        <button onClick={() => updateRequestStatus(req.id, "CONFIRM_DELIVERY")} className="px-6 py-2 bg-blue-600 text-white rounded-xl shadow-lg text-sm font-bold hover:bg-blue-500 transition">Confirm Delivery</button>
                       )}
-                      {req.status === "SHIPPED" && req.receiver.name === user.name && (
-                        <button onClick={() => updateRequestStatus(req.id, "DELIVERED")} className="px-6 py-2 bg-green-600 text-white rounded-xl shadow-lg text-sm font-bold hover:bg-green-500 transition">Confirm Receipt</button>
+                      {req.status === "SELLER_CONFIRMED" && (
+                        <p className="text-stone-400 text-sm italic py-2">Waiting for buyer to confirm delivery...</p>
+                      )}
+                      {req.status === "DELIVERED" && (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-green-400 text-sm italic py-2 font-bold flex items-center gap-2">✓ Delivery Completed</p>
+                          {!req.ratings?.some((r: any) => r.reviewerId === user.id) && (
+                            <div className="flex items-center gap-2 text-sm bg-black/20 p-2 rounded-lg">
+                              <span className="text-stone-300">Rate Buyer:</span>
+                              {[1,2,3,4,5].map(v => (
+                                <button key={v} onClick={() => submitRating(req.id, req.sender.id, v)} className="hover:scale-110 text-stone-500 hover:text-yellow-400 transition text-lg">★</button>
+                              ))}
+                            </div>
+                          )}
+                          {req.ratings?.some((r: any) => r.reviewerId === user.id) && (
+                            <p className="text-xs text-stone-500 italic">You rated this buyer.</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

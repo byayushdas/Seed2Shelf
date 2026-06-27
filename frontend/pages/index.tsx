@@ -1,147 +1,192 @@
-import Head from 'next/head'
-import Link from 'next/link'
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import Head from 'next/head';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export default function Home() {
-  const { scrollYProgress } = useScroll();
-  const opacity = useTransform(scrollYProgress, [0.3, 0.4], [0, 1]);
-  const yOffset = useTransform(scrollYProgress, [0.3, 0.4], [50, 0]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [images, setImages] = useState<HTMLImageElement[]>([]);
+  const frameCount = 151;
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const frameIndex = useTransform(scrollYProgress, [0, 1], [0, 150]);
+
+  useEffect(() => {
+    const loadedImages: HTMLImageElement[] = [];
+    const imagePaths = [];
+    for (let i = 1; i <= frameCount; i++) {
+      if (i === 146) continue;
+      const indexStr = i.toString().padStart(3, '0');
+      imagePaths.push(`/home/frame_${indexStr}.png`);
+    }
+
+    imagePaths.forEach((path, i) => {
+      const img = new Image();
+      img.src = path;
+      img.onload = () => {
+        loadedImages[i] = img;
+        if (i === 0) {
+          drawFrame(img);
+        }
+      };
+    });
+    setImages(loadedImages);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = frameIndex.on("change", (latest) => {
+      const idx = Math.floor(latest);
+      if (images[idx]) drawFrame(images[idx]);
+    });
+    return () => unsubscribe();
+  }, [images, frameIndex]);
+
+  const drawFrame = (img: HTMLImageElement) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      const idx = Math.floor(frameIndex.get());
+      if (images[idx]) drawFrame(images[idx]);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [images, frameIndex]);
+
+  // Map scroll progress for scattered points
+  const point1Opacity = useTransform(scrollYProgress, [0.05, 0.1, 0.15], [0, 1, 0]);
+  const point2Opacity = useTransform(scrollYProgress, [0.1, 0.15, 0.2], [0, 1, 0]);
+  const point3Opacity = useTransform(scrollYProgress, [0.15, 0.2, 0.25], [0, 1, 0]);
+  const point4Opacity = useTransform(scrollYProgress, [0.2, 0.25, 0.3], [0, 1, 0]);
+  const point5Opacity = useTransform(scrollYProgress, [0.25, 0.3, 0.35], [0, 1, 0]);
+  const point6Opacity = useTransform(scrollYProgress, [0.3, 0.35, 0.4], [0, 1, 0]);
+
+  // Timeline opacity map
+  const timelineOpacity = useTransform(scrollYProgress, [0.45, 0.5, 0.95, 1], [0, 1, 1, 0]);
+  const step1Op = useTransform(scrollYProgress, [0.5, 0.55], [0, 1]);
+  const step2Op = useTransform(scrollYProgress, [0.55, 0.6], [0, 1]);
+  const step3Op = useTransform(scrollYProgress, [0.6, 0.65], [0, 1]);
+  const step4Op = useTransform(scrollYProgress, [0.65, 0.7], [0, 1]);
+  const step5Op = useTransform(scrollYProgress, [0.7, 0.75], [0, 1]);
+  const step6Op = useTransform(scrollYProgress, [0.75, 0.8], [0, 1]);
 
   return (
-    <div className="bg-black text-white selection:bg-green-500 selection:text-white">
+    <div className="bg-black text-white selection:bg-[#9CAF88] selection:text-white">
       <Head>
         <title>Seed2Shelf | Blockchain Supply Chain</title>
       </Head>
 
-      {/* Hero Section */}
-      <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-        {/* Background Video */}
-       <video 
-  autoPlay 
-  loop 
-  muted 
-  playsInline
-  poster="https://images.pexels.com/photos/158179/lake-constance-sheep-pasture-sheep-blue-158179.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-  className="absolute z-0 w-auto min-w-full min-h-full max-w-none object-cover opacity-60"
->
-  <source src="https://cdn.coverr.co/videos/preview/720p/coverr-drone-shot-of-a-field-of-wheat-5231.mp4" type="video/mp4" />
-</video>
-        
-        {/* Glassmorphism Panel overlay */}
-        <div className="relative z-10 glass-dark p-12 md:p-20 rounded-3xl text-center max-w-3xl transform hover:scale-[1.01] transition-transform duration-500">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-yellow-400">
-              From Seed to Shelf
-            </h1>
-            <p className="text-xl md:text-2xl font-light text-stone-200 mb-10">
-              A Blockchain-Based Agricultural Supply Chain Platform
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/signup" className="px-8 py-3 bg-green-600 hover:bg-green-500 text-white rounded-full font-medium transition shadow-lg shadow-green-900/20">
-                Sign Up
-              </Link>
-              <Link href="/login" className="px-8 py-3 glass hover:bg-white/20 text-white rounded-full font-medium transition">
-                Login
-              </Link>
-              <button onClick={() => alert("Please use the top-right button to connect metamask")} className="px-8 py-3 border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black rounded-full font-medium transition">
-                Connect Wallet
-              </button>
-              <Link href="/customer/marketplace" className="px-8 py-3 bg-stone-100 text-stone-900 hover:bg-white rounded-full font-medium transition shadow-xl mt-4 md:mt-0 lg:ml-4 w-full md:w-auto">
-                Explore Products
-              </Link>
+      {/* Top Section */}
+      <section className="h-screen w-full bg-[#8A9A5B] flex flex-col justify-center items-center text-center p-8 relative z-20">
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight" style={{ fontFamily: "'Bentham', serif" }}>Food With Proof.</h1>
+        <p className="text-2xl md:text-4xl text-white/90 italic" style={{ fontFamily: "'Bentham', serif" }}>Because every harvest has a story..</p>
+      </section>
+
+      {/* Animation Container */}
+      <div style={{ height: "600vh" }} className="relative z-10" ref={containerRef}>
+        <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-fill z-0" />
+
+          {/* Scattered Points */}
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <motion.div style={{ opacity: point1Opacity }} className="absolute top-[20%] left-[10%] md:left-[20%] text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">Built on Trust</motion.div>
+            <motion.div style={{ opacity: point2Opacity }} className="absolute top-[40%] right-[10%] md:right-[20%] text-3xl md:text-5xl font-bold text-[#B2C29D] drop-shadow-2xl">Powered by Blockchain</motion.div>
+            <motion.div style={{ opacity: point3Opacity }} className="absolute top-[60%] left-[15%] md:left-[25%] text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">100% Traceable</motion.div>
+            <motion.div style={{ opacity: point4Opacity }} className="absolute top-[30%] right-[15%] md:right-[30%] text-3xl md:text-5xl font-bold text-[#B2C29D] drop-shadow-2xl">Verified at Every Step</motion.div>
+            <motion.div style={{ opacity: point5Opacity }} className="absolute top-[70%] left-[30%] text-3xl md:text-5xl font-bold text-white drop-shadow-2xl">Direct. Transparent. Secure.</motion.div>
+            <motion.div style={{ opacity: point6Opacity }} className="absolute top-[50%] right-[25%] text-3xl md:text-5xl font-bold text-[#B2C29D] drop-shadow-2xl">No Middlemen. Just Trust.</motion.div>
+          </div>
+
+          {/* Timeline Glassmorphism */}
+          <motion.div 
+            style={{ opacity: timelineOpacity }} 
+            className="absolute inset-0 z-20 flex flex-col justify-center items-center pointer-events-none p-4"
+          >
+            <div className="glass-dark border border-white/20 p-8 md:p-12 rounded-3xl max-w-2xl w-full relative">
+              <div className="absolute left-10 md:left-14 top-12 bottom-12 w-0.5 bg-[#8A9A5B]/50"></div>
+              
+              <div className="space-y-8 relative">
+                <motion.div style={{ opacity: step1Op }} className="flex items-start gap-6">
+                  <div className="w-4 h-4 rounded-full bg-[#9CAF88] mt-1.5 shadow-[0_0_10px_#9CAF88] relative z-10 shrink-0"></div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Grow</h3>
+                    <p className="text-white/70">Seeds are planted and crops are cultivated.</p>
+                  </div>
+                </motion.div>
+
+                <motion.div style={{ opacity: step2Op }} className="flex items-start gap-6">
+                  <div className="w-4 h-4 rounded-full bg-[#9CAF88] mt-1.5 shadow-[0_0_10px_#9CAF88] relative z-10 shrink-0"></div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Harvest</h3>
+                    <p className="text-white/70">Fresh produce is collected and verified.</p>
+                  </div>
+                </motion.div>
+
+                <motion.div style={{ opacity: step3Op }} className="flex items-start gap-6">
+                  <div className="w-4 h-4 rounded-full bg-[#9CAF88] mt-1.5 shadow-[0_0_10px_#9CAF88] relative z-10 shrink-0"></div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Process</h3>
+                    <p className="text-white/70">Cleaned, graded, and packaged.</p>
+                  </div>
+                </motion.div>
+
+                <motion.div style={{ opacity: step4Op }} className="flex items-start gap-6">
+                  <div className="w-4 h-4 rounded-full bg-[#9CAF88] mt-1.5 shadow-[0_0_10px_#9CAF88] relative z-10 shrink-0"></div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Distribute</h3>
+                    <p className="text-white/70">Securely transported across the network.</p>
+                  </div>
+                </motion.div>
+
+                <motion.div style={{ opacity: step5Op }} className="flex items-start gap-6">
+                  <div className="w-4 h-4 rounded-full bg-[#9CAF88] mt-1.5 shadow-[0_0_10px_#9CAF88] relative z-10 shrink-0"></div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Retail</h3>
+                    <p className="text-white/70">Delivered to stores with complete traceability.</p>
+                  </div>
+                </motion.div>
+
+                <motion.div style={{ opacity: step6Op }} className="flex items-start gap-6">
+                  <div className="w-4 h-4 rounded-full bg-[#9CAF88] mt-1.5 shadow-[0_0_10px_#9CAF88] relative z-10 shrink-0"></div>
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Enjoy</h3>
+                    <p className="text-white/70">Consumers scan and verify the journey.</p>
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Vertical Animated Timeline Section */}
-      <section className="py-32 bg-stone-950 relative overflow-hidden">
-        {/* Background Image for Timeline */}
-        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-          <img 
-            src="https://images.pexels.com/photos/158179/lake-constance-sheep-pasture-sheep-blue-158179.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1"
-            className="w-full h-full object-cover"
-            alt=""
+        </div>
+      </div>
+
+      <footer className="bg-black text-white text-center py-16 border-t border-white/10 relative z-20">
+        <p className="text-xl md:text-2xl mb-4 italic font-light text-[#B2C29D]">Every harvest tells a story. We make it visible.</p>
+        <p className="text-sm text-white/40 tracking-widest">SEED2SHELF | 2026</p>
+      </footer>
+
+      {/* Global Scroll Indicator */}
+      <div className="fixed bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-80 z-50 pointer-events-none">
+        <div className="w-8 h-12 border-2 border-white rounded-full flex justify-center p-1">
+          <motion.div 
+            animate={{ y: [0, 16, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            className="w-2 h-2 bg-white rounded-full"
           />
         </div>
-        
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <div className="absolute left-[39px] md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-green-500/50 via-yellow-500/50 to-transparent -translate-x-1/2"></div>
-          
-          <h2 className="text-center text-3xl md:text-5xl font-bold mb-20 text-white">
-            The Traceable Journey
-          </h2>
-
-          <div className="space-y-24">
-            {[
-              { role: "Farmer", icon: "🌱", desc: "Logs harvest details, quality specs, and GPS origin on-chain." },
-              { role: "Processor", icon: "🏭", desc: "Inspects quality, processes goods, and adds value on-chain." },
-              { role: "Distributor", icon: "🚚", desc: "Manages logistics and temperature-controlled tracking." },
-              { role: "Retailer", icon: "🏪", desc: "Receives final product and lists it on the consumer marketplace." },
-              { role: "Customer", icon: "🛍️", desc: "Scans QR code or explores UI to verify the full journey securely." }
-            ].map((step, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, x: idx % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className={`relative flex items-center justify-between md:justify-normal gap-8 w-full ${idx % 2 === 0 ? "md:flex-row-reverse left-timeline" : "right-timeline"}`}
-              >
-                <div className="order-1 md:w-5/12"></div>
-                
-                <div className="z-20 flex items-center order-1 matte-glass w-16 h-16 rounded-full shadow-xl border-2 border-green-500 absolute left-0 md:left-1/2 -translate-x-4 md:-translate-x-1/2 justify-center text-2xl">
-                  {step.icon}
-                </div>
-                
-                <div className="order-1 matte-glass rounded-2xl shadow-xl w-full md:w-5/12 px-6 py-6 border border-white/5 ml-12 md:ml-0 hover:border-green-500/30 transition-colors">
-                  <h3 className="mb-3 font-bold text-green-400 text-xl">{step.role}</h3>
-                  <p className="text-sm leading-snug text-stone-300 font-light text-opacity-100">
-                    {step.desc}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Mission Section w/ Video 2 */}
-      {mounted && (
-        <section className="relative h-[80vh] w-full flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 opacity-40">
-            <img 
-              src="https://images.pexels.com/photos/1031700/pexels-photo-1031700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1"
-              className="w-full h-full object-cover"
-              alt=""
-            />
-          </div>
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline
-            className="absolute z-0 w-auto min-w-full min-h-full max-w-none object-cover opacity-50"
-          >
-            <source src="https://cdn.coverr.co/videos/preview/720p/coverr-farm-landscape-with-a-red-barn-5230.mp4" type="video/mp4" />
-          </video>
-          
-          <motion.div 
-            style={{ opacity, y: yOffset }}
-            className="relative z-10 matte-glass p-10 md:p-16 rounded-2xl text-center max-w-4xl mx-4"
-          >
-            <h2 className="text-2xl md:text-5xl font-light leading-relaxed text-stone-100">
-              "Our mission is to bring <span className="text-green-400 font-medium">transparency, trust, and traceability</span> into agricultural supply chains using blockchain technology."
-            </h2>
-          </motion.div>
-        </section>
-      )}
-
+        <span className="text-sm font-medium tracking-widest uppercase text-white" style={{ fontFamily: "'Bentham', serif" }}>Scroll</span>
+      </div>
     </div>
   )
 }

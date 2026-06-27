@@ -25,7 +25,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json(user);
+    const ratingAgg = await prisma.rating.aggregate({
+      _avg: { value: true },
+      where: { revieweeId: id as string }
+    });
+
+    res.status(200).json({
+      ...user,
+      averageRating: ratingAgg._avg.value || null
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching user" });
   }

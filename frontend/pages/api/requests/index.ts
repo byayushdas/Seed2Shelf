@@ -20,8 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         include: {
           crop: true,
-          sender: { select: { name: true, role: true, walletAddress: true } },
-          receiver: { select: { name: true, role: true, walletAddress: true } }
+          sender: { select: { id: true, name: true, role: true, walletAddress: true } },
+          receiver: { select: { id: true, name: true, role: true, walletAddress: true } },
+          ratings: true
         },
         orderBy: { createdAt: 'desc' }
       });
@@ -33,9 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } else if (req.method === "POST") {
     try {
-      const { senderId, receiverId, cropId, deliveryDate } = req.body;
+      const { senderId, receiverId, cropId, deliveryDate, quantity } = req.body;
 
-      if (!senderId || !receiverId || !cropId || !deliveryDate) {
+      if (!senderId || !receiverId || !cropId || !deliveryDate || !quantity) {
         return res.status(400).json({ message: "Missing required fields" });
       }
 
@@ -45,6 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           receiverId,
           cropId,
           deliveryDate: new Date(deliveryDate),
+          quantity: parseFloat(quantity),
           status: "PENDING"
         }
       });
