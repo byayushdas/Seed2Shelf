@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -17,6 +17,7 @@ import {
   Check,
   ArrowRight
 } from "lucide-react";
+import { orderService } from "@/services/order";
 
 interface DistributorOrder {
   id: string;
@@ -33,8 +34,34 @@ interface DistributorOrder {
 export default function ProcessorOrdersPage() {
   const { data: session } = useSession();
   const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED">("ALL");
-
   const [orders, setOrders] = useState<DistributorOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const res = await orderService.processorApi.getOrders();
+        const mapped = (res.data || []).map((o: any) => ({
+          id: o.id,
+          batchId: o.items?.[0]?.cropId || "N/A",
+          productName: "Processed Goods",
+          category: "Processing",
+          buyer: "Buyer",
+          quantity: "Unknown",
+          totalPrice: "₹" + o.totalAmount,
+          date: o.date,
+          status: o.status
+        }));
+        setOrders(mapped);
+      } catch (err) {
+        console.error("Failed to fetch processor orders", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
   const handleAcceptOrder = (id: string) => {
     setOrders((prev) =>

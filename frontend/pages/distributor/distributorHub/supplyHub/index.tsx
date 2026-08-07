@@ -23,6 +23,7 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
+import { productService } from "@/services/product";
 
 export interface InventoryItem {
   id: string; // e.g. DIST-2026-001 or BATCH-2026-0079
@@ -48,6 +49,35 @@ export default function SupplyHubPage() {
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSupplyHub = async () => {
+      try {
+        setLoading(true);
+        const res = await productService.distributorApi.getSupplyHub();
+        // map backend supply hub to frontend format
+        const mapped = (res.data || []).map((c: any) => ({
+          id: c.batchId,
+          itemType: "RAW",
+          productName: c.cropName,
+          category: c.category,
+          quantity: c.quantity + " units",
+          pricePerUnit: "N/A", // This could come from Orders
+          date: c.harvestDate,
+          status: "In Stock",
+          qrCodeUrl: "https://chart.googleapis.com/chart?cht=qr&chl=...",
+          remainingStock: c.quantity + " units"
+        }));
+        setInventory(mapped);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSupplyHub();
+  }, []);
 
   // Form states for Log New Distributed Item
   const [category, setCategory] = useState("Processed Grains");

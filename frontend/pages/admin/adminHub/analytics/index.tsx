@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
+import { adminService } from "@/services/admin";
 import { BarChart3, TrendingUp, Users, RefreshCw } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -15,11 +16,8 @@ export default function AdminAnalytics() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/analytics`);
-      if (res.ok) {
-        const json = await res.json();
-        setAnalytics(json.data || {});
-      }
+      const json = await adminService.getAnalytics();
+      setAnalytics(json.data || {});
     } catch (err) {
       console.error(err);
     } finally {

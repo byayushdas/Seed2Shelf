@@ -1,2 +1,0 @@
-// kyc constants index
-export {};

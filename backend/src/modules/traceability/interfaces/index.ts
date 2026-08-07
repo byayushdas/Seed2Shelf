@@ -1,2 +1,0 @@
-// traceability interfaces index
-export {};

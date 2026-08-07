@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Loader2
 } from "lucide-react";
+import { shipmentService } from "@/services/shipment";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
@@ -54,31 +55,21 @@ export default function FarmerShipments() {
     const fetchShipments = async () => {
       try {
         setIsLoading(true);
-        const endpoint = mainTab === "ACTIVE" 
-          ? `${BACKEND_URL}/api/v1/farmer/shipment/active?userId=${farmerId}`
-          : `${BACKEND_URL}/api/v1/farmer/shipment/history?userId=${farmerId}`;
-
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped = json.data.map((s: any) => ({
-              id: s.shipmentId || s.id,
-              batchId: s.batchId,
-              cropName: s.cropName,
-              quantity: s.quantity,
-              value: s.value,
-              destination: s.destination,
-              dispatchedDate: s.dispatchedDate,
-              estimatedDelivery: s.estimatedDelivery || "Today, 4:30 PM",
-              status: s.status,
-              currentStep: s.currentStep || 2,
-              rejectionReason: s.rejectionReason,
-              rejectedDate: s.rejectedDate,
-              acceptedDate: s.acceptedDate
-            }));
-            setShipments(mapped);
-          }
+        const res = await shipmentService.farmerApi.getShipments();
+        if (res.data) {
+          const mapped = res.data.map((s: any) => ({
+            id: s.shipmentId || s.id,
+            batchId: s.orderId,
+            cropName: "Order " + s.orderId.slice(0, 8),
+            quantity: "Bulk",
+            value: "N/A",
+            destination: s.destination,
+            dispatchedDate: new Date(s.dispatchDate || s.createdAt).toLocaleDateString(),
+            estimatedDelivery: s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString() : "Pending",
+            status: s.status === "DELIVERED" ? "DELIVERED" : "IN_TRANSIT",
+            currentStep: s.status === "DELIVERED" ? 3 : 2
+          }));
+          setShipments(mapped);
         }
       } catch (err) {
         console.warn("Backend API offline or unreachable, utilizing local state fallback", err);

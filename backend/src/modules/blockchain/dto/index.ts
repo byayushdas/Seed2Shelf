@@ -1,2 +1,0 @@
-// blockchain dto index
-export {};

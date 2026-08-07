@@ -58,4 +58,80 @@ export const orderService = {
       method: "PUT",
     });
   },
+
+  distributorApi: {
+    async getOrders() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/distributor/orders`);
+      if (!res.ok) throw new Error("Failed to fetch distributor orders");
+      return res.json();
+    },
+    async placeOrder(items: any[]) {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/distributor/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items })
+      });
+      if (!res.ok) throw new Error("Failed to place order");
+      return res.json();
+    }
+  },
+
+  processorApi: {
+    async getOrders() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/processor/orders`);
+      if (!res.ok) throw new Error("Failed to fetch processor orders");
+      return res.json();
+    },
+    async placeOrder(items: any[]) {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/processor/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items })
+      });
+      if (!res.ok) throw new Error("Failed to place order");
+      return res.json();
+    }
+  },
+
+  retailerApi: {
+    async getOrders() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/retailer/orders`);
+      if (!res.ok) throw new Error("Failed to fetch retailer orders");
+      return res.json();
+    },
+    async placeOrder(items: any[]) {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/retailer/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items })
+      });
+      if (!res.ok) throw new Error("Failed to place order");
+      return res.json();
+    }
+  },
+
+  customerApi: {
+    async getOrders() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/customer/orders`);
+      if (!res.ok) throw new Error("Failed to fetch customer orders");
+      return res.json();
+    },
+    async placeOrder(items: any[]) {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/customer/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items })
+      });
+      if (!res.ok) throw new Error("Failed to place order");
+      return res.json();
+    }
+  }
 };

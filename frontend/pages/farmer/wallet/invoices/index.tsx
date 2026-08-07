@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { walletService } from "@/services/wallet";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -35,8 +36,33 @@ export default function WalletInvoices() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
-  // Farmer Sales Invoices (Farmer sells crop harvests to buyers)
-  const initialInvoices: any[] = [];
+  const [initialInvoices, setInitialInvoices] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        const res = await walletService.farmerApi.getInvoices();
+        if (res.data) {
+          const mapped = res.data.map((inv: any) => ({
+            id: inv.invoiceId,
+            orderId: inv.id.slice(-8),
+            batch: "Batch " + inv.id.slice(0, 4),
+            item: "Crop Sale",
+            amount: `₹${inv.amount}`,
+            date: new Date(inv.date).toLocaleDateString(),
+            buyer: "Buyer",
+            supplier: "Self",
+            status: "PAID",
+            category: "SALES"
+          }));
+          setInitialInvoices(mapped);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchInvoices();
+  }, []);
 
   const filteredInvoices = initialInvoices.filter((inv) => {
     const matchesCategory =

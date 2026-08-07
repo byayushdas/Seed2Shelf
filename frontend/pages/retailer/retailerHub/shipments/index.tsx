@@ -16,8 +16,7 @@ import {
   RotateCcw,
   Loader2
 } from "lucide-react";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+import { shipmentService } from "@/services/shipment";
 
 interface ShipmentItem {
   id: string;
@@ -54,41 +53,32 @@ export default function RetailerShipments() {
     const fetchShipments = async () => {
       try {
         setIsLoading(true);
-        const endpoint = mainTab === "ACTIVE" 
-          ? `${BACKEND_URL}/api/v1/retailer/shipment/active?userId=${retailerId}`
-          : `${BACKEND_URL}/api/v1/retailer/shipment/history?userId=${retailerId}`;
-
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped = json.data.map((s: any) => ({
-              id: s.shipmentId || s.id,
-              batchId: s.batchId,
-              itemName: s.itemName,
-              quantity: s.quantity,
-              value: s.value,
-              destination: s.destination,
-              dispatchedDate: s.dispatchedDate,
-              estimatedDelivery: s.estimatedDelivery || "Today, 4:30 PM",
-              status: s.status,
-              currentStep: s.currentStep || 2,
-              rejectionReason: s.rejectionReason,
-              rejectedDate: s.rejectedDate,
-              acceptedDate: s.acceptedDate
-            }));
-            setShipments(mapped);
-          }
-        }
+        const res = await shipmentService.retailerApi.getShipments();
+        const mapped = (res.data || []).map((s: any) => ({
+          id: s.id,
+          batchId: s.orderId,
+          itemName: "Procured Goods",
+          quantity: "Unknown",
+          value: "Unknown",
+          destination: s.destination || s.origin || "Store",
+          dispatchedDate: new Date(s.dispatchDate || Date.now()).toLocaleDateString(),
+          estimatedDelivery: new Date(s.deliveryDate || Date.now()).toLocaleDateString(),
+          status: s.status === "PENDING" ? "IN_TRANSIT" : s.status,
+          currentStep: s.status === "DELIVERED" ? 4 : 2,
+          rejectionReason: s.rejectionReason,
+          rejectedDate: s.rejectedDate,
+          acceptedDate: s.acceptedDate
+        }));
+        setShipments(mapped);
       } catch (err) {
-        console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
+        console.error("Failed to fetch retailer shipments", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchShipments();
-  }, [retailerId, mainTab]);
+  }, [mainTab]);
 
   const filteredShipments = shipments.filter((shp) => {
     if (mainTab === "ACTIVE") {

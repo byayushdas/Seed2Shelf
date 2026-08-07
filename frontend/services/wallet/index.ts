@@ -38,4 +38,67 @@ export const walletService = {
     }
     return res.json();
   },
+
+  farmerApi: {
+    async getWallet() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/farmer/wallet`);
+      if (!res.ok) throw new Error("Failed to fetch wallet");
+      return res.json();
+    },
+    async getInvoices() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/farmer/wallet/invoices`);
+      if (!res.ok) throw new Error("Failed to fetch invoices");
+      return res.json();
+    },
+    async getTransactions() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/farmer/wallet/transactions`);
+      if (!res.ok) throw new Error("Failed to fetch transactions");
+      return res.json();
+    }
+  },
+
+  distributorApi: {
+    async getWallet() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/distributor/wallet`);
+      if (!res.ok) throw new Error("Failed to fetch distributor wallet");
+      return res.json();
+    },
+    async getInvoices() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/distributor/wallet/invoices`);
+      if (!res.ok) throw new Error("Failed to fetch distributor invoices");
+      return res.json();
+    },
+    async getTransactions() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/distributor/wallet/transactions`);
+      if (!res.ok) throw new Error("Failed to fetch distributor transactions");
+      return res.json();
+    }
+  },
+
+  retailerApi: {
+    async getWallet() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/retailer/wallet`);
+      if (!res.ok) throw new Error("Failed to fetch retailer wallet");
+      return res.json();
+    },
+    async getInvoices() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/retailer/wallet/invoices`);
+      if (!res.ok) throw new Error("Failed to fetch retailer invoices");
+      return res.json();
+    },
+    async getTransactions() {
+      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+      const res = await fetch(`${baseUrl}/api/retailer/wallet/transactions`);
+      if (!res.ok) throw new Error("Failed to fetch retailer transactions");
+      return res.json();
+    }
+  }
 };

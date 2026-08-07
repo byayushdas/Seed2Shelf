@@ -1,2 +1,0 @@
-// harvest types index
-export {};

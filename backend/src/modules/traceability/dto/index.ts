@@ -1,2 +1,0 @@
-// traceability dto index
-export {};

@@ -1,2 +1,0 @@
-// kyc interfaces index
-export {};

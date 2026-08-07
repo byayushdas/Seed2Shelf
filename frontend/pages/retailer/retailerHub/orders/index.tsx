@@ -17,8 +17,7 @@ import {
   Clock,
   Loader2
 } from "lucide-react";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+import { orderService } from "@/services/order";
 
 interface OrderItem {
   id: string;
@@ -51,40 +50,30 @@ export default function RetailerOrders() {
     const fetchOrders = async () => {
       try {
         setIsLoading(true);
-        const endpoint = filterStatus === "ALL" 
-          ? `${BACKEND_URL}/api/v1/retailer/purchase-orders?userId=${retailerId}`
-          : filterStatus === "PENDING"
-          ? `${BACKEND_URL}/api/v1/retailer/purchase-orders/pending?userId=${retailerId}`
-          : `${BACKEND_URL}/api/v1/retailer/purchase-orders/accepted?userId=${retailerId}`;
-
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped = json.data.map((o: any) => ({
-              id: o.orderNumber || o.id,
-              rawId: o.id,
-              batchId: o.batchNumber || o.batchId,
-              buyer: o.buyerName || "Processor Corp",
-              cropName: o.cropName,
-              quantity: `${o.quantityKg} kg`,
-              totalPrice: `₹ ${o.totalAmount.toLocaleString()}`,
-              status: o.deliveryStatus === "PENDING_FARMER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
-              escrowLocked: o.escrowStatus === "LOCKED" || o.deliveryStatus === "ACCEPTED" || o.deliveryStatus === "DISPATCHED",
-              date: new Date(o.createdAt).toLocaleDateString("en-GB")
-            }));
-            setOrders(mapped);
-          }
-        }
+        const res = await orderService.retailerApi.getOrders();
+        const mapped = (res.data || []).map((o: any) => ({
+          id: o.id,
+          orderNumber: o.orderId,
+          batchId: o.items?.[0]?.cropId || "N/A",
+          buyer: "Retailer",
+          cropName: "Procured Goods",
+          quantity: "Unknown",
+          totalPrice: "₹" + o.totalAmount,
+          status: o.status,
+          escrowLocked: false,
+          date: o.date
+        }));
+        
+        setOrders(mapped);
       } catch (err) {
-        console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
+        console.error("Failed to fetch retailer orders", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrders();
-  }, [retailerId, filterStatus]);
+  }, [filterStatus]);
 
   // Action: Accept Order
   const handleAcceptOrder = async (orderId: string) => {
@@ -92,7 +81,7 @@ export default function RetailerOrders() {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
 
-      const res = await fetch(`${BACKEND_URL}/api/v1/retailer/purchase-orders/${targetId}/accept`, {
+      const res = await fetch(`${""}/api/v1/retailer/purchase-orders/${targetId}/accept`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: retailerId }),
@@ -135,7 +124,7 @@ export default function RetailerOrders() {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
 
-      const res = await fetch(`${BACKEND_URL}/api/v1/retailer/purchase-orders/${targetId}/start-delivery`, {
+      const res = await fetch(`${""}/api/v1/retailer/purchase-orders/${targetId}/start-delivery`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: retailerId, carrierName: "Standard Agri Express" }),

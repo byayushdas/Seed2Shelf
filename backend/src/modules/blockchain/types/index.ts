@@ -1,2 +1,0 @@
-// blockchain types index
-export {};

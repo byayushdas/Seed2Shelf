@@ -1,2 +1,0 @@
-// payments constants index
-export {};

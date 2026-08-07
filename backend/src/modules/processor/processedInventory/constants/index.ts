@@ -1,2 +1,0 @@
-// processedInventory constants index
-export {};

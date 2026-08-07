@@ -18,6 +18,7 @@ import {
   X,
   ArrowRight
 } from "lucide-react";
+import { walletService } from "@/services/wallet";
 
 export default function WalletDashboard() {
   const { data: session } = useSession();
@@ -54,14 +55,11 @@ export default function WalletDashboard() {
     if (!farmerId) return;
     const fetchWalletData = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/v1/farmer/wallet?userId=${farmerId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data) {
-            setTotalEarnings(json.data.availableBalance || 0);
-            setMoneyInEscrow(json.data.lockedBalance || 0);
-            setActiveEscrowsCount(json.data.activeEscrowsCount || 0);
-          }
+        const res = await walletService.farmerApi.getWallet();
+        if (res.data) {
+          setTotalEarnings(res.data.balance || 0);
+          setMoneyInEscrow(0); // Escrow not currently in simple Wallet model
+          setActiveEscrowsCount(0);
         }
       } catch (err) {
         console.warn("Error fetching farmer wallet balance:", err);

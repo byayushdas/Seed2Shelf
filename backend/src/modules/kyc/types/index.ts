@@ -1,2 +1,0 @@
-// kyc types index
-export {};

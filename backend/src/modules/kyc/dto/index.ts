@@ -1,2 +1,0 @@
-// kyc dto index
-export {};

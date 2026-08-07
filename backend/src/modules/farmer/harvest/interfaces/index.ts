@@ -1,2 +1,0 @@
-// harvest interfaces index
-export {};

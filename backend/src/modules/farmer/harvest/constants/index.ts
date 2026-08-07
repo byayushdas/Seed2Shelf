@@ -1,2 +1,0 @@
-// harvest constants index
-export {};

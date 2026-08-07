@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -150,8 +150,40 @@ export default function ProcessorReportsPage() {
   const { data: session } = useSession();
   const [timeframe, setTimeframe] = useState<Timeframe>("MONTHLY");
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const currentStats = analyticsByTimeframe[timeframe];
+  const [currentStats, setCurrentStats] = useState<AnalyticsData>(analyticsByTimeframe["MONTHLY"]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        setLoading(true);
+        const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+        const res = await fetch(`${baseUrl}/api/processor/reports`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            const data = json.data;
+            setCurrentStats({
+              produceTransformed: `${data.produceTransformed} units`,
+              totalRevenue: `₹ ${data.totalSpent}`,
+              escrowLocked: "₹ 0",
+              disputeRate: "0%",
+              successfulShipments: data.totalShipments - data.shipmentsInTransit,
+              totalOrders: data.totalOrders,
+              productBreakdown: [],
+              trendData: []
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch processor reports", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReports();
+  }, [timeframe]);
 
   const handleExportReport = (type: string) => {
     try {

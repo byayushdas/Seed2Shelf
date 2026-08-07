@@ -1,2 +1,0 @@
-// Config: storage.ts
-export {};

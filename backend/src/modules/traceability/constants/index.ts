@@ -1,2 +1,0 @@
-// traceability constants index
-export {};

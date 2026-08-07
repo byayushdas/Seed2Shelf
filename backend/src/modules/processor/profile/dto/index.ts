@@ -1,2 +1,0 @@
-// profile dto index
-export {};

@@ -1,2 +1,0 @@
-// profile types index
-export {};

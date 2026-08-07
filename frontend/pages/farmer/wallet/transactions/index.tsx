@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { walletService } from "@/services/wallet";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -33,8 +34,32 @@ export default function WalletTransactions() {
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Farmer payment transactions
-  const transactions: any[] = [];
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await walletService.farmerApi.getTransactions();
+        if (res.data) {
+          const mapped = res.data.map((tx: any) => ({
+            id: tx.id,
+            shortId: tx.transactionId.slice(-8),
+            title: "Transaction",
+            type: tx.type === "TRANSFER" ? "PAYOUT" : "ESCROW",
+            amount: tx.amount,
+            status: tx.status === "COMPLETED" ? "SUCCESS" : "PENDING",
+            date: new Date(tx.date).toLocaleDateString(),
+            buyer: tx.payerId?.name || "Unknown",
+            orderId: tx.transactionId
+          }));
+          setTransactions(mapped);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTransactions();
+  }, []);
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesFilter =

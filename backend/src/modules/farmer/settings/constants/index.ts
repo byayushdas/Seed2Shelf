@@ -1,2 +1,0 @@
-// settings constants index
-export {};

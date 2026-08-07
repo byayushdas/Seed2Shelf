@@ -1,2 +1,0 @@
-// wallet types index
-export {};

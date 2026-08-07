@@ -1,2 +1,0 @@
-// inventory dto index
-export {};

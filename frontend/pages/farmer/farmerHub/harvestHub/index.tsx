@@ -26,6 +26,7 @@ import {
   Check
 } from "lucide-react";
 import QRCode from "qrcode";
+import { productService } from "@/services/product";
 
 interface InventoryItem {
   id: string;
@@ -118,37 +119,65 @@ export default function HarvestHub() {
   // Registered Inventory Items - Clean empty state
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
+  // Load real inventory
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      const res = await productService.farmerApi.getCrops();
+      if (res.data) {
+        const items = await Promise.all(res.data.map(async (c: any) => {
+          const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://seed2shelf.com'}/trace/${c.id}`;
+          const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 2, width: 300 });
+          return {
+            id: c.id,
+            category: c.category,
+            cropName: c.cropName,
+            quantity: `${c.quantity} ${c.unit}`,
+            pricePerKg: `₹${c.pricePerKg}/kg`,
+            harvestDate: new Date(c.harvestDate).toLocaleDateString(),
+            status: c.status === "SOLD" ? "Sold" : (c.status === "AVAILABLE" ? "Unlisted" : "Listed"),
+            isSold: c.status === "SOLD",
+            qrCode: qrDataUrl,
+            traceUrl: qrUrl
+          };
+        }));
+        setInventory(items);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleRegisterHarvest = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-
-    // Generate unique Batch ID
-    const batchId = `BATCH-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    // Generate QR code for trace URL
-    const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://seed2shelf.com'}/trace/${batchId}`;
-    const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 2, width: 300 });
 
     const currentCrop = cropVariety && cropVariety !== "None"
       ? `${cropVariety} ${cropName}`
       : cropName || "Mangoes";
 
-    // Add to inventory
-    const newItem: InventoryItem = {
-      id: batchId,
-      category: cropCategory || "Fruits",
-      cropName: currentCrop,
-      quantity: `${quantity} kg`,
-      pricePerKg: `₹${price}/kg`,
-      harvestDate: formattedDateDisplay,
-      status: "Unlisted",
-      cropImage: cropImage || undefined,
-      qrCode: qrDataUrl,
-      traceUrl: qrUrl
-    };
+    try {
+      const res = await productService.farmerApi.createCrop({
+        cropName: currentCrop,
+        category: cropCategory || "Fruits",
+        quantity,
+        pricePerKg: price,
+        harvestDate: `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+        unit: "kg"
+      });
 
-    setInventory([newItem, ...inventory]);
-    setNewBatchInfo({ id: batchId, qr: qrDataUrl, url: qrUrl, cropName: currentCrop });
+      const batchId = res.data._id || res.data.id;
+      const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://seed2shelf.com'}/trace/${batchId}`;
+      const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 2, width: 300 });
+
+      setNewBatchInfo({ id: batchId, qr: qrDataUrl, url: qrUrl, cropName: currentCrop });
+      fetchInventory();
+    } catch (err) {
+      console.error(err);
+    }
 
     setTimeout(() => {
       setSubmitted(false);

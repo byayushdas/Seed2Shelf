@@ -23,6 +23,7 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
+import { productService } from "@/services/product";
 
 export interface InventoryItem {
   id: string; // e.g. RET-2026-001 or BATCH-2026-0079
@@ -48,6 +49,23 @@ export default function RetailHubPage() {
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      const res = await productService.retailerApi.getRetailHub();
+      setInventory(res.data || []);
+    } catch (e) {
+      console.error("Failed to load inventory:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInventory();
+  }, []);
 
   // Form states for Log New Retailed Item
   const [category, setCategory] = useState("Processed Grains");

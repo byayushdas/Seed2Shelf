@@ -1,2 +1,0 @@
-// inventory constants index
-export {};

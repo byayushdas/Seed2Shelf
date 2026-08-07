@@ -1,2 +1,0 @@
-// wallet constants index
-export {};

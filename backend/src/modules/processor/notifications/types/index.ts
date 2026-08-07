@@ -1,2 +1,0 @@
-// notifications types index
-export {};

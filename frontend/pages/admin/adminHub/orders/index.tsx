@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
+import { adminService } from "@/services/admin";
 import { ClipboardList, Truck, Package, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -16,11 +17,8 @@ export default function AdminOrdersOverview() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/orders?status=${statusFilter}`);
-      if (res.ok) {
-        const json = await res.json();
-        setOrders(json.data || []);
-      }
+      const json = await adminService.getOrders(statusFilter);
+      setOrders(json.data || []);
     } catch (err) {
       console.error(err);
     } finally {

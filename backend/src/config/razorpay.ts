@@ -1,2 +1,0 @@
-// Config: razorpay.ts
-export {};

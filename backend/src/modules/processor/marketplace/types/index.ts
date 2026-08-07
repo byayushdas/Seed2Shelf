@@ -1,2 +1,0 @@
-// marketplace types index
-export {};

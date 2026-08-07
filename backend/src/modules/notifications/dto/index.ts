@@ -1,2 +1,0 @@
-// notifications dto index
-export {};

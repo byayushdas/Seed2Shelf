@@ -376,6 +376,7 @@ export default function SupportPage() {
               className="p-2.5 bg-stone-900 hover:bg-stone-800 border border-stone-800 rounded-xl text-stone-400 hover:text-white transition cursor-pointer flex items-center justify-center shrink-0"
             >
               <RefreshCw className={`w-4 h-4 text-[#00d26a] ${isLoading ? "animate-spin" : ""}`} />
+            </button>
           </div>
         </div>
 

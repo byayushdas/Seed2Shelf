@@ -19,8 +19,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import FarmerHarvestCard from "@/components/processor/FarmerHarvestCard";
-import { marketplaceService } from "@/services/processor/marketplaceService";
 import { cartService } from "@/services/processor/cartService";
+import { productService } from "@/services/product";
 import { FarmerHarvestItem } from "@/types/processor";
 
 export default function RetailerMarketplace() {
@@ -37,10 +37,25 @@ export default function RetailerMarketplace() {
     const loadMarketplaceHarvests = async () => {
       setLoading(true);
       try {
-        const liveData = await marketplaceService.fetchAvailableHarvestsFromApi(searchQuery);
+        const res = await productService.retailerApi.getMarketplace(searchQuery);
+        const liveData = (res.data || []).map((p: any) => ({
+          id: p.id,
+          batchId: p.batchId,
+          cropName: p.name,
+          category: p.category,
+          quantity: p.quantity,
+          unit: p.unit,
+          pricePerUnit: p.pricePerUnit,
+          pricePerKg: `₹${p.pricePerUnit}/${p.unit || 'kg'}`,
+          harvestDate: p.date,
+          farmerName: p.supplierName,
+          farmerLocation: p.supplierLocation,
+          certifications: p.certifications,
+          traceUrl: p.traceUrl,
+        }));
         setHarvests(liveData);
       } catch (err) {
-        console.error("Failed to load marketplace harvests:", err);
+        console.error("Failed to load retailer marketplace harvests:", err);
       } finally {
         setLoading(false);
       }
@@ -56,11 +71,6 @@ export default function RetailerMarketplace() {
 
   const handleAddToCart = async (item: FarmerHarvestItem, qty: number = 50) => {
     cartService.addToCart(item, qty);
-    try {
-      await marketplaceService.addToCartApi(item.id, qty);
-    } catch (e) {
-      console.warn("Backend cart sync fallback", e);
-    }
   };
 
   const filteredHarvests = harvests.filter(item => {

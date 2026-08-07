@@ -1,2 +1,0 @@
-// processedInventory dto index
-export {};

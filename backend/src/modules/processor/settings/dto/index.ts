@@ -1,2 +1,0 @@
-// settings dto index
-export {};

@@ -1,2 +1,0 @@
-// storage types index
-export {};

@@ -17,8 +17,7 @@ import {
   Loader2
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-
+import { shipmentService } from "@/services/shipment";
 interface ShipmentItem {
   id: string;
   batchId: string;
@@ -54,40 +53,30 @@ export default function DistributorShipments() {
     const fetchShipments = async () => {
       try {
         setIsLoading(true);
-        const endpoint = mainTab === "ACTIVE" 
-          ? `${BACKEND_URL}/api/v1/distributor/shipment/active?userId=${distributorId}`
-          : `${BACKEND_URL}/api/v1/distributor/shipment/history?userId=${distributorId}`;
-
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped = json.data.map((s: any) => ({
-              id: s.shipmentId || s.id,
-              batchId: s.batchId,
-              itemName: s.itemName,
-              quantity: s.quantity,
-              value: s.value,
-              destination: s.destination,
-              dispatchedDate: s.dispatchedDate,
-              estimatedDelivery: s.estimatedDelivery || "Today, 4:30 PM",
-              status: s.status,
-              currentStep: s.currentStep || 2,
-              rejectionReason: s.rejectionReason,
-              rejectedDate: s.rejectedDate,
-              acceptedDate: s.acceptedDate
-            }));
-            setShipments(mapped);
-          }
-        }
+        const res = await shipmentService.distributorApi.getShipments();
+        const mapped = (res.data || []).map((s: any) => ({
+          id: s.id,
+          batchId: s.orderId,
+          itemName: "Crop Shipment",
+          quantity: "Unknown",
+          value: "Unknown",
+          destination: s.destination || (s.receiverName ? s.receiverName : "Unknown"),
+          dispatchedDate: new Date(s.dispatchDate || Date.now()).toLocaleDateString(),
+          estimatedDelivery: new Date(s.deliveryDate || Date.now()).toLocaleDateString(),
+          status: s.status === "PENDING" ? "IN_TRANSIT" : s.status,
+          currentStep: s.status === "DELIVERED" ? 4 : 2,
+        }));
+        setShipments(mapped);
       } catch (err) {
-        console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
+        console.error("Failed to fetch shipments:", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchShipments();
+    if (distributorId) {
+      fetchShipments();
+    }
   }, [distributorId, mainTab]);
 
   const filteredShipments = shipments.filter((shp) => {

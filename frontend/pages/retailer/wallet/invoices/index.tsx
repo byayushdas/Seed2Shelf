@@ -21,6 +21,8 @@ import {
   HelpCircle,
   FileX
 } from "lucide-react";
+import { walletService } from "@/services/wallet";
+import { useEffect } from "react";
 
 export default function WalletInvoices() {
   const { data: session } = useSession();
@@ -36,7 +38,23 @@ export default function WalletInvoices() {
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
   // Retailer Invoices
-  const initialInvoices: any[] = [];
+  const [initialInvoices, setInitialInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      try {
+        setLoading(true);
+        const res = await walletService.retailerApi.getInvoices();
+        setInitialInvoices(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch retailer invoices", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInvoices();
+  }, []);
 
   const filteredInvoices = initialInvoices.filter((inv) => {
     const matchesCategory =

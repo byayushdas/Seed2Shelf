@@ -1,2 +1,0 @@
-// processedInventory interfaces index
-export {};

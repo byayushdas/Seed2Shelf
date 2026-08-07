@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
+import { adminService } from "@/services/admin";
 import { 
   FileText, 
   AlertTriangle, 
@@ -71,12 +72,9 @@ export default function AdminReportsComplaints() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/reports?status=${statusFilter}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (Array.isArray(json.data) && json.data.length > 0) {
-          setReports(json.data);
-        }
+      const json = await adminService.getReports(statusFilter);
+      if (Array.isArray(json.data) && json.data.length > 0) {
+        setReports(json.data);
       }
     } catch (err) {
       console.warn("Express backend offline, utilizing local fallback report records.");

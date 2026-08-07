@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -20,6 +20,7 @@ import {
   History,
   Clock
 } from "lucide-react";
+import { shipmentService } from "@/services/shipment";
 
 interface ShipmentItem {
   id: string;
@@ -55,6 +56,35 @@ export default function ProcessorShipmentsPage() {
 
   // 2. OUTGOING SHIPMENTS (Processor -> Distributor)
   const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchShipments = async () => {
+      try {
+        setLoading(true);
+        const res = await shipmentService.processorApi.getShipments();
+        const mapped = (res.data || []).map((s: any) => ({
+          id: s.id,
+          batchId: s.orderId,
+          productName: "Goods",
+          quantity: "Unknown",
+          value: "Unknown",
+          sourceOrDestination: s.destination || s.origin || "Unknown",
+          senderName: s.receiverName || "Unknown",
+          dispatchedDate: new Date(s.dispatchDate || Date.now()).toLocaleDateString(),
+          estimatedDelivery: new Date(s.deliveryDate || Date.now()).toLocaleDateString(),
+          status: s.status === "PENDING" ? "IN_TRANSIT" : s.status,
+          currentStep: s.status === "DELIVERED" ? 4 : 2,
+        }));
+        setOutgoingShipments(mapped);
+      } catch (err) {
+        console.error("Failed to fetch processor shipments", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShipments();
+  }, []);
 
   const [notification, setNotification] = useState<string | null>(null);
 

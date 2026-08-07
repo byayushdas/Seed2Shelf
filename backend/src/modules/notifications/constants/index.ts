@@ -1,2 +1,0 @@
-// notifications constants index
-export {};

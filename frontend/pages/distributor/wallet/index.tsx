@@ -19,11 +19,10 @@ import {
   X,
   ArrowRight
 } from "lucide-react";
+import { walletService } from "@/services/wallet";
 
 export default function WalletDashboard() {
   const { data: session } = useSession();
-
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   const distributorId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
 
   const [totalEarnings, setTotalEarnings] = useState<number>(0);
@@ -56,14 +55,12 @@ export default function WalletDashboard() {
     if (!distributorId) return;
     const fetchWalletData = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/v1/distributor/wallet?userId=${distributorId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && json.data) {
-            setTotalEarnings(json.data.availableBalance || 0);
-            setMoneyInEscrow(json.data.lockedBalance || 0);
-            setActiveEscrowsCount(json.data.activeEscrowsCount || 0);
-          }
+        const res = await walletService.distributorApi.getWallet();
+        const data = res.data;
+        if (data) {
+          setTotalEarnings(data.balance || 0);
+          setMoneyInEscrow(0);
+          setActiveEscrowsCount(0);
         }
       } catch (err) {
         console.warn("Error fetching distributor wallet balance:", err);

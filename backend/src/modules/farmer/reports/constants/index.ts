@@ -1,2 +1,0 @@
-// reports constants index
-export {};

@@ -1,2 +1,0 @@
-// blockchain interfaces index
-export {};

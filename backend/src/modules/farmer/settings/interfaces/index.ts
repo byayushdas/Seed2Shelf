@@ -1,2 +1,0 @@
-// settings interfaces index
-export {};

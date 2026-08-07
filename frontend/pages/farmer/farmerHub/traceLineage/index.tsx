@@ -1,8 +1,24 @@
 import Head from "next/head";
 import Link from "next/link";
-import { GitBranch, ArrowLeft, ExternalLink } from "lucide-react";
+import { GitBranch, ArrowLeft, ExternalLink, Link as LinkIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { productService } from "@/services/product";
 
 export default function TraceLineage() {
+  const [crops, setCrops] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCrops = async () => {
+      try {
+        const res = await productService.farmerApi.getCrops();
+        setCrops(res.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchCrops();
+  }, []);
+
   return (
     <div className="min-h-screen relative text-white pt-6 pb-20">
       <Head>
@@ -43,6 +59,29 @@ export default function TraceLineage() {
               <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
+
+
+          {crops.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-sm font-bold text-white mb-4">Recent Crop Lineage Hashes</h3>
+              <div className="space-y-3">
+                {crops.map((crop) => (
+                  <div key={crop.id} className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-bold text-sm">{crop.cropName}</div>
+                      <div className="text-stone-400 text-xs mt-1">Batch: {crop.id}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4 text-indigo-400" />
+                      <span className="text-xs font-mono text-indigo-300">
+                        {crop.blockchainTxHash ? `${crop.blockchainTxHash.slice(0, 10)}...${crop.blockchainTxHash.slice(-8)}` : "Pending Tx"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
       </div>

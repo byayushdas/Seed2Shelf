@@ -1,2 +1,0 @@
-// notifications interfaces index
-export {};

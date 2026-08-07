@@ -18,6 +18,8 @@ import {
   HelpCircle,
   ChevronDown
 } from "lucide-react";
+import { walletService } from "@/services/wallet";
+import { useEffect } from "react";
 
 export default function WalletTransactions() {
   const { data: session } = useSession();
@@ -35,7 +37,23 @@ export default function WalletTransactions() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Retailer payment transactions
-  const transactions: any[] = [];
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+        const res = await walletService.retailerApi.getTransactions();
+        setTransactions(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch retailer transactions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, []);
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesFilter =

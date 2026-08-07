@@ -1,2 +1,0 @@
-// orders types index
-export {};

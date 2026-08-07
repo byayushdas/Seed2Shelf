@@ -1,2 +1,0 @@
-// reports types index
-export {};

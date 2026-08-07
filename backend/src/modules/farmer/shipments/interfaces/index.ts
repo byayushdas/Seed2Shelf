@@ -1,2 +1,0 @@
-// shipments interfaces index
-export {};

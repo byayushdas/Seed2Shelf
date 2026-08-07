@@ -1,2 +1,0 @@
-// payments interfaces index
-export {};

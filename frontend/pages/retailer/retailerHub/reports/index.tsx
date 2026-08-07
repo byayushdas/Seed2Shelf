@@ -131,12 +131,22 @@ export default function RetailerReports() {
     const fetchAnalytics = async () => {
       try {
         setIsLoading(true);
-        // Mock API call
-        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/reports?userId=${retailerId}&timeframe=${timeframe}`);
+        const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
+        const res = await fetch(`${baseUrl}/api/retailer/reports`);
         if (res.ok) {
           const json = await res.json();
-          if (json.success && json.data) {
-            setCurrentStats(json.data);
+          if (json.data) {
+            const data = json.data;
+            setCurrentStats({
+              produceTransformed: "0 kg", // Retailer might not transform produce
+              totalRevenue: `₹ ${data.totalSpent}`,
+              escrowLocked: "₹ 0",
+              disputeRate: "0%",
+              successfulShipments: data.totalShipments - data.shipmentsInTransit,
+              totalOrders: data.totalOrders,
+              productBreakdown: [],
+              trendData: []
+            });
           } else {
             setCurrentStats(emptyAnalytics);
           }

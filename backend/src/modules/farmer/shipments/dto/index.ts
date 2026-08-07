@@ -1,2 +1,0 @@
-// shipments dto index
-export {};

@@ -1,2 +1,0 @@
-// shipments constants index
-export {};

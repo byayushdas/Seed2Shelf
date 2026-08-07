@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { walletService } from "@/services/wallet";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -34,8 +35,33 @@ export default function WalletTransactions() {
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Distributor payment transactions
-  const transactions: any[] = [];
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const res = await walletService.distributorApi.getTransactions();
+        if (res.data) {
+          const mapped = res.data.map((tx: any) => ({
+            id: tx.transactionId,
+            shortId: tx.transactionId.slice(-8),
+            type: tx.type, // Map it to ESCROW, PAYOUT, BANK_DEBIT if needed
+            title: tx.type === "PAYMENT" ? "Purchase Payment" : "Transaction",
+            amount: `₹${tx.amount}`,
+            date: new Date(tx.date).toLocaleDateString(),
+            time: new Date(tx.date).toLocaleTimeString(),
+            buyer: "Me",
+            orderId: "ORD-" + tx.transactionId.slice(-6),
+            status: tx.status
+          }));
+          setTransactions(mapped);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTransactions();
+  }, []);
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesFilter =
