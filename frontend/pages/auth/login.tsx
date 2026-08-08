@@ -12,6 +12,19 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleRedirect = (role: string) => {
+    const r = role?.toUpperCase();
+    switch (r) {
+      case 'FARMER': router.push('/farmer/farmerHub/dashboard'); break;
+      case 'PROCESSOR': router.push('/processor/processorHub/dashboard'); break;
+      case 'ADMIN': router.push('/admin/adminHub/dashboard'); break;
+      case 'DISTRIBUTOR': router.push('/distributor/distributorHub/dashboard'); break;
+      case 'RETAILER': router.push('/retailer/retailerHub/dashboard'); break;
+      case 'CUSTOMER': router.push('/customer/marketplace'); break;
+      default: router.push('/');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -20,7 +33,7 @@ export default function LoginPage() {
     try {
       const res = await signIn("credentials", {
         redirect: false,
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
@@ -28,7 +41,10 @@ export default function LoginPage() {
         setError(res.error || "Invalid email or password credentials.");
         setLoading(false);
       } else {
-        router.push("/");
+        // Fetch session to determine role and redirect
+        const sessionRes = await fetch("/api/auth/session");
+        const sessionData = await sessionRes.json();
+        handleRedirect(sessionData?.user?.role);
       }
     } catch (err: any) {
       setError("An unexpected authentication error occurred.");

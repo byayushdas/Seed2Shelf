@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import bgImage from "@/assets/images/bg.png";
 import { 
   ShoppingCart, 
   Search, 
@@ -22,9 +23,6 @@ import {
   Edit,
   ArrowLeft
 } from "lucide-react";
-import { productService } from "@/services/product";
-import { orderService } from "@/services/order";
-import { paymentService } from "@/services/payment";
 
 export default function BuyProducts() {
   const { data: session } = useSession();
@@ -203,23 +201,30 @@ export default function BuyProducts() {
     const upstreamRole = getUpstreamRole(userRole);
 
     try {
-      const res = await productService.retailerApi.getRetailHub();
-      const items = res.data || [];
-      const mapped = items.map((p: any) => ({
-        id: p.id,
-        name: p.name || "Product",
-        quantity: parseInt(p.quantity) || 0,
-        harvestDate: p.date,
-        batchId: p.id,
-        price: p.pricePerUnit || 100,
-        image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600",
-        currentOwner: {
-          id: "retailer",
-          name: "Retailer Store",
-          role: "RETAILER"
-        }
-      }));
-      setCrops(mapped);
+      const res = await fetch(`/api/crops?isListed=true`);
+      if (res.ok) {
+        const result = await res.json();
+        const items = result.data || result;
+        
+        const mapped = (Array.isArray(items) ? items : [])
+          .filter((p: any) => p.quantity > 0)
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name || "Organic Harvest",
+            quantity: p.quantity || 0,
+            harvestDate: p.harvestDate ? new Date(p.harvestDate).toLocaleDateString() : "Recent",
+            batchId: p.batchId,
+            price: p.price || 100,
+            image: p.image || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600",
+            currentOwner: {
+              id: p.currentOwner?.id || p.currentOwnerId || "Owner",
+              name: p.currentOwner?.name || "Registered User",
+              role: p.currentOwner?.role || "FARMER"
+            }
+          }));
+
+        setCrops(mapped);
+      }
     } catch (err) {
       console.error("Error loading marketplace crops:", err);
     } finally {
@@ -305,39 +310,94 @@ export default function BuyProducts() {
     if (cart.length === 0 || !session?.user?.id) return;
 
     try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert("Failed to load Razorpay payment SDK. Check your internet connection.");
+        return;
+      }
+
       const grandTotal = cart.reduce((sum, item) => sum + item.requestedQuantity * (item.crop.price || 100), 0);
       setRequestStatus("Initiating secure Razorpay checkout order...");
 
-      // 1. Create the Seed2Shelf order first
-      const orderItems = cart.map(item => ({
-        cropId: item.crop.id,
-        quantity: item.requestedQuantity,
-        pricePerKg: item.crop.price || 100,
-        sellerId: item.crop.currentOwner.id,
-        type: "Processed" // retail sells processed generally
-      }));
-      
-      const orderRes = await orderService.customerApi.placeOrder(orderItems);
-      const newOrder = orderRes.data;
-
-      // 2. Open Razorpay Checkout via paymentService
-      paymentService.openRazorpayCheckout({
-        amount: grandTotal,
-        user: session.user,
-        items: orderItems,
-        onSuccess: async (verifyResult) => {
-          setRequestStatus("");
-          setCart([]);
-          setCheckoutStep(4);
-        },
-        onError: (err) => {
-          alert(`Payment failed: ${err.message || err.description || "Unknown error"}`);
-          setRequestStatus("");
-        }
+      const orderRes = await fetch("http://localhost:5000/api/payments/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: grandTotal })
       });
 
+      if (!orderRes.ok) {
+        throw new Error("Failed to initialize Razorpay checkout session.");
+      }
+
+      const orderData = await orderRes.json();
+      const buyerId = (session.user as any).farmerId || (session.user as any).processorId || session.user.id;
+      const buyerRole = session.user.role || "CUSTOMER";
+
+      const options = {
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Seed2Shelf Escrow Engine",
+        description: "Agricultural Crop Secure Escrow Payout",
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          setRequestStatus("Verifying transaction on the backend...");
+
+          try {
+            const verifyRes = await fetch("http://localhost:5000/api/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                buyerId,
+                buyerRole,
+                amount: grandTotal,
+                items: cart.map(item => ({
+                  productId: item.crop.id,
+                  batchId: item.crop.batchId,
+                  quantityPurchased: item.requestedQuantity,
+                  amount: item.requestedQuantity * (item.crop.price || 100),
+                  sellerId: item.crop.currentOwner.id,
+                  sellerRole: item.crop.currentOwner.role
+                }))
+              })
+            });
+
+            if (verifyRes.ok) {
+              setRequestStatus("");
+              setCart([]);
+              setCheckoutStep(4);
+            } else {
+              const errData = await verifyRes.json();
+              alert(`Verification failed: ${errData.error || "Please retry."}`);
+              setRequestStatus("Error: Verification failed.");
+            }
+          } catch (verifyErr: any) {
+            console.error("Error verifying payment signature:", verifyErr);
+            alert("Error connecting to verify endpoint.");
+            setRequestStatus("Error: Verification connection failed.");
+          }
+        },
+        prefill: {
+          name: session.user.name || "Buyer Name",
+          email: session.user.email || "buyer@seed2shelf.com",
+        },
+        theme: {
+          color: "#10b981",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        alert(`Payment failed: ${response.error.description}`);
+        setRequestStatus("");
+      });
+      
+      rzp.open();
     } catch (err: any) {
-      console.error("Checkout initiation error:", err);
+      console.error("Razorpay initiation error:", err);
       alert(`Error starting checkout: ${err.message}`);
       setRequestStatus("Error starting checkout session.");
     }
@@ -361,11 +421,7 @@ export default function BuyProducts() {
   const marketplaceTitle = userRole === "DISTRIBUTOR" ? "Distributor Marketplace" : userRole === "RETAILER" ? "Retailer Marketplace" : "Customer Marketplace";
 
   return (
-    <div 
-      className="min-h-screen text-white pt-24 pb-20 relative bg-cover bg-center bg-fixed font-sans"
-      style={{ backgroundImage: "url('/images/bg.png')" }}
-    >
-      <div className="absolute inset-0 bg-[#0c0c0d]/90 backdrop-blur-[4px]"></div>
+    <div className="min-h-screen text-white pt-24 pb-20 relative font-sans">
 
       <Head>
         <title>{marketplaceTitle} | Seed2Shelf</title>

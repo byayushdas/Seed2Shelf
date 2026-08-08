@@ -63,14 +63,13 @@ export default function ProcessorTransactionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Processor Transactions | Seed2Shelf</title>
         <meta name="description" content="Processor financial transaction records, distributor payouts, and farmer raw material settlements" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
 

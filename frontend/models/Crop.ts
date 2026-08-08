@@ -1,35 +1,27 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface ICrop extends Document {
-  farmerId: mongoose.Types.ObjectId;
+  batchId?: string;
   name: string;
-  category: string;
   quantity: number;
-  unit: string;
-  pricePerUnit: number;
   harvestDate: Date;
-  status: 'AVAILABLE' | 'RESERVED' | 'SOLD';
-  blockchainTxHash?: string;
+  farmerId: mongoose.Types.ObjectId | string;
+  currentOwnerId: mongoose.Types.ObjectId | string;
+  parentCropId?: mongoose.Types.ObjectId | string;
+  isListed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const CropSchema = new Schema<ICrop>({
-  farmerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+const CropSchema: Schema = new Schema({
+  batchId: { type: String, unique: true, sparse: true },
   name: { type: String, required: true },
-  category: { type: String, required: true },
   quantity: { type: Number, required: true },
-  unit: { type: String, default: 'kg' },
-  pricePerUnit: { type: Number, required: true },
   harvestDate: { type: Date, required: true },
-  status: { 
-    type: String, 
-    enum: ['AVAILABLE', 'RESERVED', 'SOLD'],
-    default: 'AVAILABLE' 
-  },
-  blockchainTxHash: { type: String }
+  farmerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  currentOwnerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  parentCropId: { type: Schema.Types.ObjectId, ref: 'Crop' },
+  isListed: { type: Boolean, default: true },
 }, { timestamps: true });
 
-const Crop: Model<ICrop> = mongoose.models.Crop || mongoose.model<ICrop>('Crop', CropSchema);
-
-export default Crop;
+export default (mongoose.models.Crop as Model<ICrop>) || mongoose.model<ICrop>('Crop', CropSchema);

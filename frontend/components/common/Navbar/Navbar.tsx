@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import logoIcon from "@/assets/icons/logo.png";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
@@ -40,7 +42,7 @@ const getHubConfig = (role: string) => {
           { name: "Orders", url: "/farmer/farmerHub/orders", icon: ClipboardList },
           { name: "Shipments", url: "/farmer/farmerHub/shipments", icon: Truck },
           { name: "Reports", url: "/farmer/farmerHub/reports", icon: FileText },
-          { name: "Trace Produce", url: "/home/trace-product", icon: GitBranch }
+          { name: "Trace Produce", url: "/trace-lineage", icon: GitBranch }
         ]
       };
     case "PROCESSOR":
@@ -52,7 +54,7 @@ const getHubConfig = (role: string) => {
           { name: "Marketplace", url: "/processor/processorHub/marketplace", icon: Sprout },
           { name: "Production Hub", url: "/processor/processorHub/processedInventory", icon: Package },
           { name: "Incoming Orders", url: "/processor/processorHub/orders", icon: ClipboardList },
-          { name: "Trace Produce", url: "/home/trace-product", icon: GitBranch }
+          { name: "Trace Produce", url: "/trace-lineage", icon: GitBranch }
         ]
       };
     case "ADMIN":
@@ -80,7 +82,7 @@ const getHubConfig = (role: string) => {
           { name: "Logistics Portal", hash: "", icon: Truck },
           { name: "Marketplace", url: "/customer/marketplace", icon: Package },
           { name: "In Transit Inventory", hash: "#inventory", icon: ClipboardList },
-          { name: "Trace Lineage", url: "/home/trace-product", icon: GitBranch }
+          { name: "Trace Lineage", url: "/trace-lineage", icon: GitBranch }
         ]
       };
     case "RETAILER":
@@ -91,7 +93,7 @@ const getHubConfig = (role: string) => {
           { name: "Retail Storefront", hash: "", icon: Home },
           { name: "Marketplace", url: "/customer/marketplace", icon: Package },
           { name: "Inventory", hash: "#inventory", icon: ClipboardList },
-          { name: "Trace Lineage", url: "/home/trace-product", icon: GitBranch }
+          { name: "Trace Lineage", url: "/trace-lineage", icon: GitBranch }
         ]
       };
     default:
@@ -208,26 +210,26 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16">
             
             {/* Far Left Side: SaaS Logo Image */}
-            <Link href={isAdmin ? "/admin/adminHub/dashboard" : isFarmer ? "/farmer" : isProcessor ? "/processor" : "/"} className="flex items-center group select-none">
-              <img 
-                src="/assets/icons/logo.png" 
-                alt="Seed2Shelf Logo" 
-                className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.03]" 
-              />
+            <Link href="/" className="flex items-center group select-none">
+              <div className="relative flex items-center justify-center py-2 transition-colors">
+                <Image 
+                  src={logoIcon} 
+                  alt="Seed2Shelf Logo" 
+                  className="w-auto h-9 sm:h-10 object-contain drop-shadow-[0_0_8px_rgba(0,210,106,0.3)] transition-transform duration-300 group-hover:scale-[1.03]"
+                  priority
+                />
+              </div>
             </Link>
 
             {/* Middle Navigation - Rendered ONLY when authenticated and NOT Portal User */}
             {isAuthenticated && !isPortalUser && (
               <div className="hidden md:flex items-center gap-6 text-sm font-medium">
-                <Link href="/" className={`transition-colors ${router.pathname === "/" ? "text-[#00d26a]" : "text-stone-300 hover:text-white"}`}>
-                  Home
-                </Link>
 
                 <Link href="/customer/marketplace" className={`transition-colors ${router.pathname.includes("marketplace") ? "text-[#00d26a]" : "text-stone-300 hover:text-white"}`}>
                   Marketplace
                 </Link>
 
-                <Link href="/home/trace-product" className={`transition-colors ${router.pathname.includes("trace") ? "text-[#00d26a]" : "text-stone-300 hover:text-white"}`}>
+                <Link href="/trace-lineage" className={`transition-colors ${router.pathname.includes("trace") ? "text-[#00d26a]" : "text-stone-300 hover:text-white"}`}>
                   Trace Produce
                 </Link>
 

@@ -19,7 +19,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import FarmerHarvestCard from "@/components/processor/FarmerHarvestCard";
-import { productService } from "@/services/product";
+import { marketplaceService } from "@/services/processor/marketplaceService";
 import { cartService } from "@/services/processor/cartService";
 import { FarmerHarvestItem } from "@/types/processor";
 
@@ -37,8 +37,8 @@ export default function DistributorMarketplace() {
     const loadMarketplaceHarvests = async () => {
       setLoading(true);
       try {
-        const res = await productService.distributorApi.getMarketplace(searchQuery);
-        setHarvests(res.data || []);
+        const liveData = await marketplaceService.fetchAvailableHarvestsFromApi(searchQuery);
+        setHarvests(liveData);
       } catch (err) {
         console.error("Failed to load marketplace harvests:", err);
       } finally {
@@ -56,7 +56,11 @@ export default function DistributorMarketplace() {
 
   const handleAddToCart = async (item: FarmerHarvestItem, qty: number = 50) => {
     cartService.addToCart(item, qty);
-    // Real implementation of addToCart sync is ignored here for simplicity since cart state is local
+    try {
+      await marketplaceService.addToCartApi(item.id, qty);
+    } catch (e) {
+      console.warn("Backend cart sync fallback", e);
+    }
   };
 
   const filteredHarvests = harvests.filter(item => {
@@ -70,14 +74,13 @@ export default function DistributorMarketplace() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Market Place | Distributor Portal</title>
         <meta name="description" content="Browse and procure verified processed goods directly from processors" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

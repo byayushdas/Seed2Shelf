@@ -40,20 +40,12 @@ export default function DistributorDashboard() {
     return "S2S-DST-000001";
   };
 
-  const [distributorInfo, setDistributorInfo] = useState<{
-    companyName: string;
-    location: string;
-    coordinates: string;
-    facilities: string;
-    fleetSize: string;
-    storageCapacity: string;
-    isRegistered: boolean;
-  }>({
+  const [distributorInfo, setDistributorInfo] = useState({
     companyName: "Not Registered Yet",
     location: "--",
     coordinates: "--",
-    facilities: "--",
-    fleetSize: "--",
+    operatingFacilities: "--",
+    transportFleet: "--",
     storageCapacity: "--",
     isRegistered: false
   });
@@ -96,10 +88,32 @@ export default function DistributorDashboard() {
     );
   };
 
-  const handleSaveFacilityDetails = (e: React.FormEvent) => {
+  const handleSaveFacilityDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    setDistributorInfo({ ...editForm });
-    setIsEditModalOpen(false);
+    try {
+      const payload = {
+        companyName: editForm.companyName,
+        location: editForm.location,
+        coordinates: editForm.coordinates,
+        storageCapacity: editForm.storageCapacity,
+        operatingFacilities: editForm.operatingFacilities,
+        transportFleet: editForm.transportFleet
+      };
+      
+      const res = await fetch(`/api/users/${distributorId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        setDistributorInfo({ ...editForm });
+      }
+    } catch (err) {
+      console.warn("Failed to save facility details", err);
+    } finally {
+      setIsEditModalOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -113,13 +127,29 @@ export default function DistributorDashboard() {
     const fetchDashboard = async () => {
       try {
         setIsLoading(true);
-        // We attempt to fetch distributor info, but it might not exist yet.
-        // Also fetch purchased batches.
-        const res = await fetch(`${BACKEND_URL}/api/v1/distributor/dashboard?userId=${distributorId}`);
+        // We attempt to fetch distributor info from our unified users endpoint
+        const res = await fetch(`/api/users/${distributorId}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.success && json.data) {
-             // populate if actual data exists
+          if (json.companyName) {
+            setDistributorInfo({
+              companyName: json.companyName || "Not Registered Yet",
+              location: json.location || "--",
+              coordinates: json.coordinates || "--",
+              storageCapacity: json.storageCapacity || "--",
+              operatingFacilities: json.operatingFacilities || "--",
+              transportFleet: json.transportFleet || "--",
+              isRegistered: true
+            });
+            setEditForm({
+              companyName: json.companyName || "",
+              location: json.location || "",
+              coordinates: json.coordinates || "",
+              storageCapacity: json.storageCapacity || "",
+              operatingFacilities: json.operatingFacilities || "",
+              transportFleet: json.transportFleet || "",
+              isRegistered: true
+            });
           }
         }
         
@@ -138,13 +168,11 @@ export default function DistributorDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Distributor Dashboard | Seed2Shelf</title>
         <meta name="description" content="Manage distribution batches, active orders, and shipments." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         
@@ -232,12 +260,12 @@ export default function DistributorDashboard() {
 
               <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1 md:col-span-2">
                 <span className="text-xs text-stone-400 font-bold uppercase block">Operating Facilities</span>
-                <p className="font-bold text-emerald-400 text-base">{distributorInfo.facilities}</p>
+                <p className="font-bold text-emerald-400 text-base">{distributorInfo.operatingFacilities}</p>
               </div>
 
               <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
                 <span className="text-xs text-stone-400 font-bold uppercase block">Transport Fleet Size</span>
-                <p className="font-bold text-white text-base">{distributorInfo.fleetSize}</p>
+                <p className="font-bold text-white text-base">{distributorInfo.transportFleet}</p>
               </div>
             </div>
           </div>
@@ -445,8 +473,8 @@ export default function DistributorDashboard() {
                   <label className="text-stone-400 font-bold block mb-1">Transport Fleet Size</label>
                   <input
                     type="text"
-                    value={editForm.fleetSize}
-                    onChange={(e) => setEditForm({ ...editForm, fleetSize: e.target.value })}
+                    value={editForm.transportFleet}
+                    onChange={(e) => setEditForm({ ...editForm, transportFleet: e.target.value })}
                     className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
                     required
                   />
@@ -457,8 +485,8 @@ export default function DistributorDashboard() {
                 <label className="text-stone-400 font-bold block mb-1">Operating Facilities</label>
                 <input
                   type="text"
-                  value={editForm.facilities}
-                  onChange={(e) => setEditForm({ ...editForm, facilities: e.target.value })}
+                  value={editForm.operatingFacilities}
+                  onChange={(e) => setEditForm({ ...editForm, operatingFacilities: e.target.value })}
                   className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
                   required
                 />

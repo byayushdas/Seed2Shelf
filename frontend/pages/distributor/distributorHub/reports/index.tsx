@@ -131,22 +131,12 @@ export default function DistributorReports() {
     const fetchAnalytics = async () => {
       try {
         setIsLoading(true);
-        const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
-        const res = await fetch(`${baseUrl}/api/distributor/reports`);
+        // Mock API call
+        const res = await fetch(`${BACKEND_URL}/api/v1/distributor/reports?userId=${distributorId}&timeframe=${timeframe}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.data) {
-            const data = json.data;
-            setCurrentStats({
-              produceTransformed: "Unknown",
-              totalRevenue: `₹ ${data.totalSpent}`,
-              escrowLocked: "₹ 0",
-              disputeRate: "0%",
-              successfulShipments: data.totalShipments - data.shipmentsInTransit,
-              totalOrders: data.totalOrders,
-              productBreakdown: [],
-              trendData: []
-            });
+          if (json.success && json.data) {
+            setCurrentStats(json.data);
           } else {
             setCurrentStats(emptyAnalytics);
           }
@@ -214,13 +204,11 @@ export default function DistributorReports() {
   const maxRevenue = Math.max(...(currentStats.trendData || []).map(d => d.revenue), 1);
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Earnings & Analytics | Seed2Shelf</title>
         <meta name="description" content="View distributor analytics and total revenue summaries." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

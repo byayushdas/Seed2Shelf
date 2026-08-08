@@ -339,8 +339,8 @@ export default function StakeholderProfile() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-stone-950 flex items-center justify-center text-white font-medium">Loading Profile...</div>;
-  if (!user) return <div className="min-h-screen bg-stone-950 flex items-center justify-center text-white font-medium">User not found</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-white font-medium">Loading Profile...</div>;
+  if (!user) return <div className="min-h-screen flex items-center justify-center text-white font-medium">User not found</div>;
 
   const isOwnProfile = session?.user?.id === id;
   const isFarmer = user.role === "FARMER";
@@ -367,23 +367,13 @@ export default function StakeholderProfile() {
     : "";
 
   return (
-    <div className="min-h-screen bg-stone-950 relative text-white pt-10 pb-20 z-20">
+    <div className="min-h-screen relative text-white pt-10 pb-20 z-20">
       {/* Solid Dark Background Overlay (Matching Wallet Style) */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <Head>
         <title>{user.name}'s Profile | Seed2Shelf</title>
       </Head>
       
-      {/* Background Image */}
-      <div className="fixed inset-0 z-0">
-        <img 
-          src="https://images.pexels.com/photos/1031700/pexels-photo-1031700.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1"
-          className="w-full h-full object-cover opacity-20"
-          alt=""
-        />
-        <div className="absolute inset-0 bg-[#0d0d0d]/90"></div>
-      </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
         {/* Banner Alert Message */}

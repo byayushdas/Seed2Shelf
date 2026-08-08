@@ -2,23 +2,12 @@ import Head from "next/head";
 import Link from "next/link";
 import { Package, ArrowLeft } from "lucide-react";
 
-import { useState, useEffect } from "react";
-import { productService } from "@/services/product";
-
 export default function FarmerInventory() {
-  const [inventory, setInventory] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchCrops = async () => {
-      try {
-        const res = await productService.farmerApi.getCrops();
-        setInventory(res.data || []);
-      } catch (err) {
-        console.error("Failed to fetch inventory", err);
-      }
-    };
-    fetchCrops();
-  }, []);
+  const mockInventory = [
+    { id: "batch-101", name: "Alphonso Mangoes Grade A", quantity: 500, status: "AVAILABLE", date: "July 12, 2026" },
+    { id: "batch-102", name: "Organic Basmati Grain", quantity: 1200, status: "AVAILABLE", date: "July 10, 2026" },
+    { id: "batch-103", name: "Desi Wheat Seeds", quantity: 800, status: "LOCKED IN ESCROW", date: "July 08, 2026" }
+  ];
 
   return (
     <div className="min-h-screen relative text-white pt-6 pb-20">
@@ -59,17 +48,17 @@ export default function FarmerInventory() {
                 </tr>
               </thead>
               <tbody>
-                {inventory.map((item) => (
+                {mockInventory.map((item) => (
                   <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="py-4 font-mono font-bold text-white text-xs">{item.id}</td>
-                    <td className="py-4 text-stone-200 font-bold">{item.cropName}</td>
-                    <td className="py-4 text-stone-300">{item.quantity} {item.unit}</td>
-                    <td className="py-4 text-stone-400 text-xs">{new Date(item.harvestDate).toLocaleDateString()}</td>
+                    <td className="py-4 text-stone-200 font-bold">{item.name}</td>
+                    <td className="py-4 text-stone-300">{item.quantity} kg</td>
+                    <td className="py-4 text-stone-400 text-xs">{item.date}</td>
                     <td className="py-4">
                       <span className={`text-[10px] px-2.5 py-1 rounded-full font-black border ${
                         item.status === 'AVAILABLE' 
                           ? 'bg-[#00d26a]/15 text-[#00d26a] border-[#00d26a]/20' 
-                          : 'bg-indigo-500/15 text-indigo-400 border-indigo-500/20'
+                          : 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20'
                       }`}>
                         {item.status}
                       </span>

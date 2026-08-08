@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import { adminService } from "@/services/admin";
 import { 
   FileText, 
   AlertTriangle, 
@@ -72,9 +71,12 @@ export default function AdminReportsComplaints() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const json = await adminService.getReports(statusFilter);
-      if (Array.isArray(json.data) && json.data.length > 0) {
-        setReports(json.data);
+      const res = await fetch(`${BACKEND_URL}/api/v1/admin/reports?status=${statusFilter}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.data) && json.data.length > 0) {
+          setReports(json.data);
+        }
       }
     } catch (err) {
       console.warn("Express backend offline, utilizing local fallback report records.");
@@ -130,7 +132,7 @@ export default function AdminReportsComplaints() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Reports & Complaints | Admin Hub | Seed2Shelf</title>
       </Head>

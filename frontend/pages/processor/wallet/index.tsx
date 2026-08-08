@@ -94,14 +94,13 @@ export default function ProcessorWalletPage() {
   const currentMetrics = summaryMetrics[timeFilter];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Processor Wallet | Seed2Shelf</title>
         <meta name="description" content="Processor corporate wallet, investment summary, and processed product revenue analytics" />
       </Head>
 
       {/* Solid Dark Background Overlay to cover background video */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
 

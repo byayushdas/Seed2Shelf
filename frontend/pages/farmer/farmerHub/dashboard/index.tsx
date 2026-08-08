@@ -75,34 +75,42 @@ export default function FarmerDashboard() {
     const fetchDashboard = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch(`${BACKEND_URL}/api/v1/farmer/dashboard?userId=${farmerId}`);
+        const res = await fetch(`/api/users/${farmerId}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.success && json.data) {
-            if (json.data.farmerId) {
-              setDisplayFarmerId(json.data.farmerId);
-            }
-            const { farm } = json.data;
-            if (farm && farm.farmName) {
-              const lat = farm.latitude;
-              const lng = farm.longitude;
-              const mapsUrl = farm.googleMapsUrl || (lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(farm.farmLocation || "")}`);
-              
-              setFarmInfo({
-                farmName: farm.farmName,
-                farmLocation: farm.farmLocation || "--",
-                coordinates: lat && lng ? `${lat}° N, ${lng}° E` : "--",
-                latitude: lat,
-                longitude: lng,
-                googleMapsUrl: mapsUrl,
-                landArea: farm.totalLandArea ? `${farm.totalLandArea} ${farm.landAreaUnit || 'Acres'}` : "--",
-                mainCrops: Array.isArray(farm.mainCultivatedCrops) && farm.mainCultivatedCrops.length > 0
-                  ? farm.mainCultivatedCrops.join(", ")
-                  : "--",
-                farmingType: farm.farmingPractice || "--",
-                isRegistered: true
-              });
-            }
+          if (json.farmName) {
+            const lat = json.latitude;
+            const lng = json.longitude;
+            const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(json.farmLocation || "")}`;
+            
+            setFarmInfo({
+              farmName: json.farmName,
+              farmLocation: json.farmLocation || "--",
+              coordinates: lat && lng ? `${lat}° N, ${lng}° E` : "--",
+              latitude: lat,
+              longitude: lng,
+              googleMapsUrl: mapsUrl,
+              landArea: json.totalLandArea ? `${json.totalLandArea} Acres` : "--",
+              mainCrops: Array.isArray(json.mainCultivatedCrops) 
+                ? json.mainCultivatedCrops.join(", ") 
+                : (typeof json.mainCultivatedCrops === 'string' ? json.mainCultivatedCrops : ""),
+              farmingType: json.farmingPractice || "--",
+              isRegistered: true
+            });
+            
+            setEditForm({
+              farmName: json.farmName || "",
+              farmLocation: json.farmLocation || "",
+              coordinates: lat && lng ? `${lat}° N, ${lng}° E` : "",
+              latitude: lat || 0,
+              longitude: lng || 0,
+              landArea: json.totalLandArea || "",
+              mainCrops: Array.isArray(json.mainCultivatedCrops) 
+                ? json.mainCultivatedCrops.join(", ") 
+                : (typeof json.mainCultivatedCrops === 'string' ? json.mainCultivatedCrops : ""),
+              farmingType: json.farmingPractice || "",
+              isRegistered: true
+            });
           }
         }
       } catch (err) {
@@ -168,29 +176,24 @@ export default function FarmerDashboard() {
         mainCultivatedCrops: cropsArray,
       };
 
-      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/dashboard`, {
+      const res = await fetch(`/api/users/${farmerId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        const json = await res.json();
-        if (json.data) {
-          const farm = json.data;
-          const lat = farm.latitude;
-          const lng = farm.longitude;
-          const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(farm.farmLocation || "")}`;
-          
-          setFarmInfo({
-            ...editForm,
-            googleMapsUrl: mapsUrl,
-          });
-        } else {
-          setFarmInfo({ ...editForm });
-        }
+        const lat = editForm.latitude;
+        const lng = editForm.longitude;
+        const mapsUrl = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(editForm.farmLocation || "")}`;
+        
+        setFarmInfo({
+          ...editForm,
+          googleMapsUrl: mapsUrl,
+          isRegistered: true
+        });
       } else {
-        setFarmInfo({ ...editForm });
+        setFarmInfo({ ...editForm, isRegistered: true });
       }
     } catch (err) {
       console.warn("Backend update error, saving locally", err);
@@ -202,13 +205,11 @@ export default function FarmerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Farmer Dashboard | Seed2Shelf</title>
         <meta name="description" content="Manage farm produce logistics, inventory escrow, and blockchain batch lineage." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

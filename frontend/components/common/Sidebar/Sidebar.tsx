@@ -125,20 +125,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   PROCESSOR NAVIGATION
                  ========================================================== */
               <>
-                {/* 1. Home */}
-                <Link
-                  href="/processor"
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    router.pathname === "/processor"
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Home className="w-4 h-4 text-[#00d26a]" />
-                  <span>Home</span>
-                </Link>
-
                 {/* 2. Profile */}
                 <Link
                   href="/processor/profile"
@@ -152,72 +138,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
                 </Link>
-
-                {/* 3. Wallet Dropdown */}
-                <div>
-                  <button
-                    onClick={() => setWalletExpanded(!walletExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <WalletIcon className="w-4 h-4 text-[#00d26a]" />
-                      <span>Wallet</span>
-                    </div>
-                    {walletExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
-                    ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {walletExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
-                      >
-                        <Link
-                          href="/processor/wallet"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/processor/wallet")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <WalletIcon className="w-3.5 h-3.5" />
-                          <span>Wallet Balance</span>
-                        </Link>
-                        <Link
-                          href="/processor/wallet/transactions"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/processor/wallet/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <ArrowLeftRight className="w-3.5 h-3.5" />
-                          <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/processor/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/processor/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
-                        </Link>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
 
                 {/* 4. Processor Hub Dropdown */}
                 <div>
@@ -316,22 +236,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <FileText className="w-3.5 h-3.5" />
                           <span>Reports</span>
                         </Link>
-                        <Link
-                          href="/home/trace-product"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/home/trace-product")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <GitBranch className="w-3.5 h-3.5" />
-                          <span>Trace Produce</span>
-                        </Link>
+                        
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Trace Lineage */}
+                <Link
+                  href="/trace-lineage"
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                    isActive("/trace-lineage")
+                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
+                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <span>Trace Lineage</span>
+                </Link>
 
                 {/* 5. Support */}
                 <Link
@@ -352,20 +275,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   DISTRIBUTOR NAVIGATION
                  ========================================================== */
               <>
-                {/* 1. Home */}
-                <Link
-                  href="/distributor"
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    router.pathname === "/distributor"
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Home className="w-4 h-4 text-[#00d26a]" />
-                  <span>Home</span>
-                </Link>
-
                 {/* 2. Profile */}
                 <Link
                   href="/distributor/profile"
@@ -379,72 +288,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
                 </Link>
-
-                {/* 3. Wallet Dropdown */}
-                <div>
-                  <button
-                    onClick={() => setWalletExpanded(!walletExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <WalletIcon className="w-4 h-4 text-[#00d26a]" />
-                      <span>Wallet</span>
-                    </div>
-                    {walletExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
-                    ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {walletExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
-                      >
-                        <Link
-                          href="/distributor/wallet"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/distributor/wallet")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <WalletIcon className="w-3.5 h-3.5" />
-                          <span>Wallet Balance</span>
-                        </Link>
-                        <Link
-                          href="/distributor/wallet/transactions"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/distributor/wallet/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <ArrowLeftRight className="w-3.5 h-3.5" />
-                          <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/distributor/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/distributor/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
-                        </Link>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
 
                 {/* 4. Distributor Hub Dropdown */}
                 <div>
@@ -543,22 +386,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <FileText className="w-3.5 h-3.5" />
                           <span>Reports</span>
                         </Link>
-                        <Link
-                          href="/home/trace-product"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/home/trace-product")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <GitBranch className="w-3.5 h-3.5" />
-                          <span>Trace Produce</span>
-                        </Link>
+                        
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Trace Lineage */}
+                <Link
+                  href="/trace-lineage"
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                    isActive("/trace-lineage")
+                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
+                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <span>Trace Lineage</span>
+                </Link>
 
                 {/* 5. Support */}
                 <Link
@@ -579,20 +425,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   RETAILER NAVIGATION
                  ========================================================== */
               <>
-                {/* 1. Home */}
-                <Link
-                  href="/retailer"
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    router.pathname === "/retailer"
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Home className="w-4 h-4 text-[#00d26a]" />
-                  <span>Home</span>
-                </Link>
-
                 {/* 2. Profile */}
                 <Link
                   href="/retailer/profile"
@@ -606,72 +438,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
                 </Link>
-
-                {/* 3. Wallet Dropdown */}
-                <div>
-                  <button
-                    onClick={() => setWalletExpanded(!walletExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <WalletIcon className="w-4 h-4 text-[#00d26a]" />
-                      <span>Wallet</span>
-                    </div>
-                    {walletExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
-                    ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {walletExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
-                      >
-                        <Link
-                          href="/retailer/wallet"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/wallet")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <WalletIcon className="w-3.5 h-3.5" />
-                          <span>Wallet Balance</span>
-                        </Link>
-                        <Link
-                          href="/retailer/wallet/transactions"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/wallet/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <ArrowLeftRight className="w-3.5 h-3.5" />
-                          <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/retailer/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
-                        </Link>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
 
                 {/* 4. Retailer Hub Dropdown */}
                 <div>
@@ -770,22 +536,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <FileText className="w-3.5 h-3.5" />
                           <span>Reports</span>
                         </Link>
-                        <Link
-                          href="/home/trace-product"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/home/trace-product")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <GitBranch className="w-3.5 h-3.5" />
-                          <span>Trace Produce</span>
-                        </Link>
+                        
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Trace Lineage */}
+                <Link
+                  href="/trace-lineage"
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                    isActive("/trace-lineage")
+                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
+                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <span>Trace Lineage</span>
+                </Link>
 
                 {/* 5. Support */}
                 <Link
@@ -806,20 +575,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   FARMER NAVIGATION
                  ========================================================== */
               <>
-                {/* 1. Home */}
-                <Link
-                  href="/farmer"
-                  onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
-                    isActive("/farmer")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <Home className="w-4 h-4 text-[#00d26a]" />
-                  <span>Home</span>
-                </Link>
-
                 {/* 2. Profile */}
                 <Link
                   href="/farmer/profile"
@@ -833,72 +588,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
                 </Link>
-
-                {/* 3. Wallet Dropdown */}
-                <div>
-                  <button
-                    onClick={() => setWalletExpanded(!walletExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
-                  >
-                    <div className="flex items-center gap-3">
-                      <WalletIcon className="w-4 h-4 text-[#00d26a]" />
-                      <span>Wallet</span>
-                    </div>
-                    {walletExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
-                    ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {walletExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
-                      >
-                        <Link
-                          href="/farmer/wallet"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/farmer/wallet")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <WalletIcon className="w-3.5 h-3.5" />
-                          <span>Wallet Balance</span>
-                        </Link>
-                        <Link
-                          href="/farmer/wallet/transactions"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/farmer/wallet/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <ArrowLeftRight className="w-3.5 h-3.5" />
-                          <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/farmer/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/farmer/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Receipt className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
-                        </Link>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
 
                 {/* 4. Farmer Hub Dropdown */}
                 <div>
@@ -985,22 +674,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <FileText className="w-3.5 h-3.5" />
                           <span>Reports</span>
                         </Link>
-                        <Link
-                          href="/home/trace-product"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/home/trace-product")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <GitBranch className="w-3.5 h-3.5" />
-                          <span>Trace Produce</span>
-                        </Link>
+                        
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* Trace Lineage */}
+                <Link
+                  href="/trace-lineage"
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                    isActive("/trace-lineage")
+                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
+                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <span>Trace Lineage</span>
+                </Link>
 
                 {/* 5. Support */}
                 <Link

@@ -285,9 +285,8 @@ export default function RetailerProfilePage() {
   const hasRealRating = user && (user.averageRating !== undefined && user.averageRating !== null && user.reviewCount);
 
   return (
-    <div className="min-h-screen bg-stone-950 relative text-white pt-6 pb-20 z-20">
+    <div className="min-h-screen relative text-white pt-6 pb-20 z-20">
       {/* Solid Dark Background Overlay (Matching Wallet Style) */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <Head>
         <title>{name || "Retailer Profile"} | Seed2Shelf</title>
@@ -298,7 +297,7 @@ export default function RetailerProfilePage() {
         {message.text && (
           <div className={`p-4 rounded-2xl border text-sm font-bold flex items-center gap-2 ${
             message.type === "success" 
-              ? "bg-green-500/10 border-green-500/20 text-[#00d26a]" 
+              ? "bg-red-500/10 border-red-500/20 text-red-500" 
               : "bg-red-500/10 border-red-500/20 text-red-400"
           }`}>
             <CheckCircle2 className="w-5 h-5" />

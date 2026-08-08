@@ -19,10 +19,11 @@ import {
   X,
   ArrowRight
 } from "lucide-react";
-import { walletService } from "@/services/wallet";
 
 export default function WalletDashboard() {
   const { data: session } = useSession();
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   const distributorId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
 
   const [totalEarnings, setTotalEarnings] = useState<number>(0);
@@ -55,12 +56,14 @@ export default function WalletDashboard() {
     if (!distributorId) return;
     const fetchWalletData = async () => {
       try {
-        const res = await walletService.distributorApi.getWallet();
-        const data = res.data;
-        if (data) {
-          setTotalEarnings(data.balance || 0);
-          setMoneyInEscrow(0);
-          setActiveEscrowsCount(0);
+        const res = await fetch(`${BACKEND_URL}/api/v1/distributor/wallet?userId=${distributorId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setTotalEarnings(json.data.availableBalance || 0);
+            setMoneyInEscrow(json.data.lockedBalance || 0);
+            setActiveEscrowsCount(json.data.activeEscrowsCount || 0);
+          }
         }
       } catch (err) {
         console.warn("Error fetching distributor wallet balance:", err);
@@ -88,14 +91,13 @@ export default function WalletDashboard() {
   const sampleProductEarnings: any[] = [];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Distributor Wallet | Seed2Shelf</title>
         <meta name="description" content="Simple, trustworthy distributor wallet and escrow center" />
       </Head>
 
       {/* Solid Dark Background Overlay to cover white home page background video */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
 

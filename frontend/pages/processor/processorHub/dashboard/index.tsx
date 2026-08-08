@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -81,21 +81,77 @@ export default function ProcessorDashboard() {
     );
   };
 
-  const handleSaveFacilityDetails = (e: React.FormEvent) => {
+  const handleSaveFacilityDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFacilityInfo({ ...editForm });
-    setIsEditModalOpen(false);
+    try {
+      const payload = {
+        facilityName: editForm.facilityName,
+        facilityLocation: editForm.facilityLocation,
+        coordinates: editForm.coordinates,
+        processingCapacity: editForm.processingCapacity,
+        mainProcessedProducts: editForm.mainProducts,
+        complianceStandards: editForm.processingPractice
+      };
+      
+      const res = await fetch(`/api/users/${processorId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        setFacilityInfo({ ...editForm });
+      }
+    } catch (err) {
+      console.warn("Failed to save facility details", err);
+    } finally {
+      setIsEditModalOpen(false);
+    }
   };
 
+  useEffect(() => {
+    if (!processorId) return;
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch(`/api/users/${processorId}`, { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.facilityName) {
+            setFacilityInfo({
+              facilityName: json.facilityName || "Not Registered Yet",
+              facilityLocation: json.facilityLocation || "--",
+              coordinates: json.coordinates || "--",
+              processingCapacity: json.processingCapacity || "--",
+              mainProducts: json.mainProcessedProducts || "--",
+              processingPractice: json.complianceStandards || "--",
+              isRegistered: true
+            });
+            setEditForm({
+              facilityName: json.facilityName || "",
+              facilityLocation: json.facilityLocation || "",
+              coordinates: json.coordinates || "",
+              processingCapacity: json.processingCapacity || "",
+              mainProducts: json.mainProcessedProducts || "",
+              processingPractice: json.complianceStandards || "",
+              isRegistered: true
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Backend API offline or unreachable, utilizing default dashboard state", err);
+      }
+    };
+    fetchDashboard();
+  }, [processorId]);
+
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Processor Dashboard | Seed2Shelf</title>
         <meta name="description" content="Manage processing facility operations, raw material marketplace, and processed goods inventory." />
       </Head>
 
       {/* Solid Dark Background Overlay to match Wallet & Farmer Dashboard theme */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

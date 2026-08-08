@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -17,7 +17,6 @@ import {
   Check,
   ArrowRight
 } from "lucide-react";
-import { orderService } from "@/services/order";
 
 interface DistributorOrder {
   id: string;
@@ -34,34 +33,8 @@ interface DistributorOrder {
 export default function ProcessorOrdersPage() {
   const { data: session } = useSession();
   const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED">("ALL");
-  const [orders, setOrders] = useState<DistributorOrder[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const res = await orderService.processorApi.getOrders();
-        const mapped = (res.data || []).map((o: any) => ({
-          id: o.id,
-          batchId: o.items?.[0]?.cropId || "N/A",
-          productName: "Processed Goods",
-          category: "Processing",
-          buyer: "Buyer",
-          quantity: "Unknown",
-          totalPrice: "₹" + o.totalAmount,
-          date: o.date,
-          status: o.status
-        }));
-        setOrders(mapped);
-      } catch (err) {
-        console.error("Failed to fetch processor orders", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
-  }, []);
+  const [orders, setOrders] = useState<DistributorOrder[]>([]);
 
   const handleAcceptOrder = (id: string) => {
     setOrders((prev) =>
@@ -82,14 +55,13 @@ export default function ProcessorOrdersPage() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Distributor Orders | Seed2Shelf Processor</title>
         <meta name="description" content="Processor B2B Order Management for Distributor Purchase Orders" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

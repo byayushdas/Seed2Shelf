@@ -178,13 +178,11 @@ export default function FarmerOrders() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Purchase Orders | Seed2Shelf Farmer</title>
         <meta name="description" content="Review purchase offers and manage blockchain escrow delivery." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

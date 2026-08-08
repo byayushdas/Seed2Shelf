@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import { adminService } from "@/services/admin";
 import { 
   Users, 
   Search, 
@@ -39,8 +38,12 @@ export default function AdminUserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const json = await adminService.getUsers(roleFilter, statusFilter, searchTerm);
-      setUsers(json.data || []);
+      const url = `${BACKEND_URL}/api/v1/admin/users?role=${roleFilter}&status=${statusFilter}&search=${encodeURIComponent(searchTerm)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        setUsers(json.data || []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -56,19 +59,29 @@ export default function AdminUserManagement() {
     try {
       setActionLoading(true);
       setMessage(null);
-      await adminService.updateUserStatus(userId, newStatus, `Admin status update to ${newStatus}`);
-      setMessage({ type: "success", text: `User account status updated to ${newStatus} successfully.` });
-      fetchUsers();
-      setSelectedUser(null);
-    } catch (err: any) {
-      setMessage({ type: "error", text: err.message || "Server error occurred while updating status." });
+      const res = await fetch(`${BACKEND_URL}/api/v1/admin/users/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, status: newStatus, reason: `Admin status update to ${newStatus}` }),
+      });
+
+      if (res.ok) {
+        setMessage({ type: "success", text: `User account status updated to ${newStatus} successfully.` });
+        fetchUsers();
+        setSelectedUser(null);
+      } else {
+        const json = await res.json();
+        setMessage({ type: "error", text: json.message || "Failed to update status." });
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: "Server error occurred while updating status." });
     } finally {
       setActionLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>User Management | Seed2Shelf</title>
       </Head>

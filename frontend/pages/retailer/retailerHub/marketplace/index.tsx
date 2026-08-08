@@ -19,8 +19,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import FarmerHarvestCard from "@/components/processor/FarmerHarvestCard";
+import { marketplaceService } from "@/services/processor/marketplaceService";
 import { cartService } from "@/services/processor/cartService";
-import { productService } from "@/services/product";
 import { FarmerHarvestItem } from "@/types/processor";
 
 export default function RetailerMarketplace() {
@@ -37,25 +37,10 @@ export default function RetailerMarketplace() {
     const loadMarketplaceHarvests = async () => {
       setLoading(true);
       try {
-        const res = await productService.retailerApi.getMarketplace(searchQuery);
-        const liveData = (res.data || []).map((p: any) => ({
-          id: p.id,
-          batchId: p.batchId,
-          cropName: p.name,
-          category: p.category,
-          quantity: p.quantity,
-          unit: p.unit,
-          pricePerUnit: p.pricePerUnit,
-          pricePerKg: `₹${p.pricePerUnit}/${p.unit || 'kg'}`,
-          harvestDate: p.date,
-          farmerName: p.supplierName,
-          farmerLocation: p.supplierLocation,
-          certifications: p.certifications,
-          traceUrl: p.traceUrl,
-        }));
+        const liveData = await marketplaceService.fetchAvailableHarvestsFromApi(searchQuery);
         setHarvests(liveData);
       } catch (err) {
-        console.error("Failed to load retailer marketplace harvests:", err);
+        console.error("Failed to load marketplace harvests:", err);
       } finally {
         setLoading(false);
       }
@@ -71,6 +56,11 @@ export default function RetailerMarketplace() {
 
   const handleAddToCart = async (item: FarmerHarvestItem, qty: number = 50) => {
     cartService.addToCart(item, qty);
+    try {
+      await marketplaceService.addToCartApi(item.id, qty);
+    } catch (e) {
+      console.warn("Backend cart sync fallback", e);
+    }
   };
 
   const filteredHarvests = harvests.filter(item => {
@@ -84,14 +74,13 @@ export default function RetailerMarketplace() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Market Place | Retailer Portal</title>
         <meta name="description" content="Browse and procure verified goods directly from distributors" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

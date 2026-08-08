@@ -41,19 +41,11 @@ export default function RetailerDashboard() {
     return "S2S-RET-000001";
   };
 
-  const [retailerInfo, setRetailerInfo] = useState<{
-    storeName: string;
-    storeLocation: string;
-    coordinates: string;
-    storeType: string;
-    shelfCapacity: string;
-    employeeCount: string;
-    isRegistered: boolean;
-  }>({
+  const [retailerInfo, setRetailerInfo] = useState({
     storeName: "Not Registered Yet",
     storeLocation: "--",
     coordinates: "--",
-    storeType: "--",
+    storeTypeFocus: "--",
     shelfCapacity: "--",
     employeeCount: "--",
     isRegistered: false
@@ -97,10 +89,32 @@ export default function RetailerDashboard() {
     );
   };
 
-  const handleSaveFacilityDetails = (e: React.FormEvent) => {
+  const handleSaveFacilityDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRetailerInfo({ ...editForm });
-    setIsEditModalOpen(false);
+    try {
+      const payload = {
+        storeName: editForm.storeName,
+        storeLocation: editForm.storeLocation,
+        coordinates: editForm.coordinates,
+        shelfCapacity: editForm.shelfCapacity,
+        storeTypeFocus: editForm.storeTypeFocus,
+        employeeCount: editForm.employeeCount
+      };
+      
+      const res = await fetch(`/api/users/${retailerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        setRetailerInfo({ ...editForm });
+      }
+    } catch (err) {
+      console.warn("Failed to save facility details", err);
+    } finally {
+      setIsEditModalOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -114,12 +128,29 @@ export default function RetailerDashboard() {
     const fetchDashboard = async () => {
       try {
         setIsLoading(true);
-        // We attempt to fetch retailer info
-        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/dashboard?userId=${retailerId}`);
+        // We attempt to fetch retailer info from our unified users endpoint
+        const res = await fetch(`/api/users/${retailerId}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.success && json.data) {
-             // populate if actual data exists
+          if (json.storeName) {
+            setRetailerInfo({
+              storeName: json.storeName || "Not Registered Yet",
+              storeLocation: json.storeLocation || "--",
+              coordinates: json.coordinates || "--",
+              shelfCapacity: json.shelfCapacity || "--",
+              storeTypeFocus: json.storeTypeFocus || "--",
+              employeeCount: json.employeeCount || "--",
+              isRegistered: true
+            });
+            setEditForm({
+              storeName: json.storeName || "",
+              storeLocation: json.storeLocation || "",
+              coordinates: json.coordinates || "",
+              shelfCapacity: json.shelfCapacity || "",
+              storeTypeFocus: json.storeTypeFocus || "",
+              employeeCount: json.employeeCount || "",
+              isRegistered: true
+            });
           }
         }
         
@@ -138,13 +169,11 @@ export default function RetailerDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Retailer Dashboard | Seed2Shelf</title>
         <meta name="description" content="Manage store inventory, incoming shipments, and retail sales." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         
@@ -232,7 +261,7 @@ export default function RetailerDashboard() {
 
               <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1 md:col-span-2">
                 <span className="text-xs text-stone-400 font-bold uppercase block">Store Type / Focus</span>
-                <p className="font-bold text-emerald-400 text-base">{retailerInfo.storeType}</p>
+                <p className="font-bold text-emerald-400 text-base">{retailerInfo.storeTypeFocus}</p>
               </div>
 
               <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
@@ -457,8 +486,8 @@ export default function RetailerDashboard() {
                 <label className="text-stone-400 font-bold block mb-1">Store Type / Focus</label>
                 <input
                   type="text"
-                  value={editForm.storeType}
-                  onChange={(e) => setEditForm({ ...editForm, storeType: e.target.value })}
+                  value={editForm.storeTypeFocus}
+                  onChange={(e) => setEditForm({ ...editForm, storeTypeFocus: e.target.value })}
                   className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
                   required
                 />

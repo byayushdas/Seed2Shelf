@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -20,7 +20,6 @@ import {
   History,
   Clock
 } from "lucide-react";
-import { shipmentService } from "@/services/shipment";
 
 interface ShipmentItem {
   id: string;
@@ -56,35 +55,6 @@ export default function ProcessorShipmentsPage() {
 
   // 2. OUTGOING SHIPMENTS (Processor -> Distributor)
   const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchShipments = async () => {
-      try {
-        setLoading(true);
-        const res = await shipmentService.processorApi.getShipments();
-        const mapped = (res.data || []).map((s: any) => ({
-          id: s.id,
-          batchId: s.orderId,
-          productName: "Goods",
-          quantity: "Unknown",
-          value: "Unknown",
-          sourceOrDestination: s.destination || s.origin || "Unknown",
-          senderName: s.receiverName || "Unknown",
-          dispatchedDate: new Date(s.dispatchDate || Date.now()).toLocaleDateString(),
-          estimatedDelivery: new Date(s.deliveryDate || Date.now()).toLocaleDateString(),
-          status: s.status === "PENDING" ? "IN_TRANSIT" : s.status,
-          currentStep: s.status === "DELIVERED" ? 4 : 2,
-        }));
-        setOutgoingShipments(mapped);
-      } catch (err) {
-        console.error("Failed to fetch processor shipments", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShipments();
-  }, []);
 
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -164,14 +134,13 @@ export default function ProcessorShipmentsPage() {
   const historyCount = currentList.filter(s => s.status !== "IN_TRANSIT").length;
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Shipments & Logistics | Seed2Shelf Processor</title>
         <meta name="description" content="Processor B2B incoming farmer deliveries and outgoing distributor shipments." />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

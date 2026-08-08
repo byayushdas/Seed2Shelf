@@ -17,7 +17,8 @@ import {
   Loader2
 } from "lucide-react";
 
-import { shipmentService } from "@/services/shipment";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
 interface ShipmentItem {
   id: string;
   batchId: string;
@@ -53,30 +54,40 @@ export default function DistributorShipments() {
     const fetchShipments = async () => {
       try {
         setIsLoading(true);
-        const res = await shipmentService.distributorApi.getShipments();
-        const mapped = (res.data || []).map((s: any) => ({
-          id: s.id,
-          batchId: s.orderId,
-          itemName: "Crop Shipment",
-          quantity: "Unknown",
-          value: "Unknown",
-          destination: s.destination || (s.receiverName ? s.receiverName : "Unknown"),
-          dispatchedDate: new Date(s.dispatchDate || Date.now()).toLocaleDateString(),
-          estimatedDelivery: new Date(s.deliveryDate || Date.now()).toLocaleDateString(),
-          status: s.status === "PENDING" ? "IN_TRANSIT" : s.status,
-          currentStep: s.status === "DELIVERED" ? 4 : 2,
-        }));
-        setShipments(mapped);
+        const endpoint = mainTab === "ACTIVE" 
+          ? `${BACKEND_URL}/api/v1/distributor/shipment/active?userId=${distributorId}`
+          : `${BACKEND_URL}/api/v1/distributor/shipment/history?userId=${distributorId}`;
+
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const mapped = json.data.map((s: any) => ({
+              id: s.shipmentId || s.id,
+              batchId: s.batchId,
+              itemName: s.itemName,
+              quantity: s.quantity,
+              value: s.value,
+              destination: s.destination,
+              dispatchedDate: s.dispatchedDate,
+              estimatedDelivery: s.estimatedDelivery || "Today, 4:30 PM",
+              status: s.status,
+              currentStep: s.currentStep || 2,
+              rejectionReason: s.rejectionReason,
+              rejectedDate: s.rejectedDate,
+              acceptedDate: s.acceptedDate
+            }));
+            setShipments(mapped);
+          }
+        }
       } catch (err) {
-        console.error("Failed to fetch shipments:", err);
+        console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (distributorId) {
-      fetchShipments();
-    }
+    fetchShipments();
   }, [distributorId, mainTab]);
 
   const filteredShipments = shipments.filter((shp) => {
@@ -90,13 +101,11 @@ export default function DistributorShipments() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Shipments & Logistics | Seed2Shelf Distributor</title>
         <meta name="description" content="Logistics tracking for distributor harvest dispatches." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-6">
         

@@ -18,7 +18,8 @@ import {
   Loader2
 } from "lucide-react";
 
-import { orderService } from "@/services/order";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
 interface OrderItem {
   id: string;
   orderNumber?: string;
@@ -50,35 +51,40 @@ export default function DistributorOrders() {
     const fetchOrders = async () => {
       try {
         setIsLoading(true);
-        const res = await orderService.distributorApi.getOrders();
-        
-        // Map backend orders to frontend OrderItem interface if needed
-        const mappedOrders = (res.data || []).map((o: any) => ({
-          id: o.id,
-          orderNumber: o.orderId,
-          batchId: o.items?.[0]?.cropId || "N/A",
-          buyer: "Me",
-          sellerName: o.sellerName,
-          cropName: "Purchased Crop",
-          quantity: o.items?.[0]?.quantity + " units",
-          totalPrice: "₹" + o.totalAmount,
-          status: o.status,
-          escrowLocked: true,
-          date: o.date
-        }));
+        const endpoint = filterStatus === "ALL" 
+          ? `${BACKEND_URL}/api/v1/distributor/purchase-orders?userId=${distributorId}`
+          : filterStatus === "PENDING"
+          ? `${BACKEND_URL}/api/v1/distributor/purchase-orders/pending?userId=${distributorId}`
+          : `${BACKEND_URL}/api/v1/distributor/purchase-orders/accepted?userId=${distributorId}`;
 
-        setOrders(mappedOrders);
-      } catch (error) {
-        console.error("Failed to load orders:", error);
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const mapped = json.data.map((o: any) => ({
+              id: o.orderNumber || o.id,
+              rawId: o.id,
+              batchId: o.batchNumber || o.batchId,
+              buyer: o.buyerName || "Processor Corp",
+              cropName: o.cropName,
+              quantity: `${o.quantityKg} kg`,
+              totalPrice: `₹ ${o.totalAmount.toLocaleString()}`,
+              status: o.deliveryStatus === "PENDING_FARMER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
+              escrowLocked: o.escrowStatus === "LOCKED" || o.deliveryStatus === "ACCEPTED" || o.deliveryStatus === "DISPATCHED",
+              date: new Date(o.createdAt).toLocaleDateString("en-GB")
+            }));
+            setOrders(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (distributorId) {
-      fetchOrders();
-    }
-  }, [filterStatus, distributorId]);
+    fetchOrders();
+  }, [distributorId, filterStatus]);
 
   // Action: Accept Order
   const handleAcceptOrder = async (orderId: string) => {
@@ -86,7 +92,7 @@ export default function DistributorOrders() {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
 
-      const res = await fetch(`${""}/api/v1/distributor/purchase-orders/${targetId}/accept`, {
+      const res = await fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/${targetId}/accept`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: distributorId }),
@@ -129,7 +135,7 @@ export default function DistributorOrders() {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
 
-      const res = await fetch(`${""}/api/v1/distributor/purchase-orders/${targetId}/start-delivery`, {
+      const res = await fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/${targetId}/start-delivery`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: distributorId, carrierName: "Standard Agri Express" }),
@@ -172,13 +178,11 @@ export default function DistributorOrders() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Purchase Orders | Seed2Shelf Distributor</title>
         <meta name="description" content="Review purchase offers and manage blockchain escrow delivery." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

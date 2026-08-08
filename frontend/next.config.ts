@@ -7,6 +7,40 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(process.cwd(), ".."),
   },
+  async redirects() {
+    return [
+      {
+        source: '/farmer',
+        destination: '/farmer/farmerHub/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/processor',
+        destination: '/processor/processorHub/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/admin',
+        destination: '/admin/adminHub/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/distributor',
+        destination: '/distributor/distributorHub/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/retailer',
+        destination: '/retailer/retailerHub/dashboard',
+        permanent: false,
+      },
+      {
+        source: '/customer',
+        destination: '/customer/marketplace',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

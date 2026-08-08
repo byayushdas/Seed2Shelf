@@ -3,7 +3,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, UserPlus, LogIn, Mail, Lock, User, Shield, AlertCircle, ArrowRight } from "lucide-react";
-import { authService } from "@/services/auth";
+import loginHero from "@/assets/images/auth/login-hero.jpg";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,7 +16,6 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
   const [isSignUp, setIsSignUp] = useState(initialModeIsSignUp);
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
     role: "FARMER",
@@ -40,6 +39,19 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleRedirect = (role: string) => {
+    const r = role?.toUpperCase();
+    switch (r) {
+      case 'FARMER': router.push('/farmer/farmerHub/dashboard'); break;
+      case 'PROCESSOR': router.push('/processor/processorHub/dashboard'); break;
+      case 'ADMIN': router.push('/admin/adminHub/dashboard'); break;
+      case 'DISTRIBUTOR': router.push('/distributor/distributorHub/dashboard'); break;
+      case 'RETAILER': router.push('/retailer/retailerHub/dashboard'); break;
+      case 'CUSTOMER': router.push('/customer/marketplace'); break;
+      default: router.push('/');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -47,40 +59,52 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
 
     try {
       if (!isSignUp) {
+        // Login
         const res = await signIn("credentials", {
           redirect: false,
           email: formData.email.trim().toLowerCase(),
-          password: formData.password,
+          password: formData.password
         });
 
         if (res?.error) {
-          setError(res.error);
+          setError(res?.error || "Failed to login");
         } else {
+          const sessionRes = await fetch("/api/auth/session");
+          const sessionData = await sessionRes.json();
           onClose();
-          router.push("/");
+          handleRedirect(sessionData?.user?.role);
         }
       } else {
-        const signupRes = await authService.signUp({
-          name: formData.name,
-          email: formData.email.trim().toLowerCase(),
-          password: formData.password,
-          role: formData.role,
-        });
-
-        if (signupRes.error) {
-          setError(signupRes.error);
-        } else {
-          const res = await signIn("credentials", {
-            redirect: false,
+        // Signup
+        const res = await fetch("http://localhost:5001/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.name,
             email: formData.email.trim().toLowerCase(),
             password: formData.password,
-          });
+            role: formData.role
+          })
+        });
 
-          if (res?.error) {
-            setError(res.error);
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.message || "Failed to sign up");
+        } else {
+          // Immediately log them in to set next-auth session
+          const signInRes = await signIn("credentials", {
+            redirect: false,
+            email: formData.email.trim().toLowerCase(),
+            password: formData.password
+          });
+          
+          if (signInRes?.error) {
+            setError("Signed up successfully, but failed to log in automatically.");
           } else {
+            const sessionRes = await fetch("/api/auth/session");
+            const sessionData = await sessionRes.json();
             onClose();
-            router.push("/");
+            handleRedirect(sessionData?.user?.role);
           }
         }
       }
@@ -158,7 +182,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                     type="button"
                     onClick={() => {
                       setIsSignUp(false);
-                      setFormData({ name: "", email: "", password: "", role: "FARMER" });
+                      setFormData({ email: "", password: "", role: "FARMER" });
                       setError("");
                     }}
                     className={`flex-1 py-2.5 rounded-xl transition-colors duration-200 z-10 flex items-center justify-center gap-2 cursor-pointer ${
@@ -173,7 +197,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                     type="button"
                     onClick={() => {
                       setIsSignUp(true);
-                      setFormData({ name: "", email: "", password: "", role: "FARMER" });
+                      setFormData({ email: "", password: "", role: "FARMER" });
                       setError("");
                     }}
                     className={`flex-1 py-2.5 rounded-xl transition-colors duration-200 z-10 flex items-center justify-center gap-2 cursor-pointer ${
@@ -199,25 +223,6 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                   {/* Dummy hidden inputs to trap aggressive browser autofill */}
                   <input type="text" style={{ display: 'none' }} tabIndex={-1} />
                   <input type="password" style={{ display: 'none' }} tabIndex={-1} />
-
-                  {isSignUp && (
-                    <div>
-                      <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">Full Name</label>
-                      <div className="relative">
-                        <User className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-500" />
-                        <input 
-                          type="text" 
-                          name="name" 
-                          value={formData.name} 
-                          onChange={handleChange} 
-                          required 
-                          autoComplete="off"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00d26a] focus:ring-1 focus:ring-[#00d26a]/50 transition" 
-                          placeholder="e.g. Ayush Das" 
-                        />
-                      </div>
-                    </div>
-                  )}
 
                   <div>
                     <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">Email Address</label>
@@ -308,9 +313,8 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
             <div className="hidden lg:block lg:col-span-5 relative p-3">
               <div className="relative w-full h-full min-h-[460px] rounded-[24px] overflow-hidden shadow-2xl group border border-white/10">
                 
-                {/* Hero Image from static assets: assets/images/auth/login-hero.jpg */}
                 <img 
-                  src="/assets/images/auth/login-hero.jpg" 
+                  src={loginHero.src} 
                   alt="Agriculture Landscape" 
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />

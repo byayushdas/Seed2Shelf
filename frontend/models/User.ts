@@ -1,36 +1,74 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IUser extends Document {
   name: string;
   email: string;
   password?: string;
-  phone?: string;
-  address?: string;
   role: string;
-  kycStatus: 'pending' | 'approved' | 'rejected';
+  walletAddress?: string;
+  profilePhoto?: string;
+  farmerId?: string;
+  processorId?: string;
+  adminId?: string;
+  distributorId?: string;
+  retailerId?: string;
+  mobileNumber?: string;
+  dob?: string;
+  gender?: string;
+  permanentAddress?: string;
+  state?: string;
+  district?: string;
+  village?: string;
+  pinCode?: string;
+  farmName?: string;
+  farmLocation?: string;
+  landArea?: number;
+  mainCrops?: string;
+  farmingType?: string;
+  regDate?: Date;
+  aadhaarNumber?: string;
+  aadhaarFront?: string;
+  aadhaarBack?: string;
+  kycStatus?: string;
+  verificationDate?: Date;
+  rejectionReason?: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-const UserSchema = new Schema<IUser>(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, select: false },
-    phone: { type: String },
-    address: { type: String },
-    kycStatus: {
-      type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending',
-    },
-  },
-  {
-    timestamps: { createdAt: true, updatedAt: false },
-    discriminatorKey: 'role',
-  }
-);
+const UserSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String }, // optional for oauth
+  role: { type: String, required: true },
+  walletAddress: { type: String, unique: true, sparse: true },
+  profilePhoto: { type: String },
+  farmerId: { type: String, unique: true, sparse: true },
+  processorId: { type: String, unique: true, sparse: true },
+  adminId: { type: String, unique: true, sparse: true },
+  distributorId: { type: String, unique: true, sparse: true },
+  retailerId: { type: String, unique: true, sparse: true },
+  mobileNumber: { type: String },
+  dob: { type: String },
+  gender: { type: String },
+  permanentAddress: { type: String },
+  state: { type: String },
+  district: { type: String },
+  village: { type: String },
+  pinCode: { type: String },
+  farmName: { type: String },
+  farmLocation: { type: String },
+  landArea: { type: Number },
+  mainCrops: { type: String },
+  farmingType: { type: String },
+  regDate: { type: Date },
+  aadhaarNumber: { type: String },
+  aadhaarFront: { type: String },
+  aadhaarBack: { type: String },
+  kycStatus: { type: String, default: "Pending Verification" },
+  verificationDate: { type: Date },
+  rejectionReason: { type: String },
+}, { timestamps: true });
 
-// Prevent mongoose from recompiling the model upon hot-reloads
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
-
-export default User;
+// Prevent mongoose from compiling the model multiple times in next.js
+export default (mongoose.models.User as Model<IUser>) || mongoose.model<IUser>('User', UserSchema);

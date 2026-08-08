@@ -26,7 +26,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { cartService } from "@/services/processor/cartService";
-import { orderService } from "@/services/order";
+import { marketplaceService } from "@/services/processor/marketplaceService";
 import { loadRazorpayScript } from "@/services/payment";
 import { CartItem } from "@/types/processor";
 
@@ -185,39 +185,92 @@ export default function ProcessorCartPage() {
     setPaymentError(null);
 
     try {
-      const orderItems = cartItems.map(item => ({
-        cropId: item.harvestItem.id,
-        sellerId: item.harvestItem.farmerId, // Fallback seller ID
-        quantity: item.selectedQuantity,
-        pricePerKg: item.harvestItem.pricePerUnit || parseFloat(item.harvestItem.pricePerKg.replace(/[^0-9.]/g, ''))
-      }));
+      // 1. Ensure Razorpay Checkout SDK script is loaded
+      await loadRazorpayScript();
 
-      const res = await orderService.processorApi.placeOrder(orderItems);
-      const orderId = res.data.orderId || `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+      // 2. Call Backend /payment/initiate API
+      const initiationResponse = await marketplaceService.initiateRazorpayPaymentApi(
+        selectedAddressId || "saved-1",
+        totals.total
+      );
 
-      setConfirmedOrder({
-        orderId,
-        razorpayPaymentId: `mock_pay_${Date.now()}`,
-        items: [...cartItems],
-        totals: { ...totals },
-        factoryName,
-        streetAddress,
-        cityState,
-        contactPerson,
-        contactPhone,
-      });
+      const paymentData = initiationResponse.data || initiationResponse;
+      const razorpayKey = paymentData.keyId || "rzp_test_TAwi9UQj2Q7wP5";
+      const razorpayOrderId = paymentData.orderId || `order_PRC_${Date.now()}`;
 
-      cartService.clearCart();
+      // 3. Open official Razorpay Checkout SDK popup
+      if (typeof window !== "undefined" && (window as any).Razorpay) {
+        const options: any = {
+          key: razorpayKey,
+          amount: (totals.total * 100).toString(),
+          currency: "INR",
+          name: "Seed2Shelf B2B Marketplace",
+          description: "Raw Crop Procurement & Escrow Deposit",
+          handler: async function (response: any) {
+            try {
+              // 4. Call Backend /payment/verify API
+              const verifyRes = await marketplaceService.verifyRazorpayPaymentApi({
+                razorpayPaymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
+                razorpayOrderId: response.razorpay_order_id || razorpayOrderId,
+                razorpaySignature: response.razorpay_signature || `mock_sig_${Date.now()}`,
+                factoryId: selectedAddressId || "saved-1",
+              });
+
+              const confirmedData = verifyRes.data || verifyRes;
+              const orderId = confirmedData.orderNumber || confirmedData.orderReferenceId || `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+
+              setConfirmedOrder({
+                orderId,
+                razorpayPaymentId: response.razorpay_payment_id || confirmedData.paymentId || `pay_test_${Date.now()}`,
+                items: [...cartItems],
+                totals: { ...totals },
+                factoryName,
+                streetAddress,
+                cityState,
+                contactPerson,
+                contactPhone,
+              });
+
+              cartService.clearCart();
+              setIsProcessingPayment(false);
+              setCheckoutStep(3);
+            } catch (err: any) {
+              setIsProcessingPayment(false);
+              setPaymentError(err.message || "Payment verification failed");
+            }
+          },
+          prefill: {
+            name: session?.user?.name || contactPerson || "Processor Facility Manager",
+            email: session?.user?.email || "processor@seed2shelf.com",
+            contact: contactPhone || "+91 98765 43210",
+          },
+          theme: {
+            color: "#059669",
+          },
+          modal: {
+            ondismiss: function () {
+              setIsProcessingPayment(false);
+            },
+          },
+        };
+
+        if (razorpayOrderId && razorpayOrderId.startsWith("order_") && razorpayOrderId.length === 20) {
+          options.order_id = razorpayOrderId;
+        }
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } else {
+        throw new Error("Razorpay SDK failed to load. Please refresh the page and try again.");
+      }
+    } catch (error: any) {
       setIsProcessingPayment(false);
-      setCheckoutStep(3);
-    } catch (err: any) {
-      setIsProcessingPayment(false);
-      setPaymentError(err.message || "Payment verification failed");
+      setPaymentError(error.message || "Failed to initiate payment");
     }
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Checkout & Order Placement | Processor Portal</title>
         <meta name="description" content="Review raw crop purchases and place B2B orders with farmers" />
@@ -227,7 +280,6 @@ export default function ProcessorCartPage() {
 
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
         

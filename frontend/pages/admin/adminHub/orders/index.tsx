@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import { adminService } from "@/services/admin";
 import { ClipboardList, Truck, Package, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -17,8 +16,11 @@ export default function AdminOrdersOverview() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const json = await adminService.getOrders(statusFilter);
-      setOrders(json.data || []);
+      const res = await fetch(`${BACKEND_URL}/api/v1/admin/orders?status=${statusFilter}`);
+      if (res.ok) {
+        const json = await res.json();
+        setOrders(json.data || []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -31,7 +33,7 @@ export default function AdminOrdersOverview() {
   }, [statusFilter]);
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Orders & Shipments | Admin Engine | Seed2Shelf</title>
       </Head>

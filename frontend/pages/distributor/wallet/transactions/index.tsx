@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { walletService } from "@/services/wallet";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -35,33 +34,8 @@ export default function WalletTransactions() {
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const [transactions, setTransactions] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const res = await walletService.distributorApi.getTransactions();
-        if (res.data) {
-          const mapped = res.data.map((tx: any) => ({
-            id: tx.transactionId,
-            shortId: tx.transactionId.slice(-8),
-            type: tx.type, // Map it to ESCROW, PAYOUT, BANK_DEBIT if needed
-            title: tx.type === "PAYMENT" ? "Purchase Payment" : "Transaction",
-            amount: `₹${tx.amount}`,
-            date: new Date(tx.date).toLocaleDateString(),
-            time: new Date(tx.date).toLocaleTimeString(),
-            buyer: "Me",
-            orderId: "ORD-" + tx.transactionId.slice(-6),
-            status: tx.status
-          }));
-          setTransactions(mapped);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchTransactions();
-  }, []);
+  // Distributor payment transactions
+  const transactions: any[] = [];
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesFilter =
@@ -86,14 +60,13 @@ export default function WalletTransactions() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Wallet Transactions | Seed2Shelf</title>
         <meta name="description" content="Payment history and escrow transaction logs for distributors" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
 

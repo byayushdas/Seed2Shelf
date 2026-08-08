@@ -100,7 +100,7 @@ export default function AdminMainDashboard() {
   const currentRoleCard = roleCardsData.find((card) => card.key === selectedRoleFilter) || roleCardsData[0];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Admin Dashboard | Seed2Shelf</title>
       </Head>

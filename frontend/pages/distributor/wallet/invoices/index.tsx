@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { walletService } from "@/services/wallet";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -36,33 +35,8 @@ export default function WalletInvoices() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
 
-  const [initialInvoices, setInitialInvoices] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        const res = await walletService.distributorApi.getInvoices();
-        if (res.data) {
-          const mapped = res.data.map((inv: any) => ({
-            id: inv.invoiceId,
-            orderId: inv.id.slice(-8),
-            batch: "Batch " + inv.id.slice(0, 4),
-            item: "B2B Purchase",
-            amount: `₹${inv.amount}`,
-            date: new Date(inv.date).toLocaleDateString(),
-            buyer: "Me",
-            supplier: "Seller",
-            status: "PAID",
-            category: "PURCHASE"
-          }));
-          setInitialInvoices(mapped);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchInvoices();
-  }, []);
+  // Distributor Invoices
+  const initialInvoices: any[] = [];
 
   const filteredInvoices = initialInvoices.filter((inv) => {
     const matchesCategory =
@@ -86,14 +60,13 @@ export default function WalletInvoices() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Wallet Invoices | Seed2Shelf</title>
         <meta name="description" content="Agricultural sales tax invoices and procurement accounting records" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
 

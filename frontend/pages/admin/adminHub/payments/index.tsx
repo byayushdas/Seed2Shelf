@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import { adminService } from "@/services/admin";
 import { ArrowLeftRight, Lock, CheckCircle2, ShieldCheck, RefreshCw } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -16,8 +15,11 @@ export default function AdminPaymentsEscrow() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const json = await adminService.getPayments();
-      setPayments(json.data || []);
+      const res = await fetch(`${BACKEND_URL}/api/v1/admin/payments`);
+      if (res.ok) {
+        const json = await res.json();
+        setPayments(json.data || []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -30,7 +32,7 @@ export default function AdminPaymentsEscrow() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Payments & Escrow | Admin Engine | Seed2Shelf</title>
       </Head>

@@ -23,7 +23,6 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
-import { productService } from "@/services/product";
 
 export interface InventoryItem {
   id: string; // e.g. RET-2026-001 or BATCH-2026-0079
@@ -49,23 +48,6 @@ export default function RetailHubPage() {
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchInventory = async () => {
-    try {
-      setLoading(true);
-      const res = await productService.retailerApi.getRetailHub();
-      setInventory(res.data || []);
-    } catch (e) {
-      console.error("Failed to load inventory:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInventory();
-  }, []);
 
   // Form states for Log New Retailed Item
   const [category, setCategory] = useState("Processed Grains");
@@ -339,14 +321,13 @@ export default function RetailHubPage() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Retail Hub | Seed2Shelf Retailer</title>
         <meta name="description" content="Transform raw farmer crops into processed goods with blockchain traceability." />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

@@ -18,7 +18,6 @@ import {
   X,
   ArrowRight
 } from "lucide-react";
-import { walletService } from "@/services/wallet";
 
 export default function WalletDashboard() {
   const { data: session } = useSession();
@@ -55,11 +54,14 @@ export default function WalletDashboard() {
     if (!farmerId) return;
     const fetchWalletData = async () => {
       try {
-        const res = await walletService.farmerApi.getWallet();
-        if (res.data) {
-          setTotalEarnings(res.data.balance || 0);
-          setMoneyInEscrow(0); // Escrow not currently in simple Wallet model
-          setActiveEscrowsCount(0);
+        const res = await fetch(`${BACKEND_URL}/api/v1/farmer/wallet?userId=${farmerId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setTotalEarnings(json.data.availableBalance || 0);
+            setMoneyInEscrow(json.data.lockedBalance || 0);
+            setActiveEscrowsCount(json.data.activeEscrowsCount || 0);
+          }
         }
       } catch (err) {
         console.warn("Error fetching farmer wallet balance:", err);
@@ -87,14 +89,13 @@ export default function WalletDashboard() {
   const sampleCropEarnings: any[] = [];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Farmer Wallet | Seed2Shelf</title>
         <meta name="description" content="Simple, trustworthy farmer wallet and escrow center" />
       </Head>
 
       {/* Solid Dark Background Overlay to cover white home page background video */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto space-y-7">
 

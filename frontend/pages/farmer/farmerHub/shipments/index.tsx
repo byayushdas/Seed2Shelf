@@ -16,7 +16,6 @@ import {
   RotateCcw,
   Loader2
 } from "lucide-react";
-import { shipmentService } from "@/services/shipment";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
@@ -55,21 +54,31 @@ export default function FarmerShipments() {
     const fetchShipments = async () => {
       try {
         setIsLoading(true);
-        const res = await shipmentService.farmerApi.getShipments();
-        if (res.data) {
-          const mapped = res.data.map((s: any) => ({
-            id: s.shipmentId || s.id,
-            batchId: s.orderId,
-            cropName: "Order " + s.orderId.slice(0, 8),
-            quantity: "Bulk",
-            value: "N/A",
-            destination: s.destination,
-            dispatchedDate: new Date(s.dispatchDate || s.createdAt).toLocaleDateString(),
-            estimatedDelivery: s.deliveryDate ? new Date(s.deliveryDate).toLocaleDateString() : "Pending",
-            status: s.status === "DELIVERED" ? "DELIVERED" : "IN_TRANSIT",
-            currentStep: s.status === "DELIVERED" ? 3 : 2
-          }));
-          setShipments(mapped);
+        const endpoint = mainTab === "ACTIVE" 
+          ? `${BACKEND_URL}/api/v1/farmer/shipment/active?userId=${farmerId}`
+          : `${BACKEND_URL}/api/v1/farmer/shipment/history?userId=${farmerId}`;
+
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const mapped = json.data.map((s: any) => ({
+              id: s.shipmentId || s.id,
+              batchId: s.batchId,
+              cropName: s.cropName,
+              quantity: s.quantity,
+              value: s.value,
+              destination: s.destination,
+              dispatchedDate: s.dispatchedDate,
+              estimatedDelivery: s.estimatedDelivery || "Today, 4:30 PM",
+              status: s.status,
+              currentStep: s.currentStep || 2,
+              rejectionReason: s.rejectionReason,
+              rejectedDate: s.rejectedDate,
+              acceptedDate: s.acceptedDate
+            }));
+            setShipments(mapped);
+          }
         }
       } catch (err) {
         console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
@@ -92,13 +101,11 @@ export default function FarmerShipments() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Shipments & Logistics | Seed2Shelf Farmer</title>
         <meta name="description" content="Logistics tracking for farmer harvest dispatches." />
       </Head>
-
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-6">
         

@@ -1,37 +1,19 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface ITransaction extends Document {
-  transactionId: string;
-  orderId?: mongoose.Types.ObjectId;
-  payerId: mongoose.Types.ObjectId;
-  payeeId?: mongoose.Types.ObjectId;
-  amount: number;
-  currency: string;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
-  type: 'PAYMENT' | 'REFUND' | 'TRANSFER' | 'WITHDRAWAL';
-  createdAt: Date;
-  updatedAt: Date;
+  cropId: mongoose.Types.ObjectId | string;
+  senderRole: string;
+  receiverRole: string;
+  blockchainHash?: string;
+  timestamp: Date;
 }
 
-const TransactionSchema = new Schema<ITransaction>({
-  transactionId: { type: String, required: true, unique: true },
-  orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
-  payerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  payeeId: { type: Schema.Types.ObjectId, ref: 'User' },
-  amount: { type: Number, required: true },
-  currency: { type: String, default: 'USD' },
-  status: { 
-    type: String, 
-    enum: ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'],
-    default: 'PENDING' 
-  },
-  type: {
-    type: String,
-    enum: ['PAYMENT', 'REFUND', 'TRANSFER', 'WITHDRAWAL'],
-    required: true
-  }
-}, { timestamps: true });
+const TransactionSchema: Schema = new Schema({
+  cropId: { type: Schema.Types.ObjectId, ref: 'Crop', required: true },
+  senderRole: { type: String, required: true },
+  receiverRole: { type: String, required: true },
+  blockchainHash: { type: String },
+  timestamp: { type: Date, default: Date.now },
+});
 
-const Transaction: Model<ITransaction> = mongoose.models.Transaction || mongoose.model<ITransaction>('Transaction', TransactionSchema);
-
-export default Transaction;
+export default (mongoose.models.Transaction as Model<ITransaction>) || mongoose.model<ITransaction>('Transaction', TransactionSchema);

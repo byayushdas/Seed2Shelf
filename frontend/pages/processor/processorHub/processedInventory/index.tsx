@@ -23,7 +23,6 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
-import { productService } from "@/services/product";
 
 export interface InventoryItem {
   id: string; // e.g. PROC-2026-001 or BATCH-2026-0079
@@ -49,23 +48,6 @@ export default function ProductionHubPage() {
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchInventory = async () => {
-    try {
-      setLoading(true);
-      const res = await productService.processorApi.getInventory();
-      setInventory(res.data || []);
-    } catch (e) {
-      console.error("Failed to load inventory:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInventory();
-  }, []);
 
   // Form states for Log New Processed Item
   const [category, setCategory] = useState("Processed Grains");
@@ -163,40 +145,46 @@ export default function ProductionHubPage() {
   };
 
   // Register New Processed Product
-  const handleRegisterProduct = async (e: React.FormEvent) => {
+  const handleRegisterProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!productName || !quantity || !price) return;
 
     const finalCategory = category === "Others" ? (customCategory.trim() || "Others") : category;
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    const newBatchId = `PROC-2026-${randomDigits}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${newBatchId}`;
+    const traceUrl = `https://seed2shelf.app/trace/${newBatchId}`;
 
-    try {
-      const res = await productService.processorApi.createProcessedProduct({
-        name: productName,
-        category: finalCategory,
-        quantity: Number(quantity),
-        pricePerUnit: Number(price),
-        sourceCropIds: parentRawBatchId ? [parentRawBatchId] : []
-      });
+    const newItem: InventoryItem = {
+      id: newBatchId,
+      itemType: "PROCESSED",
+      productName,
+      category: finalCategory,
+      quantity: `${quantity} kg`,
+      pricePerUnit: `₹${price}/kg`,
+      date: formattedDateDisplay,
+      status: "In Stock",
+      parentRawBatchId,
+      productImage: productImage || getProductImage({ category: finalCategory } as any),
+      qrCodeUrl: qrUrl
+    };
 
-      // Clear Form
-      setProductName("");
-      setCustomCategory("");
-      setQuantity("");
-      setPrice("");
-      setParentRawBatchId("");
-      setProductImage(null);
-      
-      setSubmitted(true);
-      if (res.data) {
-        setNewBatchInfo({ id: res.data.id, qr: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${res.data.id}`, url: `https://seed2shelf.app/trace/${res.data.id}` });
-      }
-      
-      // Refresh inventory
-      await fetchInventory();
+    setInventory([newItem, ...inventory]);
+    setNewBatchInfo({
+      id: newBatchId,
+      qr: qrUrl,
+      url: traceUrl
+    });
 
-    } catch (error) {
-      console.error("Failed to create processed product", error);
-    }
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 5000);
+
+    // Reset Form
+    setProductName("");
+    setCustomCategory("");
+    setQuantity("");
+    setPrice("");
+    setProductImage(null);
   };
 
   // Toggle List / Unlist Status
@@ -333,14 +321,13 @@ export default function ProductionHubPage() {
   });
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Production Hub | Seed2Shelf Processor</title>
         <meta name="description" content="Transform raw farmer crops into processed goods with blockchain traceability." />
       </Head>
 
       {/* Solid Dark Background Overlay */}
-      <div className="fixed inset-0 bg-stone-950 z-[-1] pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-7">
         

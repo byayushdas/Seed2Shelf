@@ -102,27 +102,4 @@ export const paymentService = {
       onError(err);
     }
   },
-
-  customerApi: {
-    async createOrder(orderId: string) {
-      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
-      const res = await fetch(`${baseUrl}/api/customer/payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create", orderId })
-      });
-      if (!res.ok) throw new Error("Failed to create razorpay order");
-      return res.json();
-    },
-    async verifyPayment(orderId: string, paymentId: string, signature: string) {
-      const baseUrl = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000");
-      const res = await fetch(`${baseUrl}/api/customer/payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "verify", orderId, paymentId, signature })
-      });
-      if (!res.ok) throw new Error("Failed to verify payment");
-      return res.json();
-    }
-  }
 };
