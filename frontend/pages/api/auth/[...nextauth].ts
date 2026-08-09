@@ -35,20 +35,11 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid credentials");
         }
 
-        let farmerId = user.farmerId || undefined;
-        let processorId = user.processorId || undefined;
-        let adminId = (user as any).adminId || undefined;
-
-        if (user.role === 'FARMER' && !farmerId) {
-          farmerId = `S2S-FRM-${user.id.slice(0, 6).toUpperCase()}`;
-          await User.findByIdAndUpdate(user.id, { farmerId }).catch(() => {});
-        } else if (user.role === 'PROCESSOR' && !processorId) {
-          processorId = `S2S-PRC-${user.id.slice(0, 6).toUpperCase()}`;
-          await User.findByIdAndUpdate(user.id, { processorId }).catch(() => {});
-        } else if (user.role === 'ADMIN' && !adminId) {
-          adminId = `S2S-ADM-${user.id.slice(0, 6).toUpperCase()}`;
-          await User.findByIdAndUpdate(user.id, { adminId }).catch(() => {});
-        }
+        let farmerId = user.role === 'FARMER' ? user.roleId : undefined;
+        let processorId = user.role === 'PROCESSOR' ? user.roleId : undefined;
+        let adminId = user.role === 'ADMIN' ? user.roleId : undefined;
+        let distributorId = user.role === 'DISTRIBUTOR' ? user.roleId : undefined;
+        let retailerId = user.role === 'RETAILER' ? user.roleId : undefined;
 
         return {
           id: user.id,
@@ -58,8 +49,8 @@ export const authOptions: NextAuthOptions = {
           farmerId,
           processorId,
           adminId,
-          distributorId: (user as any).distributorId || undefined,
-          retailerId: (user as any).retailerId || undefined,
+          distributorId,
+          retailerId,
           walletAddress: user.walletAddress || null,
           image: user.profilePhoto || null
         };

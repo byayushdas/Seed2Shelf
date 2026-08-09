@@ -19,11 +19,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const p = u.profileDetails || {};
 
         return res.status(200).json({
+          ...u,
           ...p,
           id: u._id || userId,
           email: u.email || "",
           role: u.role || "FARMER",
-          name: p.name || "",
+          name: u.name || "",
         });
       }
 
@@ -53,11 +54,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const p = u.profileDetails || {};
 
         return res.status(200).json({
+          ...u,
           ...p,
           id: u._id || userId,
           email: u.email || session.user.email,
           role: u.role || "FARMER",
-          name: p.name || req.body.name || "",
+          name: u.name || req.body.name || "",
         });
       }
 

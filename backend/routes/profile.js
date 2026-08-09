@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const RoleInfo = require('../models/RoleInfo');
+const Role = require('../models/Role');
+
+const userFields = [
+  'name', 'mobileNumber', 'dob', 'gender', 'permanentAddress', 
+  'state', 'district', 'village', 'pinCode', 'profilePhoto', 
+  'aadhaarNumber', 'aadhaarFront', 'aadhaarBack', 'submitKyc', 
+  'kycStatus', 'rejectionReason', 'verificationDate'
+];
 
 // GET Profile
 router.get('/:id', async (req, res) => {
@@ -11,12 +18,14 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     
-    const roleInfo = await RoleInfo.findOne({ email: user.email });
+    let roleDoc = {};
+    if (user.roleId) {
+      roleDoc = await Role.findById(user.roleId) || {};
+    }
     
-    // We send back the user object which includes email, role, and profileDetails
-    // We dynamically attach roleInfo to profileDetails to maintain frontend compatibility
+    // We send back the user object which includes email, role, and we attach role details
     const userData = user.toObject();
-    userData.profileDetails = roleInfo || {};
+    userData.profileDetails = roleDoc;
 
     return res.status(200).json({
       success: true,
@@ -39,22 +48,33 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    let roleInfo = await RoleInfo.findOne({ email: user.email });
-    
-    if (!roleInfo) {
-      roleInfo = new RoleInfo({ _id: "PENDING_" + Date.now(), email: user.email, role: user.role, roleId: "PENDING" });
+    let roleDoc = null;
+    if (user.roleId) {
+      roleDoc = await Role.findById(user.roleId);
+      if (!roleDoc) {
+        roleDoc = new Role({ _id: user.roleId, userId: user._id, role: user.role });
+      }
     }
 
-    // Update RoleInfo with new fields
+    // Split updates
     for (const key in updateData) {
-      roleInfo.set(key, updateData[key]);
+      if (userFields.includes(key)) {
+        user.set(key, updateData[key]);
+      } else if (roleDoc && key !== '_id' && key !== 'roleId' && key !== 'role' && key !== 'userId') {
+        roleDoc.set(key, updateData[key]);
+      }
+    }
+
+    user.updatedAt = Date.now();
+    await user.save();
+
+    if (roleDoc) {
+      roleDoc.updatedAt = Date.now();
+      await roleDoc.save();
     }
     
-    roleInfo.updatedAt = Date.now();
-    await roleInfo.save();
-    
     const userData = user.toObject();
-    userData.profileDetails = roleInfo;
+    userData.profileDetails = roleDoc || {};
 
     return res.status(200).json({
       success: true,

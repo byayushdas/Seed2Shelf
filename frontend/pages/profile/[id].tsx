@@ -153,9 +153,9 @@ export default function StakeholderProfile() {
 
       setFarmName(data.farmName || "");
       setFarmLocation(data.farmLocation || "");
-      setLandArea(data.landArea !== null && data.landArea !== undefined ? String(data.landArea) : "");
-      setMainCrops(data.mainCrops || "");
-      setFarmingType(data.farmingType || "");
+      setLandArea(data.totalLandArea !== null && data.totalLandArea !== undefined ? String(data.totalLandArea) : (data.landArea !== null && data.landArea !== undefined ? String(data.landArea) : ""));
+      setMainCrops(Array.isArray(data.mainCultivatedCrops) ? data.mainCultivatedCrops.join(', ') : (data.mainCultivatedCrops || data.mainCrops || ""));
+      setFarmingType(data.farmingPractice || data.farmingType || "");
 
       setAadhaarNumber(data.aadhaarNumber || "");
       setAadhaarFront(data.aadhaarFront || "");
@@ -279,9 +279,9 @@ export default function StakeholderProfile() {
           pinCode,
           farmName,
           farmLocation,
-          landArea,
-          mainCrops,
-          farmingType,
+          totalLandArea: landArea,
+          mainCultivatedCrops: mainCrops ? mainCrops.split(',').map((c: string) => c.trim()) : [],
+          farmingPractice: farmingType,
           profilePhoto,
           aadhaarNumber,
           aadhaarFront,

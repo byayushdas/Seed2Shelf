@@ -1,12 +1,20 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/User');
-const Role = require('../models/Role');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const fs = require('fs');
 
-// SIGNUP
+let content = fs.readFileSync('routes/auth.js', 'utf8');
 
+// Replace RoleInfo with Role
+content = content.replace(/const RoleInfo = require\('\.\.\/models\/RoleInfo'\);/g, "const Role = require('../models/Role');");
+
+// Update /signup
+content = content.replace(/const { email, password, role } = req.body;/g, "const { name, email, password, role } = req.body;");
+
+// Update roleId generation block to use User instead of RoleInfo
+content = content.replace(/RoleInfo\.findOne\(\{ role:/g, "User.findOne({ role:");
+content = content.replace(/lastRoleInfo/g, "lastUser");
+
+// Now we need to move User.create AFTER roleId generation
+// I'll rewrite the entire signup block
+const newSignup = `
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -32,50 +40,50 @@ router.post('/signup', async (req, res) => {
       const lastUser = await User.findOne({ role: "FARMER", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-FRM-(d+)/);
+        const match = lastUser.roleId.match(/S2S-FRM-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-FRM-${String(nextNum).padStart(6, '0')}`;
+      roleId = \`S2S-FRM-\${String(nextNum).padStart(6, '0')}\`;
     } else if (role === "PROCESSOR") {
       const lastUser = await User.findOne({ role: "PROCESSOR", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-PRC-(d+)/);
+        const match = lastUser.roleId.match(/S2S-PRC-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-PRC-${String(nextNum).padStart(6, '0')}`;
+      roleId = \`S2S-PRC-\${String(nextNum).padStart(6, '0')}\`;
     } else if (role === "ADMIN") {
       const lastUser = await User.findOne({ role: "ADMIN", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-ADM-(d+)/);
+        const match = lastUser.roleId.match(/S2S-ADM-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-ADM-${String(nextNum).padStart(6, '0')}`;
+      roleId = \`S2S-ADM-\${String(nextNum).padStart(6, '0')}\`;
     } else if (role === "DISTRIBUTOR") {
       const lastUser = await User.findOne({ role: "DISTRIBUTOR", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-DST-(d+)/);
+        const match = lastUser.roleId.match(/S2S-DST-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-DST-${String(nextNum).padStart(6, '0')}`;
+      roleId = \`S2S-DST-\${String(nextNum).padStart(6, '0')}\`;
     } else if (role === "RETAILER") {
       const lastUser = await User.findOne({ role: "RETAILER", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-RET-(d+)/);
+        const match = lastUser.roleId.match(/S2S-RET-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-RET-${String(nextNum).padStart(6, '0')}`;
+      roleId = \`S2S-RET-\${String(nextNum).padStart(6, '0')}\`;
     } else if (role === "CUSTOMER") {
       const lastUser = await User.findOne({ role: "CUSTOMER", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-CUS-(d+)/);
+        const match = lastUser.roleId.match(/S2S-CUS-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-CUS-${String(nextNum).padStart(6, '0')}`;
+      roleId = \`S2S-CUS-\${String(nextNum).padStart(6, '0')}\`;
     }
 
     const user = await User.create({
@@ -109,9 +117,12 @@ router.post('/signup', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+`;
 
-// LOGIN
+content = content.replace(/router\.post\('\/signup', async \(req, res\) => \{[\s\S]*?(?=\/\/ LOGIN)/, newSignup + '\n');
 
+// Replace login
+const newLogin = `
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -163,5 +174,8 @@ router.post('/login', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+`;
 
-module.exports = router;
+content = content.replace(/router\.post\('\/login', async \(req, res\) => \{[\s\S]*?(?=module\.exports = router;)/, newLogin + '\n');
+
+fs.writeFileSync('routes/auth.js', content, 'utf8');

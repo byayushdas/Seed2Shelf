@@ -224,6 +224,31 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                   <input type="text" style={{ display: 'none' }} tabIndex={-1} />
                   <input type="password" style={{ display: 'none' }} tabIndex={-1} />
 
+                  <AnimatePresence>
+                    {isSignUp && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">Full Name</label>
+                        <div className="relative mb-3.5">
+                          <User className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-500" />
+                          <input 
+                            type="text" 
+                            name="name" 
+                            value={formData.name || ""} 
+                            onChange={handleChange} 
+                            required={isSignUp}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00d26a] focus:ring-1 focus:ring-[#00d26a]/50 transition" 
+                            placeholder="John Doe" 
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   <div>
                     <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">Email Address</label>
                     <div className="relative">
