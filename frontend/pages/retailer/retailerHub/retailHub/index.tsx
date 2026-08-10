@@ -45,9 +45,43 @@ export interface InventoryItem {
 
 export default function RetailHubPage() {
   const { data: session } = useSession();
+  const retailerId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";
+  const roleId = (session?.user as any)?.roleId || "";
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+
+  useEffect(() => {
+    if (!retailerId) return;
+    const fetchInventory = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/inventory?userId=${retailerId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            const mapped = json.data.map((item: any) => ({
+              id: item._id || item.batchId,
+              itemType: "RETAILED",
+              productName: item.productName,
+              category: item.category,
+              quantity: `${item.quantity} kg`,
+              pricePerUnit: `₹${item.pricePerUnit}/kg`,
+              date: item.date ? new Date(item.date).toLocaleDateString("en-GB") : "",
+              status: item.status,
+              parentRawBatchId: item.parentDistBatchId,
+              productImage: item.productImage || undefined,
+              qrCodeUrl: item.qrCodeUrl || ""
+            }));
+            setInventory(mapped);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch retailer inventory:", err);
+      }
+    };
+    fetchInventory();
+  }, [retailerId]);
 
   // Form states for Log New Retailed Item
   const [category, setCategory] = useState("Processed Grains");
@@ -155,55 +189,100 @@ export default function RetailHubPage() {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${newBatchId}`;
     const traceUrl = `https://seed2shelf.app/trace/${newBatchId}`;
 
-    const newItem: InventoryItem = {
-      id: newBatchId,
-      itemType: "RETAILED",
-      productName,
-      category: finalCategory,
-      quantity: `${quantity} kg`,
-      pricePerUnit: `₹${price}/kg`,
-      date: formattedDateDisplay,
-      status: "In Stock",
-      parentRawBatchId: parentRawBatchIds.join(", "),
-      productImage: productImage || getProductImage({ category: finalCategory } as any),
-      qrCodeUrl: qrUrl
+    const dateToSave = new Date(selectedYear, selectedMonth, selectedDay).toISOString();
+
+    const processSave = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/inventory`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: retailerId,
+            roleId: roleId,
+            productName,
+            category: finalCategory,
+            quantity: quantity,
+            pricePerUnit: price,
+            parentDistBatchId: parentRawBatchIds.join(", "),
+            productImage: productImage || getProductImage({ category: finalCategory } as any),
+            qrCodeUrl: qrUrl,
+            traceUrl: traceUrl,
+            date: dateToSave,
+            batchId: newBatchId
+          })
+        });
+
+        if (res.ok) {
+          const newItem: InventoryItem = {
+            id: newBatchId,
+            itemType: "RETAILED",
+            productName,
+            category: finalCategory,
+            quantity: `${quantity} kg`,
+            pricePerUnit: `₹${price}/kg`,
+            date: formattedDateDisplay,
+            status: "In Stock",
+            parentRawBatchId: parentRawBatchIds.join(", "),
+            productImage: productImage || getProductImage({ category: finalCategory } as any),
+            qrCodeUrl: qrUrl
+          };
+
+          setInventory(prev => [newItem, ...prev]);
+          setNewBatchInfo({
+            id: newBatchId,
+            qr: qrUrl,
+            url: traceUrl
+          });
+          setSubmitted(true);
+          setTimeout(() => setSubmitted(false), 5000);
+
+          // Reset Form
+          setProductName("");
+          setCustomCategory("");
+          setQuantity("");
+          setPrice("");
+          setProductImage(null);
+        }
+      } catch (err) {
+        console.error("Error saving retailed product:", err);
+      }
     };
 
-    setInventory([newItem, ...inventory]);
-    setNewBatchInfo({
-      id: newBatchId,
-      qr: qrUrl,
-      url: traceUrl
-    });
+    processSave();
 
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
-
-    // Reset Form
-    setProductName("");
-    setCustomCategory("");
-    setQuantity("");
-    setPrice("");
-    setProductImage(null);
   };
 
   // Toggle List / Unlist Status
-  const handleToggleListStatus = (id: string) => {
-    setInventory(
-      inventory.map((item) => {
-        if (item.id === id) {
-          const newStatus = item.status === "Listed" ? "In Stock" : "Listed";
-          return { ...item, status: newStatus };
-        }
-        return item;
-      })
-    );
+  const handleToggleListStatus = async (id: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/retailer/inventory/${id}/list`, { method: "PUT" });
+      if (res.ok) {
+        setInventory(
+          inventory.map((item) => {
+            if (item.id === id) {
+              const newStatus = item.status === "Listed" ? "In Stock" : "Listed";
+              return { ...item, status: newStatus };
+            }
+            return item;
+          })
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling list status:", err);
+    }
   };
 
   // Delete Item
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     if (confirm("Are you sure you want to remove this item from your inventory?")) {
-      setInventory(inventory.filter((item) => item.id !== id));
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/inventory/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          setInventory(inventory.filter((item) => item.id !== id));
+        }
+      } catch (err) {
+        console.error("Error deleting item:", err);
+      }
     }
   };
 

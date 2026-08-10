@@ -26,7 +26,7 @@ import {
   FileText
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function AdminMainDashboard() {
   const { data: session } = useSession();
@@ -85,8 +85,7 @@ export default function AdminMainDashboard() {
     (stats?.users?.farmers || 0) +
     (stats?.users?.processors || 0) +
     (stats?.users?.distributors || 0) +
-    (stats?.users?.retailers || 0) +
-    (stats?.users?.customers || 0)
+    (stats?.users?.retailers || 0)
   );
 
   const roleCardsData = [
@@ -94,7 +93,7 @@ export default function AdminMainDashboard() {
     { key: "PROCESSOR", label: "Processors", count: stats?.users?.processors || 0, desc: "Factory & Processing Hubs", color: "text-emerald-400" },
     { key: "DISTRIBUTOR", label: "Distributors", count: stats?.users?.distributors || 0, desc: "Cold-Chain & Logistics", color: "text-blue-400" },
     { key: "RETAILER", label: "Retailers", count: stats?.users?.retailers || 0, desc: "Store & Supply Outlets", color: "text-purple-400" },
-    { key: "CUSTOMER", label: "Consumers", count: stats?.users?.customers || 0, desc: "End Buyers & Consumers", color: "text-amber-400" },
+
   ];
 
   const currentRoleCard = roleCardsData.find((card) => card.key === selectedRoleFilter) || roleCardsData[0];
@@ -201,7 +200,7 @@ export default function AdminMainDashboard() {
                   <option value="PROCESSOR">Processors</option>
                   <option value="DISTRIBUTOR">Distributors</option>
                   <option value="RETAILER">Retailers</option>
-                  <option value="CUSTOMER">Consumers</option>
+
                 </select>
               )}
 

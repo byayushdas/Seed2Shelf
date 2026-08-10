@@ -18,7 +18,7 @@ import {
   Loader2
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 interface OrderItem {
   id: string;

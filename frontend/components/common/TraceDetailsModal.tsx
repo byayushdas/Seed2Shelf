@@ -2,7 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShieldCheck, MapPin, Package, Clock, Award } from "lucide-react";
 
-export type StageType = "FARMER" | "PROCESSOR" | "DISTRIBUTOR" | "RETAILER" | "CUSTOMER";
+export type StageType = "FARMER" | "PROCESSOR" | "DISTRIBUTOR" | "RETAILER";
 
 export interface StageDetailItem {
   label: string;

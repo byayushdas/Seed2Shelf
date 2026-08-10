@@ -23,7 +23,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function UniversalKYCVerification() {
   const { data: session } = useSession();

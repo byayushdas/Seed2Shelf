@@ -41,7 +41,7 @@ export default function Home() {
         }}
       >
       <Head>
-        <title>Seed2Shelf - Home</title>
+        <title>Seed2Shelf | Home</title>
         <meta
           name="description"
           content="Track every handoff from farmer to retailer with immutable blockchain records, automated payment protection, and QR-powered transparency."

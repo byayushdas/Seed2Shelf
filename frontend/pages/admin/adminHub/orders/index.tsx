@@ -6,7 +6,7 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { ClipboardList, Truck, Package, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function AdminOrdersOverview() {
   const [orders, setOrders] = useState<any[]>([]);

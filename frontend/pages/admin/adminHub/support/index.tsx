@@ -16,7 +16,7 @@ import {
   Layers
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 const SUPPORT_CATEGORIES = [
   "Incoming Produce Quality Inspection Dispute",

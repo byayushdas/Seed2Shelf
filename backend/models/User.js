@@ -7,21 +7,47 @@ const userSchema = new mongoose.Schema({
   role: { 
     type: String, 
     required: true,
-    enum: ['FARMER', 'PROCESSOR', 'DISTRIBUTOR', 'RETAILER', 'CUSTOMER', 'ADMIN']
+    enum: ['FARMER', 'PROCESSOR', 'DISTRIBUTOR', 'RETAILER', 'ADMIN']
   },
   roleId: { type: String },
 
-  // General Profile Details
-  mobileNumber: { type: String },
-  dob: { type: String },
-  gender: { type: String, enum: ['Male', 'Female', 'Other', 'Prefer not to say'] },
-  permanentAddress: { type: String },
-  state: { type: String },
-  district: { type: String },
-  village: { type: String },
-  pinCode: { type: String },
-  profilePhoto: { type: String },
-  
+  averageRating: { type: Number, default: 0 },
+  reviews: [{
+    reviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    rating: { type: Number, required: true },
+    comment: { type: String },
+    createdAt: { type: Date, default: Date.now }
+  }],
+
+
+  // Farmer Fields
+  farmName: { type: String },
+  farmLocation: { type: String },
+  totalLandArea: { type: String },
+  mainCultivatedCrops: { type: [String] },
+  farmingPractice: { type: String },
+
+  // Processor Fields
+  facilityName: { type: String },
+  facilityLocation: { type: String },
+  processingCapacity: { type: String },
+  mainProcessedProducts: { type: String },
+  complianceStandards: { type: String },
+
+  // Distributor Fields
+  companyName: { type: String },
+  location: { type: String },
+  storageCapacity: { type: String },
+  operatingFacilities: { type: String },
+  transportFleet: { type: String },
+
+  // Retailer Fields
+  storeName: { type: String },
+  storeLocation: { type: String },
+  shelfCapacity: { type: String },
+  storeTypeFocus: { type: String },
+  employeeCount: { type: String },
+
   // KYC Details
   aadhaarNumber: { type: String },
   aadhaarFront: { type: String },

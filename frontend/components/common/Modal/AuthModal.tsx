@@ -16,6 +16,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
   const [isSignUp, setIsSignUp] = useState(initialModeIsSignUp);
 
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
     role: "FARMER",
@@ -47,7 +48,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
       case 'ADMIN': router.push('/admin/adminHub/dashboard'); break;
       case 'DISTRIBUTOR': router.push('/distributor/distributorHub/dashboard'); break;
       case 'RETAILER': router.push('/retailer/retailerHub/dashboard'); break;
-      case 'CUSTOMER': router.push('/customer/marketplace'); break;
+
       default: router.push('/');
     }
   };
@@ -182,7 +183,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                     type="button"
                     onClick={() => {
                       setIsSignUp(false);
-                      setFormData({ email: "", password: "", role: "FARMER" });
+                      setFormData({ name: "", email: "", password: "", role: "FARMER" });
                       setError("");
                     }}
                     className={`flex-1 py-2.5 rounded-xl transition-colors duration-200 z-10 flex items-center justify-center gap-2 cursor-pointer ${
@@ -197,7 +198,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                     type="button"
                     onClick={() => {
                       setIsSignUp(true);
-                      setFormData({ email: "", password: "", role: "FARMER" });
+                      setFormData({ name: "", email: "", password: "", role: "FARMER" });
                       setError("");
                     }}
                     className={`flex-1 py-2.5 rounded-xl transition-colors duration-200 z-10 flex items-center justify-center gap-2 cursor-pointer ${
@@ -298,7 +299,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                           <option value="PROCESSOR">Processor</option>
                           <option value="DISTRIBUTOR">Distributor</option>
                           <option value="RETAILER">Retailer</option>
-                          <option value="CUSTOMER">Customer / Consumer</option>
+
                           <option value="ADMIN">Platform Administrator (Admin)</option>
                         </select>
                       </div>

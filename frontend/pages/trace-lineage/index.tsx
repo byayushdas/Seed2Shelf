@@ -154,21 +154,6 @@ const STAGE_LEVELS_DATA: StageData[] = [
     timelineInfo: [
       { label: "Received Date", value: "22/07/2026 • 10:00 AM" }
     ]
-  },
-  {
-    stageType: "CUSTOMER",
-    stageTitle: "Consumer Purchase & Authenticity",
-    batchId: "BATCH2026000003-CUST",
-    badge: "Authenticity Verified",
-    generalInfo: [
-      { label: "Purchase Region", value: "North India Retail Corridor" },
-      { label: "Authenticity Status", value: "100% On-Chain Verified Authentic" },
-      { label: "Trace Completed", value: "5-Stage Provenance Verified" },
-      { label: "Product Journey Completed", value: "Farm-to-Table Audit Trail Verified" }
-    ],
-    timelineInfo: [
-      { label: "Verification Date", value: "26/07/2026 • Live Scan" }
-    ]
   }
 ];
 
@@ -514,45 +499,6 @@ export default function TraceBatch() {
                     </div>
                   </div>
                 </div>
-
-                {/* CONNECTOR LINE 4 */}
-                <div className="flex flex-col items-center justify-center my-1">
-                  <div className="w-[2px] h-6 bg-teal-500/50" />
-                  <ArrowDown className="w-4 h-4 text-teal-400 my-0.5" />
-                  <div className="w-[2px] h-6 bg-teal-500/50" />
-                </div>
-
-                {/* LEVEL 5: CONSUMER VERIFICATION (CUSTOMER) */}
-                <div className="max-w-2xl mx-auto space-y-3">
-                  <h3 className="text-xs font-black text-stone-300 uppercase tracking-widest text-center border-b border-stone-800 pb-2">
-                    LEVEL 5: CONSUMER PURCHASE & AUTHENTICITY (CUSTOMER)
-                  </h3>
-
-                  <div className="p-6 bg-stone-950 rounded-2xl border border-teal-500/40 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-black text-teal-400 bg-stone-900 px-3 py-1 rounded-xl border border-stone-800">
-                        {batchId}-CUST
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h4 className="text-base font-black text-white">North India Retail Region</h4>
-                      <p className="text-xs text-stone-300">Consumer Purchase & Provenance Verification</p>
-                      <p className="text-xs text-stone-400">On-Chain Authenticity Verified</p>
-                    </div>
-
-                    <div className="pt-3 border-t border-stone-900 flex items-center justify-end">
-                      <button
-                        onClick={() => handleOpenModal(STAGE_LEVELS_DATA[4])}
-                        className="px-3.5 py-1.5 rounded-xl bg-teal-600/20 hover:bg-teal-600/30 border border-teal-500/40 text-teal-400 font-extrabold text-[11px] transition cursor-pointer flex items-center gap-1"
-                      >
-                        <span>View Details</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </motion.div>
           )}

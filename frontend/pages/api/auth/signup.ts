@@ -27,45 +27,67 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let farmerId: string | undefined = undefined;
-    let processorId: string | undefined = undefined;
-    let adminId: string | undefined = undefined;
+    let uniqueId: string | undefined = undefined;
     if (role === "FARMER") {
-      const lastFarmer = await User.findOne({ role: "FARMER", farmerId: { $ne: null } })
-        .sort({ farmerId: -1 });
+      const lastUser = await User.findOne({ role: "FARMER", uniqueId: { $ne: null } })
+        .sort({ uniqueId: -1 });
 
       let nextNum = 1;
-      if (lastFarmer && lastFarmer.farmerId) {
-        const match = lastFarmer.farmerId.match(/S2S-FRM-(\d+)/);
+      if (lastUser && lastUser.uniqueId) {
+        const match = lastUser.uniqueId.match(/S2S-FRM-(\d+)/);
         if (match) {
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      farmerId = `S2S-FRM-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-FRM-${String(nextNum).padStart(6, '0')}`;
     } else if (role === "PROCESSOR") {
-      const lastProcessor = await User.findOne({ role: "PROCESSOR", processorId: { $ne: null } })
-        .sort({ processorId: -1 });
+      const lastUser = await User.findOne({ role: "PROCESSOR", uniqueId: { $ne: null } })
+        .sort({ uniqueId: -1 });
 
       let nextNum = 1;
-      if (lastProcessor && lastProcessor.processorId) {
-        const match = lastProcessor.processorId.match(/S2S-PRC-(\d+)/);
+      if (lastUser && lastUser.uniqueId) {
+        const match = lastUser.uniqueId.match(/S2S-PRC-(\d+)/);
         if (match) {
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      processorId = `S2S-PRC-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-PRC-${String(nextNum).padStart(6, '0')}`;
+    } else if (role === "DISTRIBUTOR") {
+      const lastUser = await User.findOne({ role: "DISTRIBUTOR", uniqueId: { $ne: null } })
+        .sort({ uniqueId: -1 });
+
+      let nextNum = 1;
+      if (lastUser && lastUser.uniqueId) {
+        const match = lastUser.uniqueId.match(/S2S-DIS-(\d+)/);
+        if (match) {
+          nextNum = parseInt(match[1]) + 1;
+        }
+      }
+      uniqueId = `S2S-DIS-${String(nextNum).padStart(6, '0')}`;
+    } else if (role === "RETAILER") {
+      const lastUser = await User.findOne({ role: "RETAILER", uniqueId: { $ne: null } })
+        .sort({ uniqueId: -1 });
+
+      let nextNum = 1;
+      if (lastUser && lastUser.uniqueId) {
+        const match = lastUser.uniqueId.match(/S2S-RET-(\d+)/);
+        if (match) {
+          nextNum = parseInt(match[1]) + 1;
+        }
+      }
+      uniqueId = `S2S-RET-${String(nextNum).padStart(6, '0')}`;
     } else if (role === "ADMIN") {
-      const lastAdmin = await User.findOne({ role: "ADMIN", adminId: { $ne: null } })
-        .sort({ adminId: -1 });
+      const lastUser = await User.findOne({ role: "ADMIN", uniqueId: { $ne: null } })
+        .sort({ uniqueId: -1 });
 
       let nextNum = 1;
-      if (lastAdmin && lastAdmin.adminId) {
-        const match = lastAdmin.adminId.match(/S2S-ADM-(\d+)/);
+      if (lastUser && lastUser.uniqueId) {
+        const match = lastUser.uniqueId.match(/S2S-ADM-(\d+)/);
         if (match) {
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      adminId = `S2S-ADM-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-ADM-${String(nextNum).padStart(6, '0')}`;
     }
 
     const user = await User.create({
@@ -73,9 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email: normalizedEmail,
       password: hashedPassword,
       role,
-      farmerId,
-      processorId,
-      adminId,
+      uniqueId,
       regDate: new Date()
     });
 

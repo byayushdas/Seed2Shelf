@@ -6,7 +6,7 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { Receipt, RefreshCw, ShieldCheck } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function AdminAuditLogs() {
   const [logs, setLogs] = useState<any[]>([]);

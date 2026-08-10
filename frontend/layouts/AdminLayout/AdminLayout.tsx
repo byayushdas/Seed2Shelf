@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import Navbar from "@/components/common/Navbar/Navbar";
 import ChatAndNotifications from "@/components/shared/Chat/ChatAndNotifications";
-import AdminSidebar from "@/components/common/Sidebar/AdminSidebar";
 import bgImage from "@/assets/images/bg.png";
 
 interface AdminLayoutProps {

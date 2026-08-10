@@ -1,511 +1,472 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
-import Link from "next/link";
 import { 
   BarChart3, 
-  Factory, 
-  Boxes, 
-  ClipboardList, 
-  Truck, 
-  MapPin, 
-  Layers, 
-  ArrowRight,
-  Pencil,
-  X,
-  Check,
-  LocateFixed,
-  ExternalLink,
-  Store,
-  GitBranch,
-  ShieldCheck
+  TrendingUp, 
+  IndianRupee,
+  Package,
+  Lock,
+  AlertTriangle,
+  Calendar,
+  Download,
+  CheckCircle2,
+  PieChart,
+  ArrowUpRight,
+  Activity,
+  FileSpreadsheet
 } from "lucide-react";
 
-export default function ProcessorDashboard() {
-  const { data: session } = useSession();
-  const processorId = (session?.user as any)?.processorId || (session?.user as any)?.customId || (session?.user as any)?.id || "";
+type Timeframe = "WEEKLY" | "MONTHLY" | "YEARLY";
+
+interface ProductMetric {
+  name: string;
+  quantity: string;
+  revenue: string;
+  percentage: number;
+}
+
+interface TrendPoint {
+  period: string;
+  revenue: number;
+  volume: number;
+}
+
+interface AnalyticsData {
+  produceTransformed: string;
+  totalRevenue: string;
+  escrowLocked: string;
+  disputeRate: string;
+  successfulShipments: number;
+  totalOrders: number;
+  productBreakdown: ProductMetric[];
+  trendData: TrendPoint[];
+}
+
+const analyticsByTimeframe: Record<Timeframe, AnalyticsData> = {
+  WEEKLY: {
+    produceTransformed: "0 kg",
+    totalRevenue: "₹ 0",
+    escrowLocked: "₹ 0",
+    disputeRate: "0.0%",
+    successfulShipments: 0,
+    totalOrders: 0,
+    productBreakdown: [],
+    trendData: []
+  },
+  MONTHLY: {
+    produceTransformed: "0 kg",
+    totalRevenue: "₹ 0",
+    escrowLocked: "₹ 0",
+    disputeRate: "0.0%",
+    successfulShipments: 0,
+    totalOrders: 0,
+    productBreakdown: [],
+    trendData: []
+  },
+  YEARLY: {
+    produceTransformed: "0 kg",
+    totalRevenue: "₹ 0",
+    escrowLocked: "₹ 0",
+    disputeRate: "0.0%",
+    successfulShipments: 0,
+    totalOrders: 0,
+    productBreakdown: [],
+    trendData: []
+  }
+};
+function generatePdfBlob(title: string, timeframe: string, stats: any): Blob {
+  const dateStr = new Date().toLocaleString("en-IN");
+  const produceVal = stats.produceSold || stats.produceTransformed || "0 kg";
+  const revenueVal = stats.totalRevenue || "₹ 0";
+  const escrowVal = stats.escrowLocked || "₹ 0";
+  const disputeVal = stats.disputeRate || "0.0%";
+  const shipVal = String(stats.successfulShipments || 0);
+  const orderVal = String(stats.totalOrders || 0);
+
+  const items = stats.cropBreakdown || stats.productBreakdown || [];
+
+  const textLines = [
+    `${title.toUpperCase()} (${timeframe})`,
+    `Generated: ${dateStr}`,
+    "----------------------------------------------------------------------",
+    `Produce Sold / Transformed : ${produceVal}`,
+    `Total Revenue              : ${revenueVal}`,
+    `Escrow Locked              : ${escrowVal}`,
+    `Dispute Rate               : ${disputeVal}`,
+    `Successful Shipments       : ${shipVal}`,
+    `Total Orders               : ${orderVal}`,
+    "----------------------------------------------------------------------",
+    "ITEMIZED BREAKDOWN:",
+    ...(items.length > 0 
+      ? items.map((it: any) => `* ${it.name}: ${it.quantity} | ${it.revenue} (${it.percentage}%)`)
+      : ["* No recorded transactions for this timeframe."]),
+    "----------------------------------------------------------------------",
+    "Verified & Secured by Seed2Shelf Platform Blockchain"
+  ];
+
+  const pdfStreamText = textLines.map(line => {
+    const escaped = line.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+    return `(${escaped}) '`;
+  }).join("\n");
+
+  const pdfContent = `BT
+/F1 11 Tf
+14 TL
+40 780 Td
+${pdfStreamText}
+ET`;
+
+  const streamLength = pdfContent.length;
+
+  const obj1 = `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`;
+  const obj2 = `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`;
+  const obj3 = `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n`;
+  const obj4 = `4 0 obj\n<< /Length ${streamLength} >>\nstream\n${pdfContent}\nendstream\nendobj\n`;
+  const obj5 = `5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n`;
+
+  const header = `%PDF-1.4\n`;
   
-  const getFormattedProcessorId = () => {
-    const pId = (session?.user as any)?.processorId || processorId;
-    if (pId && pId.startsWith("S2S-PRC-")) return pId;
-    if (pId && !pId.includes("-") && pId.length <= 15) return `S2S-PRC-${pId}`;
-    return "S2S-PRC-000001";
-  };
+  const o1Pos = header.length;
+  const o2Pos = o1Pos + obj1.length;
+  const o3Pos = o2Pos + obj2.length;
+  const o4Pos = o3Pos + obj3.length;
+  const o5Pos = o4Pos + obj4.length;
+  const xrefPos = o5Pos + obj5.length;
 
-  const [facilityInfo, setFacilityInfo] = useState({
-    facilityName: "Not Registered Yet",
-    facilityLocation: "--",
-    coordinates: "--",
-    processingCapacity: "--",
-    mainProducts: "--",
-    processingPractice: "--",
-    isRegistered: false
-  });
+  const xref = `xref\n0 6\n0000000000 65535 f \n${String(o1Pos).padStart(10, '0')} 00000 n \n${String(o2Pos).padStart(10, '0')} 00000 n \n${String(o3Pos).padStart(10, '0')} 00000 n \n${String(o4Pos).padStart(10, '0')} 00000 n \n${String(o5Pos).padStart(10, '0')} 00000 n \n`;
 
-  // Edit Facility Details Modal State
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ ...facilityInfo });
-  const [isLocating, setIsLocating] = useState(false);
+  const trailer = `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
 
-  const handleDetectGPSLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude.toFixed(4);
-        const lng = position.coords.longitude.toFixed(4);
-        const coordsStr = `${lat}° N, ${lng}° E`;
-        setEditForm(prev => ({
-          ...prev,
-          coordinates: coordsStr,
-          facilityLocation: prev.facilityLocation.includes("GPS:") 
-            ? prev.facilityLocation 
-            : `${prev.facilityLocation} (GPS: ${lat}, ${lng})`
-        }));
-        setIsLocating(false);
-      },
-      () => {
-        setIsLocating(false);
-        setEditForm(prev => ({
-          ...prev,
-          coordinates: "29.6857° N, 76.9905° E",
-          facilityLocation: "Karnal Industrial Zone, Haryana, India (GPS: 29.6857, 76.9905)"
-        }));
-      }
-    );
-  };
+  const fullPdf = header + obj1 + obj2 + obj3 + obj4 + obj5 + xref + trailer;
 
-  const handleSaveFacilityDetails = async (e: React.FormEvent) => {
-    e.preventDefault();
+  return new Blob([fullPdf], { type: "application/pdf" });
+}
+
+export default function ProcessorDashboardPage() {
+  const { data: session } = useSession();
+  const [timeframe, setTimeframe] = useState<Timeframe>("MONTHLY");
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+
+  const currentStats = analyticsByTimeframe[timeframe];
+
+  const handleExportReport = (type: string) => {
     try {
-      const payload = {
-        facilityName: editForm.facilityName,
-        facilityLocation: editForm.facilityLocation,
-        coordinates: editForm.coordinates,
-        processingCapacity: editForm.processingCapacity,
-        mainProcessedProducts: editForm.mainProducts,
-        complianceStandards: editForm.processingPractice
-      };
-      
-      const res = await fetch(`/api/users/${processorId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      
-      if (res.ok) {
-        setFacilityInfo({ ...editForm });
+      if (type === "CSV") {
+        const rows = [
+          ["Seed2Shelf Processing & Inventory Analytics Report"],
+          ["Timeframe", timeframe],
+          ["Date Generated", new Date().toLocaleString("en-IN")],
+          [""],
+          ["Summary Metric", "Value"],
+          ["Produce Transformed", currentStats.produceTransformed || "0 kg"],
+          ["Total Revenue", currentStats.totalRevenue || "₹ 0"],
+          ["Escrow Locked", currentStats.escrowLocked || "₹ 0"],
+          ["Dispute Rate", currentStats.disputeRate || "0.0%"],
+          ["Successful Shipments", currentStats.successfulShipments || 0],
+          ["Total Orders", currentStats.totalOrders || 0],
+          [""],
+          ["Product Breakdown"],
+          ["Product Name", "Quantity", "Revenue", "Share %"],
+          ...(currentStats.productBreakdown || []).map(p => [p.name, p.quantity, p.revenue, `${p.percentage}%`])
+        ];
+
+        const csvString = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Processor_Report_${timeframe}_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        const blob = generatePdfBlob("Seed2Shelf Processor Analytics Report", timeframe, currentStats);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Processor_Report_${timeframe}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       }
+      setDownloadSuccess(`${type} file downloaded to your device!`);
     } catch (err) {
-      console.warn("Failed to save facility details", err);
-    } finally {
-      setIsEditModalOpen(false);
+      console.error("Export error:", err);
     }
+    setTimeout(() => setDownloadSuccess(null), 3500);
   };
 
-  useEffect(() => {
-    if (!processorId) return;
-    const fetchDashboard = async () => {
-      try {
-        const res = await fetch(`/api/users/${processorId}`, { cache: "no-store" });
-        if (res.ok) {
-          const json = await res.json();
-          if (json.facilityName) {
-            setFacilityInfo({
-              facilityName: json.facilityName || "Not Registered Yet",
-              facilityLocation: json.facilityLocation || "--",
-              coordinates: json.coordinates || "--",
-              processingCapacity: json.processingCapacity || "--",
-              mainProducts: json.mainProcessedProducts || "--",
-              processingPractice: json.complianceStandards || "--",
-              isRegistered: true
-            });
-            setEditForm({
-              facilityName: json.facilityName || "",
-              facilityLocation: json.facilityLocation || "",
-              coordinates: json.coordinates || "",
-              processingCapacity: json.processingCapacity || "",
-              mainProducts: json.mainProcessedProducts || "",
-              processingPractice: json.complianceStandards || "",
-              isRegistered: true
-            });
-          }
-        }
-      } catch (err) {
-        console.warn("Backend API offline or unreachable, utilizing default dashboard state", err);
-      }
-    };
-    fetchDashboard();
-  }, [processorId]);
+  const maxRevenue = Math.max(...currentStats.trendData.map(d => d.revenue), 1);
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Processor Dashboard | Seed2Shelf</title>
-        <meta name="description" content="Manage processing facility operations, raw material marketplace, and processed goods inventory." />
+        <meta name="description" content="View processed goods analytics, transformation volume, and revenue summaries." />
       </Head>
 
-      {/* Solid Dark Background Overlay to match Wallet & Farmer Dashboard theme */}
+      {/* Solid Dark Background Overlay matching Wallet theme */}
 
       <div className="max-w-6xl mx-auto space-y-7">
         
-        {/* =========================================================================
-            HEADER (CLEAN TITLE & SUBTITLE - MATCHING FARMER DASHBOARD 1-TO-1)
-           ========================================================================= */}
-        <div className="flex items-center gap-3.5 border-y border-stone-800/80 py-3.5">
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
-            <BarChart3 className="h-7 w-7" />
+        {/* HEADER WITH TIMEFRAME SELECTOR ON RIGHT */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
+          <div className="flex items-center gap-3.5">
+            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
+              <BarChart3 className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                Dashboard
+              </h1>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Processor Dashboard
-            </h1>
-          </div>
-        </div>
 
+          {/* TIMEFRAME SWITCHING OPTIONS */}
+          <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+            <button
+              onClick={() => setTimeframe("WEEKLY")}
+              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                timeframe === "WEEKLY"
+                  ? "bg-emerald-600 text-white shadow-md font-black"
+                  : "text-stone-400 hover:text-stone-200"
+              }`}
+            >
+              <span>Weekly</span>
+            </button>
 
-        {/* =========================================================================
-            PROCESSING FACILITY INFORMATION SECTION (MATCHING FARMER DASHBOARD)
-           ========================================================================= */}
-        <div className="space-y-3">
-          
-          {/* HEADING OUTSIDE THE BOX WITH EDIT BUTTON */}
-          <div className="flex items-center justify-between px-1 h-6">
-            <h2 className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-              Processing Facility Information & Details
-            </h2>
+            <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
 
             <button
-              onClick={() => {
-                setEditForm({ ...facilityInfo });
-                setIsEditModalOpen(true);
-              }}
-              className="inline-flex items-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white font-bold text-xs px-3.5 py-1.5 rounded-xl border border-stone-800 transition cursor-pointer"
+              onClick={() => setTimeframe("MONTHLY")}
+              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                timeframe === "MONTHLY"
+                  ? "bg-emerald-600 text-white shadow-md font-black"
+                  : "text-stone-400 hover:text-stone-200"
+              }`}
             >
-              <Pencil className="w-3.5 h-3.5 text-emerald-400" />
-              Edit Details
+              <span>Monthly</span>
+            </button>
+
+            <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
+
+            <button
+              onClick={() => setTimeframe("YEARLY")}
+              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                timeframe === "YEARLY"
+                  ? "bg-emerald-600 text-white shadow-md font-black"
+                  : "text-stone-400 hover:text-stone-200"
+              }`}
+            >
+              <span>Yearly</span>
             </button>
           </div>
-
-          {/* DETAILS PORTION INSIDE THE BOX */}
-          <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex justify-between items-center pb-3 border-b border-stone-800">
-              <span className="text-xs font-semibold text-stone-400">
-                Registered Facility Record
-              </span>
-              <span className="text-xs font-mono font-bold text-stone-400 bg-stone-950 border border-stone-800 px-3 py-1 rounded-xl">
-                ID: {getFormattedProcessorId()}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm">
-              
-              {/* Facility Name */}
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
-                <span className="text-xs text-stone-400 font-bold uppercase block flex items-center gap-1">
-                  <Factory className="w-3.5 h-3.5 text-emerald-400" /> Facility Name
-                </span>
-                <p className="font-bold text-white text-base">{facilityInfo.facilityName}</p>
-              </div>
-
-              {/* Facility Location */}
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-stone-400 font-bold uppercase flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" /> Facility Location
-                  </span>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(facilityInfo.facilityLocation)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition cursor-pointer"
-                    title="Open exact location in Google Maps"
-                  >
-                    <ExternalLink className="w-3 h-3" /> View on Google Maps
-                  </a>
-                </div>
-                <p className="font-bold text-white text-base">{facilityInfo.facilityLocation}</p>
-              </div>
-
-              {/* Processing Capacity */}
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
-                <span className="text-xs text-stone-400 font-bold uppercase block flex items-center gap-1">
-                  <Layers className="w-3.5 h-3.5 text-emerald-400" /> Processing Capacity
-                </span>
-                <p className="font-bold text-white text-base">{facilityInfo.processingCapacity}</p>
-              </div>
-
-              {/* Main Processed Products */}
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1 md:col-span-2">
-                <span className="text-xs text-stone-400 font-bold uppercase block">Main Processed Products</span>
-                <p className="font-bold text-emerald-400 text-base">{facilityInfo.mainProducts}</p>
-              </div>
-
-              {/* Processing Practice */}
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
-                <span className="text-xs text-stone-400 font-bold uppercase block flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Compliance & Standards
-                </span>
-                <p className="font-bold text-white text-base">{facilityInfo.processingPractice}</p>
-              </div>
-
-            </div>
-          </div>
-
         </div>
 
+        {downloadSuccess && (
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold flex items-center gap-2 animate-in fade-in duration-300">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>{downloadSuccess}</span>
+          </div>
+        )}
 
-        {/* =========================================================================
-            PROCESSOR FEATURE MODULES GRID (MATCHING FARMER MODULES GRID)
-           ========================================================================= */}
-        <div className="space-y-3">
-          <div className="flex items-center px-1 h-6">
-            <h2 className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-              Processor Modules
-            </h2>
+        {/* TIMEFRAME SUB-HEADER BANNER */}
+        <div className="flex flex-wrap items-center justify-between bg-stone-900/90 border border-stone-800/90 rounded-2xl p-4 sm:p-5 gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-bold text-stone-200">
+              {timeframe === "WEEKLY" ? "Current Week Processing Report (Jul 20 - Jul 26, 2026)" : timeframe === "MONTHLY" ? "Monthly Processing Summary (July 2026)" : "Annual Yield & Transformation Summary (Year 2026)"}
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-            {/* Marketplace */}
-            <Link
-              href="/processor/processorHub/marketplace"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleExportReport("CSV")}
+              className="px-3.5 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-xs font-bold text-stone-300 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <Store className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Marketplace</h3>
-                <p className="text-xs text-stone-400 mt-1">Procure fresh raw crops directly from farmers</p>
-              </div>
-            </Link>
-
-            {/* Processed Inventory */}
-            <Link
-              href="/processor/processorHub/processedInventory"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={() => handleExportReport("PDF")}
+              className="px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl text-xs font-bold text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <Boxes className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Processed Inventory</h3>
-                <p className="text-xs text-stone-400 mt-1">Manage packaged goods, stock & batch codes</p>
-              </div>
-            </Link>
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Download PDF</span>
+            </button>
+          </div>
+        </div>
 
-            {/* Incoming Orders */}
-            <Link
-              href="/processor/processorHub/orders"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <ClipboardList className="w-6 h-6" />
+        {/* UNIFIED 4-METRIC SQUARE CONTAINER (MATCHING FARMER REPORTS EXACTLY) */}
+        <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-3.5 sm:p-5 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            
+            {/* Cell 1: Produce Transformed */}
+            <div className="p-6 bg-stone-950/80 border border-stone-800/70 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/30 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-stone-400 uppercase tracking-wider block">
+                  PRODUCED SOLD
+                </span>
+                <div className="p-2.5 bg-stone-900 border border-stone-800 rounded-xl text-stone-300">
+                  <Package className="w-4 h-4" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
               </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Incoming Orders</h3>
-                <p className="text-xs text-stone-400 mt-1">Review distributor orders & payment escrows</p>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-white tracking-tight">{currentStats.produceTransformed}</p>
+                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{currentStats.successfulShipments} Processed Batches</span>
+                </div>
               </div>
-            </Link>
+            </div>
 
-            {/* Shipments */}
-            <Link
-              href="/processor/processorHub/shipments"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <Truck className="w-6 h-6" />
+            {/* Cell 2: Total Revenue */}
+            <div className="p-6 bg-stone-950/80 border border-emerald-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/40 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-400 uppercase tracking-wider block">
+                  TOTAL REVENUE
+                </span>
+                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                  <IndianRupee className="w-4 h-4" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
               </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Shipments</h3>
-                <p className="text-xs text-stone-400 mt-1">Track outgoing cargo dispatches & delivery</p>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-emerald-400 tracking-tight">{currentStats.totalRevenue}</p>
+                <div className="text-[11px] text-emerald-400/90 flex items-center gap-1.5 font-medium">
+                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                  <span>Settled Escrow Earnings from Distributors</span>
+                </div>
               </div>
-            </Link>
+            </div>
 
-            {/* Reports */}
-            <Link
-              href="/processor/processorHub/reports"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <BarChart3 className="w-6 h-6" />
+            {/* Cell 3: Escrow Locked */}
+            <div className="p-6 bg-stone-950/80 border border-amber-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-amber-500/40 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">
+                  ESCROW LOCKED
+                </span>
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+                  <Lock className="w-4 h-4" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
               </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Reports & Analytics</h3>
-                <p className="text-xs text-stone-400 mt-1">Review processing yield & revenue summaries</p>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-amber-400 tracking-tight">{currentStats.escrowLocked}</p>
+                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                  <Activity className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>In-Transit Protection</span>
+                </div>
               </div>
-            </Link>
+            </div>
 
-            {/* Trace Produce */}
-            <Link
-              href="/home/trace-product"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <GitBranch className="w-6 h-6" />
+            {/* Cell 4: Dispute Rate */}
+            <div className="p-6 bg-stone-950/80 border border-rose-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-rose-500/40 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-stone-400 uppercase tracking-wider block">
+                  DISPUTE RATE
+                </span>
+                <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400">
+                  <AlertTriangle className="w-4 h-4" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
               </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Trace Produce</h3>
-                <p className="text-xs text-stone-400 mt-1">Scan QR codes & track farm-to-shelf lineage</p>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-rose-400 tracking-tight">{currentStats.disputeRate}</p>
+                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Quality Assurance Approved</span>
+                </div>
               </div>
-            </Link>
+            </div>
 
           </div>
+        </div>
+
+        {/* ANALYTICS CHARTS & BREAKDOWN SECTION */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Revenue & Volume Trend Chart */}
+          <div className="lg:col-span-2 bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 space-y-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-extrabold text-white">Revenue & Volume Trend</h3>
+              </div>
+              <span className="text-xs text-stone-400 font-medium">
+                {timeframe} Performance
+              </span>
+            </div>
+
+            {/* Custom Bar Visualization */}
+            <div className="space-y-4 pt-2">
+              <div className="h-44 flex items-end justify-between gap-3 sm:gap-6 pt-6 px-2">
+                {currentStats.trendData.map((data, idx) => {
+                  const heightPercent = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                      <span className="text-[10px] text-emerald-400 font-mono opacity-0 group-hover:opacity-100 transition">
+                        ₹{data.revenue}
+                      </span>
+                      <div className="w-full bg-stone-950 rounded-t-xl h-full flex items-end overflow-hidden border border-stone-800">
+                        <div 
+                          className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-xl transition-all duration-500"
+                          style={{ height: `${Math.max(heightPercent, 8)}%` }}
+                        />
+                      </div>
+                      <span className="text-[11px] font-bold text-stone-400">{data.period}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Processed Product Revenue Breakdown */}
+          <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 space-y-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+              <div className="flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-extrabold text-white">Product Share</h3>
+              </div>
+              <span className="text-xs text-stone-400 font-medium">Output Share %</span>
+            </div>
+
+            <div className="space-y-4 pt-1">
+              {currentStats.productBreakdown.map((product, idx) => (
+                <div key={idx} className="space-y-1.5 p-3.5 bg-stone-950 rounded-2xl border border-stone-800">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-white">{product.name}</span>
+                    <span className="text-emerald-400 font-mono">{product.revenue}</span>
+                  </div>
+                  
+                  {/* Progress bar */}
+                  <div className="w-full h-2 bg-stone-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full"
+                      style={{ width: `${product.percentage}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5">
+                    <span>Volume: {product.quantity}</span>
+                    <span>{product.percentage}% of total</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
       </div>
-
-
-      {/* =========================================================================
-          EDIT FACILITY DETAILS MODAL POPUP
-         ========================================================================= */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-800 w-full max-w-lg rounded-3xl p-6 sm:p-7 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400">
-                  <Pencil className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-white">Edit Facility Details</h3>
-                  <p className="text-xs text-stone-400">Update processing plant information records</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-stone-400 hover:text-white rounded-xl bg-stone-800 hover:bg-stone-700 transition cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Edit Form */}
-            <form onSubmit={handleSaveFacilityDetails} className="space-y-4 text-xs">
-              <div>
-                <label className="text-stone-400 font-bold block mb-1">Facility Name</label>
-                <input
-                  type="text"
-                  value={editForm.facilityName}
-                  onChange={(e) => setEditForm({ ...editForm, facilityName: e.target.value })}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-stone-400 font-bold block mb-1">Facility Location (Google Maps)</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={editForm.facilityLocation}
-                      onChange={(e) => setEditForm({ ...editForm, facilityLocation: e.target.value })}
-                      placeholder="e.g. Karnal Industrial Zone, Haryana, India"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 pr-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                      required
-                    />
-                    <MapPin className="w-4 h-4 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleDetectGPSLocation}
-                    disabled={isLocating}
-                    className="px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0"
-                    title="Auto-detect current location via GPS / Google Maps API"
-                  >
-                    <LocateFixed className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
-                    <span>{isLocating ? "Locating..." : "Auto-Pin GPS"}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-stone-400 font-bold block mb-1">Processing Capacity</label>
-                  <input
-                    type="text"
-                    value={editForm.processingCapacity}
-                    onChange={(e) => setEditForm({ ...editForm, processingCapacity: e.target.value })}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-stone-400 font-bold block mb-1">Compliance & Practice</label>
-                  <input
-                    type="text"
-                    value={editForm.processingPractice}
-                    onChange={(e) => setEditForm({ ...editForm, processingPractice: e.target.value })}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-stone-400 font-bold block mb-1">Main Processed Products</label>
-                <input
-                  type="text"
-                  value={editForm.mainProducts}
-                  onChange={(e) => setEditForm({ ...editForm, mainProducts: e.target.value })}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                  required
-                />
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-stone-800">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import { ArrowLeftRight, Lock, CheckCircle2, ShieldCheck, RefreshCw } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function AdminPaymentsEscrow() {
   const [payments, setPayments] = useState<any[]>([]);

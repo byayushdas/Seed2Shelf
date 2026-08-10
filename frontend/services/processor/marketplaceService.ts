@@ -1,6 +1,6 @@
 import { FarmerHarvestItem } from "@/types/processor";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1";
 
 const mockHarvests: FarmerHarvestItem[] = [];
 
@@ -54,6 +54,68 @@ export const marketplaceService = {
       console.warn("Error fetching marketplace harvests:", e);
     }
     return mockHarvests;
+  },
+
+  // For DISTRIBUTOR marketplace — browse listed PROCESSED goods from Processors
+  async fetchAvailableProcessedGoodsFromApi(search?: string, category?: string): Promise<FarmerHarvestItem[]> {
+    try {
+      const url = new URL(`${API_BASE_URL}/distributor/marketplace`);
+      if (search) url.searchParams.append("search", search);
+      if (category) url.searchParams.append("category", category);
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        return data.data.map((item: any) => ({
+          id: item.id || item.batchId,
+          batchId: item.batchId || "PROC-001",
+          cropName: item.productName || item.cropName || "Processed Good",
+          farmerName: item.processorName || item.farmerName || "Registered Processor",
+          farmerLocation: item.processorLocation || item.farmerLocation || "India",
+          quantity: item.quantity ?? 0,
+          unit: "kg",
+          pricePerUnit: item.pricePerUnit ?? 0,
+          totalPrice: (item.quantity ?? 0) * (item.pricePerUnit ?? 0),
+          harvestDate: item.processingDate || item.harvestDate || "Recently Processed",
+          hasQrCode: item.hasQrCode ?? true,
+          imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=600",
+        }));
+      }
+    } catch (e) {
+      console.warn("Error fetching distributor marketplace:", e);
+    }
+    return [];
+  },
+
+  // For RETAILER marketplace — browse listed DISTRIBUTED goods from Distributors
+  async fetchAvailableDistributedGoodsFromApi(search?: string, category?: string): Promise<FarmerHarvestItem[]> {
+    try {
+      const url = new URL(`${API_BASE_URL}/retailer/marketplace`);
+      if (search) url.searchParams.append("search", search);
+      if (category) url.searchParams.append("category", category);
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        return data.data.map((item: any) => ({
+          id: item.id || item.batchId,
+          batchId: item.batchId || "DIST-001",
+          cropName: item.productName || item.cropName || "Distributed Good",
+          farmerName: item.distributorName || item.farmerName || "Registered Distributor",
+          farmerLocation: item.distributorLocation || item.farmerLocation || "India",
+          quantity: item.quantity ?? 0,
+          unit: "kg",
+          pricePerUnit: item.pricePerUnit ?? 0,
+          totalPrice: (item.quantity ?? 0) * (item.pricePerUnit ?? 0),
+          harvestDate: item.date || item.harvestDate || "Recently Added",
+          hasQrCode: item.hasQrCode ?? true,
+          imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=600",
+        }));
+      }
+    } catch (e) {
+      console.warn("Error fetching retailer marketplace:", e);
+    }
+    return [];
   },
 
   async addToCartApi(harvestId: string, quantityKg: number): Promise<any> {

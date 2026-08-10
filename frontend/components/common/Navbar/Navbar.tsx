@@ -41,7 +41,7 @@ const getHubConfig = (role: string) => {
           { name: "Harvest Hub", url: "/farmer/farmerHub/harvestHub", icon: Sprout },
           { name: "Orders", url: "/farmer/farmerHub/orders", icon: ClipboardList },
           { name: "Shipments", url: "/farmer/farmerHub/shipments", icon: Truck },
-          { name: "Reports", url: "/farmer/farmerHub/reports", icon: FileText },
+
           { name: "Trace Produce", url: "/trace-lineage", icon: GitBranch }
         ]
       };
@@ -80,7 +80,7 @@ const getHubConfig = (role: string) => {
         basePath: "/distributor",
         items: [
           { name: "Logistics Portal", hash: "", icon: Truck },
-          { name: "Marketplace", url: "/customer/marketplace", icon: Package },
+          { name: "Marketplace", url: "/distributor/distributorHub/marketplace", icon: Package },
           { name: "In Transit Inventory", hash: "#inventory", icon: ClipboardList },
           { name: "Trace Lineage", url: "/trace-lineage", icon: GitBranch }
         ]
@@ -91,7 +91,7 @@ const getHubConfig = (role: string) => {
         basePath: "/retailer",
         items: [
           { name: "Retail Storefront", hash: "", icon: Home },
-          { name: "Marketplace", url: "/customer/marketplace", icon: Package },
+          { name: "Marketplace", url: "/retailer/retailerHub/marketplace", icon: Package },
           { name: "Inventory", hash: "#inventory", icon: ClipboardList },
           { name: "Trace Lineage", url: "/trace-lineage", icon: GitBranch }
         ]
@@ -225,9 +225,7 @@ export default function Navbar() {
             {isAuthenticated && !isPortalUser && (
               <div className="hidden md:flex items-center gap-6 text-sm font-medium">
 
-                <Link href="/customer/marketplace" className={`transition-colors ${router.pathname.includes("marketplace") ? "text-[#00d26a]" : "text-stone-300 hover:text-white"}`}>
-                  Marketplace
-                </Link>
+
 
                 <Link href="/trace-lineage" className={`transition-colors ${router.pathname.includes("trace") ? "text-[#00d26a]" : "text-stone-300 hover:text-white"}`}>
                   Trace Produce
@@ -472,7 +470,7 @@ export default function Navbar() {
   );
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: string; isOpen: boolean; onToggle: () => void; onClose: () => void }) {
   const [notifications, setNotifications] = useState<any[]>([]);

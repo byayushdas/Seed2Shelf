@@ -7,24 +7,9 @@ export interface IUser extends Document {
   role: string;
   walletAddress?: string;
   profilePhoto?: string;
-  farmerId?: string;
-  processorId?: string;
-  adminId?: string;
-  distributorId?: string;
-  retailerId?: string;
-  mobileNumber?: string;
-  dob?: string;
-  gender?: string;
-  permanentAddress?: string;
-  state?: string;
-  district?: string;
-  village?: string;
-  pinCode?: string;
-  farmName?: string;
-  farmLocation?: string;
-  landArea?: number;
-  mainCrops?: string;
-  farmingType?: string;
+  uniqueId: string;
+  averageRating?: number;
+  reviewCount?: number;
   regDate?: Date;
   aadhaarNumber?: string;
   aadhaarFront?: string;
@@ -42,25 +27,9 @@ const UserSchema: Schema = new Schema({
   password: { type: String }, // optional for oauth
   role: { type: String, required: true },
   walletAddress: { type: String, unique: true, sparse: true },
-  profilePhoto: { type: String },
-  farmerId: { type: String, unique: true, sparse: true },
-  processorId: { type: String, unique: true, sparse: true },
-  adminId: { type: String, unique: true, sparse: true },
-  distributorId: { type: String, unique: true, sparse: true },
-  retailerId: { type: String, unique: true, sparse: true },
-  mobileNumber: { type: String },
-  dob: { type: String },
-  gender: { type: String },
-  permanentAddress: { type: String },
-  state: { type: String },
-  district: { type: String },
-  village: { type: String },
-  pinCode: { type: String },
-  farmName: { type: String },
-  farmLocation: { type: String },
-  landArea: { type: Number },
-  mainCrops: { type: String },
-  farmingType: { type: String },
+  uniqueId: { type: String, unique: true, sparse: true },
+  averageRating: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 },
   regDate: { type: Date },
   aadhaarNumber: { type: String },
   aadhaarFront: { type: String },

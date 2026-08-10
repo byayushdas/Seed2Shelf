@@ -22,7 +22,7 @@ import {
   RefreshCw
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 export default function AdminUserManagement() {
   const { data: session } = useSession();
@@ -148,7 +148,7 @@ export default function AdminUserManagement() {
               <option value="PROCESSOR">Processor</option>
               <option value="DISTRIBUTOR">Distributor</option>
               <option value="RETAILER">Retailer</option>
-              <option value="CUSTOMER">Customer</option>
+
             </select>
           </div>
 

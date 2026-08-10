@@ -20,7 +20,7 @@ export default function LoginPage() {
       case 'ADMIN': router.push('/admin/adminHub/dashboard'); break;
       case 'DISTRIBUTOR': router.push('/distributor/distributorHub/dashboard'); break;
       case 'RETAILER': router.push('/retailer/retailerHub/dashboard'); break;
-      case 'CUSTOMER': router.push('/customer/marketplace'); break;
+
       default: router.push('/');
     }
   };

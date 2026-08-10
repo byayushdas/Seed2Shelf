@@ -57,6 +57,9 @@ const getCropImage = (item: InventoryItem) => {
 
 export default function HarvestHub() {
   const { data: session } = useSession();
+  const farmerId = (session?.user as any)?.id || (session?.user as any)?.farmerId || "";
+  const roleId = (session?.user as any)?.roleId || "";
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
   // Tab State for Active Inventory vs Sales History
   const [farmerTab, setFarmerTab] = useState<"ACTIVE" | "SOLD_HISTORY">("ACTIVE");
@@ -118,6 +121,41 @@ export default function HarvestHub() {
   // Registered Inventory Items - Clean empty state
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
+  // Fetch inventory from backend on mount
+  useEffect(() => {
+    if (!farmerId) return;
+    const fetchHarvests = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/farmer/harvests?userId=${farmerId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            const mapped = json.data.map((item: any) => ({
+              id: item._id || item.batchId,
+              category: item.category,
+              cropName: item.cropName,
+              quantity: `${item.quantity} kg`,
+              pricePerKg: `₹${item.pricePerKg}/kg`,
+              harvestDate: item.harvestDate ? new Date(item.harvestDate).toLocaleDateString("en-GB") : formattedDateDisplay,
+              status: item.status,
+              cropImage: item.cropImage || undefined,
+              qrCode: item.qrCode || undefined,
+              traceUrl: item.traceUrl || undefined,
+              isSold: item.status === "Sold",
+              soldTo: item.soldTo,
+              soldDate: item.soldDate ? new Date(item.soldDate).toLocaleDateString("en-GB") : undefined,
+              totalSaleValue: item.totalSaleValue ? `₹${item.totalSaleValue}` : undefined
+            }));
+            setInventory(mapped);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch harvests:", err);
+      }
+    };
+    fetchHarvests();
+  }, [farmerId]);
+
   const handleRegisterHarvest = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
@@ -133,22 +171,51 @@ export default function HarvestHub() {
       ? `${cropVariety} ${cropName}`
       : cropName || "Mangoes";
 
-    // Add to inventory
-    const newItem: InventoryItem = {
-      id: batchId,
-      category: cropCategory || "Fruits",
-      cropName: currentCrop,
-      quantity: `${quantity} kg`,
-      pricePerKg: `₹${price}/kg`,
-      harvestDate: formattedDateDisplay,
-      status: "Unlisted",
-      cropImage: cropImage || undefined,
-      qrCode: qrDataUrl,
-      traceUrl: qrUrl
-    };
+    const dateToSave = new Date(selectedYear, selectedMonth, selectedDay).toISOString();
 
-    setInventory([newItem, ...inventory]);
-    setNewBatchInfo({ id: batchId, qr: qrDataUrl, url: qrUrl, cropName: currentCrop });
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/harvests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: farmerId,
+          roleId: roleId,
+          cropName: currentCrop,
+          category: cropCategory,
+          variety: cropVariety,
+          quantity: quantity,
+          pricePerKg: price,
+          harvestDate: dateToSave,
+          cropImage: cropImage,
+          qrCode: qrDataUrl,
+          traceUrl: qrUrl,
+          batchId: batchId
+        })
+      });
+
+      if (res.ok) {
+        // Add to inventory
+        const newItem: InventoryItem = {
+          id: batchId,
+          category: cropCategory || "Fruits",
+          cropName: currentCrop,
+          quantity: `${quantity} kg`,
+          pricePerKg: `₹${price}/kg`,
+          harvestDate: formattedDateDisplay,
+          status: "Unlisted",
+          cropImage: cropImage || undefined,
+          qrCode: qrDataUrl,
+          traceUrl: qrUrl
+        };
+
+        setInventory([newItem, ...inventory]);
+        setNewBatchInfo({ id: batchId, qr: qrDataUrl, url: qrUrl, cropName: currentCrop });
+      } else {
+        console.error("Failed to save harvest");
+      }
+    } catch (err) {
+      console.error("Error saving harvest:", err);
+    }
 
     setTimeout(() => {
       setSubmitted(false);
@@ -178,18 +245,32 @@ export default function HarvestHub() {
     farmerTab === "ACTIVE" ? !i.isSold : i.isSold
   );
 
-  const handleDeleteItem = (id: string) => {
-    setInventory(inventory.filter((item) => item.id !== id));
+  const handleDeleteItem = async (id: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/harvests/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setInventory(inventory.filter((item) => item.id !== id));
+      }
+    } catch (err) {
+      console.error("Error deleting harvest:", err);
+    }
   };
 
-  const handleToggleListStatus = (id: string) => {
-    setInventory(
-      inventory.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === "Listed" ? "Unlisted" : "Listed" }
-          : item
-      )
-    );
+  const handleToggleListStatus = async (id: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/harvests/${id}/list`, { method: "PUT" });
+      if (res.ok) {
+        setInventory(
+          inventory.map((item) =>
+            item.id === id
+              ? { ...item, status: item.status === "Listed" ? "Unlisted" : "Listed" }
+              : item
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling list status:", err);
+    }
   };
 
   const handleInventoryQrClick = async (item: InventoryItem) => {

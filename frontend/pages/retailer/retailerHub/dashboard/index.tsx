@@ -1,520 +1,478 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import Link from "next/link";
 import { 
   BarChart3, 
-  Sprout, 
-  ClipboardList, 
-  Truck, 
-  MapPin, 
-  Layers, 
-  ArrowRight,
-  ChevronRight,
-  Pencil,
-  X,
-  Store,
+  TrendingUp, 
+  IndianRupee,
   Package,
-  FileText,
-  GitBranch,
-  Loader2,
-  PackageSearch,
-  LocateFixed,
-  ExternalLink,
-  Check
+  Lock,
+  AlertTriangle,
+  Calendar,
+  Download,
+  CheckCircle2,
+  PieChart,
+  ArrowUpRight,
+  Activity,
+  FileSpreadsheet,
+  Loader2
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+
+type Timeframe = "WEEKLY" | "MONTHLY" | "YEARLY";
+
+interface ItemMetric {
+  name: string;
+  quantity: string;
+  revenue: string;
+  percentage: number;
+}
+
+interface TrendPoint {
+  period: string;
+  revenue: number;
+  volume: number;
+}
+
+interface AnalyticsData {
+  produceTransformed: string;
+  totalRevenue: string;
+  escrowLocked: string;
+  disputeRate: string;
+  successfulShipments: number;
+  totalOrders: number;
+  productBreakdown: ItemMetric[];
+  trendData: TrendPoint[];
+}
+
+const emptyAnalytics: AnalyticsData = {
+  produceTransformed: "0 kg",
+  totalRevenue: "₹ 0",
+  escrowLocked: "₹ 0",
+  disputeRate: "0.0%",
+  successfulShipments: 0,
+  totalOrders: 0,
+  productBreakdown: [],
+  trendData: []
+};
+
+function generatePdfBlob(title: string, timeframe: string, stats: any): Blob {
+  const dateStr = new Date().toLocaleString("en-IN");
+  const produceVal = stats.produceTransformed || stats.produceSold || "0 kg";
+  const revenueVal = stats.totalRevenue || "₹ 0";
+  const escrowVal = stats.escrowLocked || "₹ 0";
+  const disputeVal = stats.disputeRate || "0.0%";
+  const shipVal = String(stats.successfulShipments || 0);
+  const orderVal = String(stats.totalOrders || 0);
+
+  const items = stats.productBreakdown || stats.cropBreakdown || [];
+
+  const textLines = [
+    `${title.toUpperCase()} (${timeframe})`,
+    `Generated: ${dateStr}`,
+    "----------------------------------------------------------------------",
+    `Items Moved                : ${produceVal}`,
+    `Total Revenue              : ${revenueVal}`,
+    `Escrow Locked              : ${escrowVal}`,
+    `Dispute Rate               : ${disputeVal}`,
+    `Successful Shipments       : ${shipVal}`,
+    `Total Orders               : ${orderVal}`,
+    "----------------------------------------------------------------------",
+    "ITEMIZED BREAKDOWN:",
+    ...(items.length > 0 
+      ? items.map((it: any) => `* ${it.name}: ${it.quantity} | ${it.revenue} (${it.percentage}%)`)
+      : ["* No recorded transactions for this timeframe."]),
+    "----------------------------------------------------------------------",
+    "Verified & Secured by Seed2Shelf Platform Blockchain"
+  ];
+
+  const pdfStreamText = textLines.map(line => {
+    const escaped = line.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+    return `(${escaped}) '`;
+  }).join("\n");
+
+  const pdfContent = `BT\n/F1 11 Tf\n14 TL\n40 780 Td\n${pdfStreamText}\nET`;
+  const streamLength = pdfContent.length;
+
+  const obj1 = `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`;
+  const obj2 = `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`;
+  const obj3 = `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n`;
+  const obj4 = `4 0 obj\n<< /Length ${streamLength} >>\nstream\n${pdfContent}\nendstream\nendobj\n`;
+  const obj5 = `5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n`;
+
+  const header = `%PDF-1.4\n`;
+  
+  const o1Pos = header.length;
+  const o2Pos = o1Pos + obj1.length;
+  const o3Pos = o2Pos + obj2.length;
+  const o4Pos = o3Pos + obj3.length;
+  const o5Pos = o4Pos + obj4.length;
+  const xrefPos = o5Pos + obj5.length;
+
+  const xref = `xref\n0 6\n0000000000 65535 f \n${String(o1Pos).padStart(10, '0')} 00000 n \n${String(o2Pos).padStart(10, '0')} 00000 n \n${String(o3Pos).padStart(10, '0')} 00000 n \n${String(o4Pos).padStart(10, '0')} 00000 n \n${String(o5Pos).padStart(10, '0')} 00000 n \n`;
+  const trailer = `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
+
+  const fullPdf = header + obj1 + obj2 + obj3 + obj4 + obj5 + xref + trailer;
+  return new Blob([fullPdf], { type: "application/pdf" });
+}
 
 export default function RetailerDashboard() {
   const { data: session } = useSession();
-  const retailerId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";
-  
-  const [displayRetId, setDisplayRetId] = useState<string>(
-    (session?.user as any)?.retailerId || ""
-  );
+  const retailerId = (session?.user as any)?.retailerId || (session?.user as any)?.id || "";
 
-  const getFormattedRetId = () => {
-    const rId = (session?.user as any)?.retailerId || displayRetId;
-    if (rId && rId.startsWith("S2S-RET-")) return rId;
-    if (rId && !rId.includes("-") && rId.length <= 15) return `S2S-RET-${rId}`;
-    return "S2S-RET-000001";
-  };
-
-  const [retailerInfo, setRetailerInfo] = useState({
-    storeName: "Not Registered Yet",
-    storeLocation: "--",
-    coordinates: "--",
-    storeTypeFocus: "--",
-    shelfCapacity: "--",
-    employeeCount: "--",
-    isRegistered: false
-  });
-
+  const [timeframe, setTimeframe] = useState<Timeframe>("MONTHLY");
+  const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Edit Store Details Modal State
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ ...retailerInfo });
-  const [isLocating, setIsLocating] = useState(false);
-
-  const handleDetectGPSLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude.toFixed(4);
-        const lng = position.coords.longitude.toFixed(4);
-        const coordsStr = `${lat}° N, ${lng}° E`;
-        setEditForm(prev => ({
-          ...prev,
-          coordinates: coordsStr,
-          storeLocation: prev.storeLocation.includes("GPS:") 
-            ? prev.storeLocation 
-            : `${prev.storeLocation} (GPS: ${lat}, ${lng})`
-        }));
-        setIsLocating(false);
-      },
-      () => {
-        setIsLocating(false);
-        setEditForm(prev => ({
-          ...prev,
-          coordinates: "29.6857° N, 76.9905° E",
-          storeLocation: "Karnal Industrial Zone, Haryana, India (GPS: 29.6857, 76.9905)"
-        }));
-      }
-    );
-  };
-
-  const handleSaveFacilityDetails = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        storeName: editForm.storeName,
-        storeLocation: editForm.storeLocation,
-        coordinates: editForm.coordinates,
-        shelfCapacity: editForm.shelfCapacity,
-        storeTypeFocus: editForm.storeTypeFocus,
-        employeeCount: editForm.employeeCount
-      };
-      
-      const res = await fetch(`/api/users/${retailerId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      
-      if (res.ok) {
-        setRetailerInfo({ ...editForm });
-      }
-    } catch (err) {
-      console.warn("Failed to save facility details", err);
-    } finally {
-      setIsEditModalOpen(false);
-    }
-  };
-
-  useEffect(() => {
-    if ((session?.user as any)?.retailerId) {
-      setDisplayRetId((session?.user as any).retailerId);
-    }
-  }, [session]);
+  const [currentStats, setCurrentStats] = useState<AnalyticsData>(emptyAnalytics);
 
   useEffect(() => {
     if (!retailerId) return;
-    const fetchDashboard = async () => {
+    const fetchAnalytics = async () => {
       try {
         setIsLoading(true);
-        // We attempt to fetch retailer info from our unified users endpoint
-        const res = await fetch(`/api/users/${retailerId}`, { cache: "no-store" });
+        // Mock API call
+        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/reports?userId=${retailerId}&timeframe=${timeframe}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.storeName) {
-            setRetailerInfo({
-              storeName: json.storeName || "Not Registered Yet",
-              storeLocation: json.storeLocation || "--",
-              coordinates: json.coordinates || "--",
-              shelfCapacity: json.shelfCapacity || "--",
-              storeTypeFocus: json.storeTypeFocus || "--",
-              employeeCount: json.employeeCount || "--",
-              isRegistered: true
-            });
-            setEditForm({
-              storeName: json.storeName || "",
-              storeLocation: json.storeLocation || "",
-              coordinates: json.coordinates || "",
-              shelfCapacity: json.shelfCapacity || "",
-              storeTypeFocus: json.storeTypeFocus || "",
-              employeeCount: json.employeeCount || "",
-              isRegistered: true
-            });
+          if (json.success && json.data) {
+            setCurrentStats(json.data);
+          } else {
+            setCurrentStats(emptyAnalytics);
           }
         }
-        
-        // Try fetching actual crops where currentOwnerId is the retailerId
-        // Removed purchased batches fetch
-
       } catch (err) {
-        console.warn("Backend API offline or unreachable, utilizing default dashboard state", err);
+        console.warn("Backend API offline or unreachable, utilizing default zero state", err);
+        setCurrentStats(emptyAnalytics);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchDashboard();
-  }, [retailerId]);
+    fetchAnalytics();
+  }, [retailerId, timeframe]);
 
+  const handleExportReport = async (type: "CSV" | "PDF") => {
+    try {
+      if (type === "CSV") {
+        const rows = [
+          ["Seed2Shelf Retailer Analytics Report"],
+          ["Timeframe", timeframe],
+          ["Date Generated", new Date().toLocaleString("en-IN")],
+          [""],
+          ["Summary Metric", "Value"],
+          ["Items Moved", currentStats.produceTransformed || "0 kg"],
+          ["Total Revenue", currentStats.totalRevenue || "₹ 0"],
+          ["Escrow Locked", currentStats.escrowLocked || "₹ 0"],
+          ["Dispute Rate", currentStats.disputeRate || "0.0%"],
+          ["Successful Shipments", currentStats.successfulShipments || 0],
+          ["Total Orders", currentStats.totalOrders || 0],
+          [""],
+          ["Product Breakdown"],
+          ["Item Name", "Quantity", "Revenue", "Share %"],
+          ...(currentStats.productBreakdown || []).map(c => [c.name, c.quantity, c.revenue, `${c.percentage}%`])
+        ];
+
+        const csvString = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Retailer_Report_${timeframe}_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        const blob = generatePdfBlob("Seed2Shelf Retailer Analytics Report", timeframe, currentStats);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Retailer_Report_${timeframe}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+      setDownloadSuccess(`${type} file downloaded to your device!`);
+    } catch (err) {
+      console.error("Export error:", err);
+    }
+    setTimeout(() => setDownloadSuccess(null), 3500);
+  };
+
+  const maxRevenue = Math.max(...(currentStats.trendData || []).map(d => d.revenue), 1);
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Retailer Dashboard | Seed2Shelf</title>
-        <meta name="description" content="Manage store inventory, incoming shipments, and retail sales." />
+        <meta name="description" content="View retailer analytics and total revenue summaries." />
       </Head>
 
       <div className="max-w-6xl mx-auto space-y-7">
         
-        {/* HEADER */}
-        <div className="flex items-center justify-between border-y border-stone-800/80 py-3.5">
+        {/* HEADER WITH TIMEFRAME SELECTOR ON RIGHT */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
               <BarChart3 className="h-7 w-7" />
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Retailer Dashboard
+                Dashboard
               </h1>
             </div>
           </div>
 
-          {isLoading && (
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Syncing Live Data...</span>
+          <div className="flex items-center gap-3">
+            {isLoading && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Generating...</span>
+              </div>
+            )}
+
+            {/* TIMEFRAME SWITCHING OPTIONS */}
+            <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+              <button
+                onClick={() => setTimeframe("WEEKLY")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                  timeframe === "WEEKLY"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Weekly</span>
+              </button>
+
+              <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
+
+              <button
+                onClick={() => setTimeframe("MONTHLY")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                  timeframe === "MONTHLY"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Monthly</span>
+              </button>
+
+              <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
+
+              <button
+                onClick={() => setTimeframe("YEARLY")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                  timeframe === "YEARLY"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Yearly</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* RETAILER INFORMATION SECTION */}
-        <div className="space-y-3">
-          
-          <div className="flex items-center justify-between px-1 h-6">
-            <h2 className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-              Retailer Information & Details
-            </h2>
+        {downloadSuccess && (
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold flex items-center gap-2 animate-in fade-in duration-300">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>{downloadSuccess}</span>
+          </div>
+        )}
 
+        {/* TIMEFRAME SUB-HEADER BANNER */}
+        <div className="flex flex-wrap items-center justify-between bg-stone-900/90 border border-stone-800/90 rounded-2xl p-4 sm:p-5 gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-bold text-stone-200">
+              {timeframe === "WEEKLY" ? "Current Week Report" : timeframe === "MONTHLY" ? "Monthly Summary" : "Annual Summary"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setEditForm({ ...retailerInfo });
-                setIsEditModalOpen(true);
-              }}
-              className="inline-flex items-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-white font-bold text-xs px-3.5 py-1.5 rounded-xl border border-stone-800 transition cursor-pointer"
+              onClick={() => handleExportReport("CSV")}
+              className="px-3.5 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-xs font-bold text-stone-300 transition flex items-center gap-1.5 cursor-pointer"
             >
-              <Pencil className="w-3.5 h-3.5 text-emerald-400" />
-              Edit Details
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={() => handleExportReport("PDF")}
+              className="px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl text-xs font-bold text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Download PDF</span>
             </button>
           </div>
+        </div>
 
-          <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
-            <div className="flex justify-between items-center pb-3 border-b border-stone-800">
-              <span className="text-xs font-semibold text-stone-400">
-                Registered Retail Store Record
-              </span>
-              <span className="text-xs font-mono font-bold text-stone-400 bg-stone-950 border border-stone-800 px-3 py-1 rounded-xl">
-                ID: {getFormattedRetId()}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm">
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
-                <span className="text-xs text-stone-400 font-bold uppercase block">Store Name</span>
-                <p className="font-bold text-white text-base">{retailerInfo.storeName}</p>
-              </div>
-
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-stone-400 font-bold uppercase flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" /> Store Location
-                  </span>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(retailerInfo.storeLocation)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition cursor-pointer"
-                    title="Open exact location in Google Maps"
-                  >
-                    <ExternalLink className="w-3 h-3" /> View on Google Maps
-                  </a>
-                </div>
-                <p className="font-bold text-white text-base">{retailerInfo.storeLocation}</p>
-              </div>
-
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
-                <span className="text-xs text-stone-400 font-bold uppercase block flex items-center gap-1">
-                  <Layers className="w-3.5 h-3.5 text-emerald-400" /> Shelf Capacity
+        {/* UNIFIED 4-METRIC SQUARE CONTAINER */}
+        <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-3.5 sm:p-5 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            
+            {/* Cell 1: Items Moved */}
+            <div className="p-6 bg-stone-950/80 border border-stone-800/70 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/30 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-stone-400 uppercase tracking-wider block">
+                  ITEMS MOVED
                 </span>
-                <p className="font-bold text-white text-base">{retailerInfo.shelfCapacity}</p>
+                <div className="p-2.5 bg-stone-900 border border-stone-800 rounded-xl text-stone-300">
+                  <Package className="w-4 h-4" />
+                </div>
               </div>
-
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1 md:col-span-2">
-                <span className="text-xs text-stone-400 font-bold uppercase block">Store Type / Focus</span>
-                <p className="font-bold text-emerald-400 text-base">{retailerInfo.storeTypeFocus}</p>
-              </div>
-
-              <div className="p-4 bg-stone-950/60 rounded-2xl border border-stone-800/80 space-y-1">
-                <span className="text-xs text-stone-400 font-bold uppercase block">Employee Count</span>
-                <p className="font-bold text-white text-base">{retailerInfo.employeeCount}</p>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-white tracking-tight">{currentStats.produceTransformed}</p>
+                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{currentStats.successfulShipments} Dispatched Batches</span>
+                </div>
               </div>
             </div>
+
+            {/* Cell 2: Total Revenue */}
+            <div className="p-6 bg-stone-950/80 border border-emerald-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/40 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-400 uppercase tracking-wider block">
+                  TOTAL REVENUE
+                </span>
+                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                  <IndianRupee className="w-4 h-4" />
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-emerald-400 tracking-tight">{currentStats.totalRevenue}</p>
+                <div className="text-[11px] text-emerald-400/90 flex items-center gap-1.5 font-medium">
+                  <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+                  <span>Settled Escrow Earnings</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cell 3: Escrow Locked */}
+            <div className="p-6 bg-stone-950/80 border border-amber-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-amber-500/40 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">
+                  ESCROW LOCKED
+                </span>
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+                  <Lock className="w-4 h-4" />
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-amber-400 tracking-tight">{currentStats.escrowLocked}</p>
+                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                  <Activity className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span>In-Transit Protection</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Cell 4: Dispute Rate */}
+            <div className="p-6 bg-stone-950/80 border border-rose-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-rose-500/40 transition duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-stone-400 uppercase tracking-wider block">
+                  DISPUTE RATE
+                </span>
+                <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-rose-400 tracking-tight">{currentStats.disputeRate}</p>
+                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Quality Assurance Approved</span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
+        {/* ANALYTICS CHARTS & BREAKDOWN SECTION */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Revenue & Volume Trend Chart */}
+          <div className="lg:col-span-2 bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 space-y-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-extrabold text-white">Revenue & Volume Trend</h3>
+              </div>
+              <span className="text-xs text-stone-400 font-medium">
+                {timeframe} Performance
+              </span>
+            </div>
 
-        {/* FEATURE MODULES GRID */}
-        <div className="space-y-3">
-          <div className="flex items-center px-1 h-6">
-            <h2 className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-              Retailer Modules
-            </h2>
+            {/* Custom Bar Visualization */}
+            <div className="space-y-4 pt-2">
+              <div className="h-44 flex items-end justify-between gap-3 sm:gap-6 pt-6 px-2">
+                {(currentStats.trendData || []).map((data, idx) => {
+                  const heightPercent = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                      <span className="text-[10px] text-emerald-400 font-mono opacity-0 group-hover:opacity-100 transition">
+                        ₹{data.revenue}
+                      </span>
+                      <div className="w-full bg-stone-950 rounded-t-xl h-full flex items-end overflow-hidden border border-stone-800">
+                        <div 
+                          className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-xl transition-all duration-500"
+                          style={{ height: `${Math.max(heightPercent, 8)}%` }}
+                        />
+                      </div>
+                      <span className="text-[11px] font-bold text-stone-400">{data.period}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Product Revenue Breakdown */}
+          <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 space-y-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+              <div className="flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-extrabold text-white">Item Share</h3>
+              </div>
+              <span className="text-xs text-stone-400 font-medium">Yield Share %</span>
+            </div>
 
-            {/* Marketplace */}
-            <Link
-              href="/retailer/retailerHub/marketplace"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <Store className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Marketplace</h3>
-                <p className="text-xs text-stone-400 mt-1">Browse and purchase processed goods</p>
-              </div>
-            </Link>
-            
-            {/* Retail Hub */}
-            <Link
-              href="/retailer/retailerHub/retailHub"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <Store className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Retail Hub</h3>
-                <p className="text-xs text-stone-400 mt-1">Package & List Retail Items</p>
-              </div>
-            </Link>
+            <div className="space-y-4 pt-1">
+              {(currentStats.productBreakdown || []).map((crop, idx) => (
+                <div key={idx} className="space-y-1.5 p-3.5 bg-stone-950 rounded-2xl border border-stone-800">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-white">{crop.name}</span>
+                    <span className="text-emerald-400 font-mono">{crop.revenue}</span>
+                  </div>
+                  
+                  {/* Progress bar */}
+                  <div className="w-full h-2 bg-stone-900 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full"
+                      style={{ width: `${crop.percentage}%` }}
+                    />
+                  </div>
 
-            {/* Orders */}
-            <Link
-              href="/retailer/retailerHub/orders"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <ClipboardList className="w-6 h-6" />
+                  <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5">
+                    <span>Volume: {crop.quantity}</span>
+                    <span>{crop.percentage}% of total</span>
+                  </div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Orders</h3>
-                <p className="text-xs text-stone-400 mt-1">Track requested purchases</p>
-              </div>
-            </Link>
-
-            {/* Shipments */}
-            <Link
-              href="/retailer/retailerHub/shipments"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <Truck className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Shipments</h3>
-                <p className="text-xs text-stone-400 mt-1">Track incoming deliveries</p>
-              </div>
-            </Link>
-
-            {/* Reports */}
-            <Link
-              href="/retailer/retailerHub/reports"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <FileText className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Reports & Analytics</h3>
-                <p className="text-xs text-stone-400 mt-1">Review retail operations and expenses</p>
-              </div>
-            </Link>
-
-            {/* Trace Produce */}
-            <Link
-              href="/home/trace-product"
-              className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-sm transition group flex flex-col justify-between h-44 cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  <GitBranch className="w-6 h-6" />
-                </div>
-                <ArrowRight className="w-4 h-4 text-stone-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Trace Produce</h3>
-                <p className="text-xs text-stone-400 mt-1">Verify batch authenticity</p>
-              </div>
-            </Link>
-
+              ))}
+            </div>
           </div>
+
         </div>
 
       </div>
-
-      {/* =========================================================================
-          EDIT DETAILS MODAL POPUP
-         ========================================================================= */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-800 w-full max-w-lg rounded-3xl p-6 sm:p-7 space-y-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400">
-                  <Pencil className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-white">Edit Retailer Details</h3>
-                  <p className="text-xs text-stone-400">Update store and facility records</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-2 text-stone-400 hover:text-white rounded-xl bg-stone-800 hover:bg-stone-700 transition cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Edit Form */}
-            <form onSubmit={handleSaveFacilityDetails} className="space-y-4 text-xs">
-              <div>
-                <label className="text-stone-400 font-bold block mb-1">Store Name</label>
-                <input
-                  type="text"
-                  value={editForm.storeName}
-                  onChange={(e) => setEditForm({ ...editForm, storeName: e.target.value })}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-stone-400 font-bold block mb-1">Store Location (Google Maps)</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={editForm.storeLocation}
-                      onChange={(e) => setEditForm({ ...editForm, storeLocation: e.target.value })}
-                      placeholder="e.g. Connaught Place, New Delhi"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 pr-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                      required
-                    />
-                    <MapPin className="w-4 h-4 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleDetectGPSLocation}
-                    disabled={isLocating}
-                    className="px-3.5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shrink-0"
-                    title="Auto-detect current location via GPS / Google Maps API"
-                  >
-                    <LocateFixed className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
-                    <span>{isLocating ? "Locating..." : "Auto-Pin GPS"}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-stone-400 font-bold block mb-1">Shelf Capacity</label>
-                  <input
-                    type="text"
-                    value={editForm.shelfCapacity}
-                    onChange={(e) => setEditForm({ ...editForm, shelfCapacity: e.target.value })}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-stone-400 font-bold block mb-1">Employee Count</label>
-                  <input
-                    type="text"
-                    value={editForm.employeeCount}
-                    onChange={(e) => setEditForm({ ...editForm, employeeCount: e.target.value })}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-stone-400 font-bold block mb-1">Store Type / Focus</label>
-                <input
-                  type="text"
-                  value={editForm.storeTypeFocus}
-                  onChange={(e) => setEditForm({ ...editForm, storeTypeFocus: e.target.value })}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-emerald-500/50 transition"
-                  required
-                />
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-stone-800">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs font-bold transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition cursor-pointer"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

@@ -2,26 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { 
-  User, 
-  MapPin, 
-  ShieldCheck, 
-  Camera, 
-  CheckCircle2, 
-  Star, 
-  ExternalLink,
-  Save,
-  X,
-  UserCog
-} from "lucide-react";
+import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Store } from "lucide-react";
 import { KYCVerificationStatus, getKycStatusLabel } from "../../../types/kyc";
-import AdvancedGenderPicker from "@/components/common/ProfileControls/AdvancedGenderPicker";
-import AdvancedDatePicker from "@/components/common/ProfileControls/AdvancedDatePicker";
 
 export default function RetailerProfilePage() {
   const { data: session, status, update: updateSession } = useSession();
   const router = useRouter();
-  const profilePhotoInputRef = useRef<HTMLInputElement>(null);
   const aadhaarFrontInputRef = useRef<HTMLInputElement>(null);
   const aadhaarBackInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,28 +19,22 @@ export default function RetailerProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // Profile Form Fields
-  const [profilePhoto, setProfilePhoto] = useState("");
-  const [profilePhotoPublicId, setProfilePhotoPublicId] = useState("");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState("Male");
-
-  // Address Fields
-  const [permanentAddress, setPermanentAddress] = useState("");
-  const [village, setVillage] = useState("");
-  const [district, setDistrict] = useState("");
-  const [state, setState] = useState("");
-  const [pinCode, setPinCode] = useState("");
-
-  // KYC Fields (Aadhaar Only)
   const [aadhaarNumber, setAadhaarNumber] = useState("");
   const [aadhaarFront, setAadhaarFront] = useState("");
   const [aadhaarFrontPublicId, setAadhaarFrontPublicId] = useState("");
   const [aadhaarBack, setAadhaarBack] = useState("");
   const [aadhaarBackPublicId, setAadhaarBackPublicId] = useState("");
+
+  const [storeName, setStoreName] = useState("");
+  const [storeLocation, setStoreLocation] = useState("");
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
+  const [shelfCapacity, setShelfCapacity] = useState("");
+  const [storeTypeFocus, setStoreTypeFocus] = useState("");
+  const [employeeCount, setEmployeeCount] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
+
   const [kycStatus, setKycStatus] = useState<string>(KYCVerificationStatus.PENDING);
 
   useEffect(() => {
@@ -97,18 +77,7 @@ export default function RetailerProfilePage() {
   };
 
   const populateForm = (data: any) => {
-    setProfilePhoto(data.profilePhoto || "");
     setName(data.name || "");
-    setEmail(data.email || "");
-    setMobileNumber(data.mobileNumber || "");
-    setDob(data.dob || "");
-    setGender(data.gender || "Male");
-
-    setPermanentAddress(data.permanentAddress || "");
-    setVillage(data.village || "");
-    setDistrict(data.district || "");
-    setState(data.state || "");
-    setPinCode(data.pinCode || "");
 
     setAadhaarNumber(data.aadhaarNumber || "");
     setAadhaarFront(data.aadhaarFront || "");
@@ -130,10 +99,7 @@ export default function RetailerProfilePage() {
 
     try {
       const base64 = await toBase64(file);
-      if (type === "profile") {
-        setProfilePhoto(base64);
-        window.dispatchEvent(new Event("profileUpdated"));
-      } else if (type === "aadhaar_front") {
+      if (type === "aadhaar_front") {
         setAadhaarFront(base64);
       } else if (type === "aadhaar_back") {
         setAadhaarBack(base64);
@@ -147,12 +113,7 @@ export default function RetailerProfilePage() {
 
       if (res.ok) {
         const data = await res.json();
-        if (type === "profile") {
-          setProfilePhoto(data.url);
-          if (data.publicId) setProfilePhotoPublicId(data.publicId);
-          window.dispatchEvent(new CustomEvent("profileUpdated", { detail: { profilePhoto: data.url } }));
-          if (updateSession) updateSession({ image: data.url });
-        } else if (type === "aadhaar_front") {
+        if (type === "aadhaar_front") {
           setAadhaarFront(data.url);
           if (data.publicId) setAadhaarFrontPublicId(data.publicId);
         } else if (type === "aadhaar_back") {
@@ -166,59 +127,60 @@ export default function RetailerProfilePage() {
     }
   };
 
+  
+  const handleDetectGPSLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = parseFloat(position.coords.latitude.toFixed(4));
+        const lng = parseFloat(position.coords.longitude.toFixed(4));
+        setLatitude(lat);
+        setLongitude(lng);
+        setStoreLocation(prev => prev.includes("GPS:") ? prev : `${prev} (GPS: ${lat}, ${lng})`);
+        setIsLocating(false);
+      },
+      (error) => {
+        setIsLocating(false);
+        setLatitude(29.6857);
+        setLongitude(76.9905);
+        setStoreLocation("Karnal Industrial Zone, Haryana, India (GPS: 29.6857, 76.9905)");
+      }
+    );
+  };
+
   const handleSave = async () => {
     setMessage({ type: "", text: "" });
 
-    console.log("🟢 [RetailerProfile:handleSave] Triggered. Form State Before Submission:", {
-      targetUserId,
+    const updatedData = {
       name,
-      mobileNumber,
-      dob,
-      gender,
-      permanentAddress,
-      village,
-      district,
-      state,
-      pinCode,
-      profilePhoto,
-      profilePhotoPublicId,
       aadhaarNumber,
       aadhaarFront,
-      aadhaarFrontPublicId,
       aadhaarBack,
-      aadhaarBackPublicId
-    });
-
-    if (mobileNumber && !/^\d{10}$/.test(mobileNumber)) {
-      setMessage({ type: "error", text: "Mobile number must be a 10-digit number" });
-      return;
-    }
-    if (pinCode && !/^\d{6}$/.test(pinCode)) {
-      setMessage({ type: "error", text: "PIN code must be a 6-digit number" });
-      return;
-    }
-
+    };
     setSaving(true);
     try {
       if (targetUserId) {
         const payload = {
           name,
-          mobileNumber,
-          dob,
-          gender,
-          permanentAddress,
-          village,
-          district,
-          state,
-          pinCode,
-          profilePhoto,
-          profilePhotoPublicId,
           aadhaarNumber,
           aadhaarFront,
           aadhaarFrontPublicId,
           aadhaarBack,
           aadhaarBackPublicId,
           submitKyc: true,
+
+          storeName,
+          storeLocation,
+          latitude,
+          longitude,
+          shelfCapacity,
+          storeTypeFocus,
+          employeeCount,
+
         };
 
         console.log(`🟢 [RetailerProfile:handleSave] Sending PUT request to /api/users/${targetUserId} with payload:`, payload);
@@ -242,7 +204,7 @@ export default function RetailerProfilePage() {
         }
       }
       setEditMode(false);
-      window.dispatchEvent(new CustomEvent("profileUpdated", { detail: { profilePhoto } }));
+      window.dispatchEvent(new CustomEvent("profileUpdated", { detail: {} }));
       setMessage({ type: "success", text: "Profile information & KYC documents saved successfully!" });
     } catch (err) {
       console.error("❌ [RetailerProfile:handleSave] Network or runtime error:", err);
@@ -280,7 +242,7 @@ export default function RetailerProfilePage() {
     );
   }
 
-  const retailerId = user?.retailerId || (session?.user as any)?.retailerId || "S2S-RET-000001";
+  const retailerId = user?.retailerId || (session?.user as any)?.retailerId || "S2S-FRM-000001";
   const currentKycStatus = kycStatus || KYCVerificationStatus.PENDING;
   const hasRealRating = user && (user.averageRating !== undefined && user.averageRating !== null && user.reviewCount);
 
@@ -316,27 +278,7 @@ export default function RetailerProfilePage() {
               {/* Photo & Badge */}
               <div className="flex flex-col items-center shrink-0">
                 <div className="relative w-28 h-28 rounded-full border-2 border-[#00d26a]/40 overflow-hidden bg-gradient-to-br from-[#0d2a1a] to-[#081a10] flex items-center justify-center shadow-lg">
-                  {profilePhoto ? (
-                    <img src={profilePhoto} alt={name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-4xl font-black text-[#00d26a]">{name ? name[0].toUpperCase() : "F"}</span>
-                  )}
-                  {editMode && (
-                    <div
-                      onClick={() => profilePhotoInputRef.current?.click()}
-                      className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Camera className="w-5 h-5 text-[#00d26a]" />
-                      <span className="text-[9px] font-bold text-white uppercase">Change</span>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={profilePhotoInputRef}
-                    onChange={(e) => handleFileUpload(e, "profile")}
-                    accept="image/*"
-                    className="hidden"
-                  />
+                  <span className="text-4xl font-black text-[#00d26a]">{name ? name[0].toUpperCase() : "F"}</span>
                 </div>
 
                 {/* Reviews Pill Badge */}
@@ -411,16 +353,16 @@ export default function RetailerProfilePage() {
           </div>
         </div>
 
-        {/* 2. Basic Information Section */}
+        {/* 2. Public Identity Section */}
         <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
           <h2 className="text-lg font-bold text-green-300 flex items-center gap-2">
             <User className="w-5 h-5 text-[#00d26a]" />
-            Basic Information
+            Public Identity
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Full Name</label>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Name</label>
               {editMode ? (
                 <input
                   type="text"
@@ -436,139 +378,17 @@ export default function RetailerProfilePage() {
             </div>
 
             <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Phone Number</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  placeholder="10 digit phone number"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
-                />
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
-                  {mobileNumber || "N/A"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Email Address</label>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-stone-300">
-                {email || "N/A"}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Gender</label>
-              <AdvancedGenderPicker value={gender} onChange={setGender} editMode={editMode} />
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Date of Birth</label>
-              <AdvancedDatePicker value={dob} onChange={setDob} editMode={editMode} label="Date of Birth" />
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Retailer ID (Read Only)</label>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Role ID (Unique ID)</label>
               <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-bold text-[#00d26a]">
                 {retailerId}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* 3. Address Information Section */}
-        <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
-          <h2 className="text-lg font-bold text-green-300 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-[#00d26a]" />
-            Address Information
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-            <div className="md:col-span-2">
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Permanent Address</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={permanentAddress}
-                  onChange={(e) => setPermanentAddress(e.target.value)}
-                  placeholder="Street / House details"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
-                />
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
-                  {permanentAddress || "N/A"}
-                </div>
-              )}
-            </div>
-
+            
             <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">State</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  placeholder="State name"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
-                />
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
-                  {state || "N/A"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">District</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="District name"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
-                />
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
-                  {district || "N/A"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Village</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={village}
-                  onChange={(e) => setVillage(e.target.value)}
-                  placeholder="Village name"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
-                />
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
-                  {village || "N/A"}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">PIN Code</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value)}
-                  placeholder="6 digit PIN code"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
-                />
-              ) : (
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
-                  {pinCode || "N/A"}
-                </div>
-              )}
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Role</label>
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-bold text-white">
+                RETAILER
+              </div>
             </div>
           </div>
         </div>
@@ -705,7 +525,116 @@ export default function RetailerProfilePage() {
           </div>
         </div>
 
-        {/* 5. Ratings & Reviews Section */}
+        
+        {/* 5. Registered Store Record Section */}
+        <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+          <h2 className="text-lg font-bold text-green-300 flex items-center gap-2">
+            <Store className="w-5 h-5 text-[#00d26a]" />
+            Registered Retail Store Record
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Store Name</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  placeholder="Enter store name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {storeName || "Not Registered"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Store Location</label>
+              {editMode ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={storeLocation}
+                    onChange={(e) => setStoreLocation(e.target.value)}
+                    placeholder="Enter location"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDetectGPSLocation}
+                    disabled={isLocating}
+                    className="shrink-0 px-4 py-3 bg-[#00d26a]/10 hover:bg-[#00d26a]/20 border border-[#00d26a]/30 text-[#00d26a] rounded-xl font-bold flex items-center gap-2 transition disabled:opacity-50"
+                  >
+                    <LocateFixed className="w-4 h-4" />
+                    {isLocating ? "Locating..." : "Current Location"}
+                  </button>
+                </div>
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {storeLocation || "Not Registered"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Shelf Capacity</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={shelfCapacity}
+                  onChange={(e) => setShelfCapacity(e.target.value)}
+                  placeholder="e.g. 500 items"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {shelfCapacity || "Not Registered"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Store Type Focus</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={storeTypeFocus}
+                  onChange={(e) => setStoreTypeFocus(e.target.value)}
+                  placeholder="e.g. Organic, Supermarket"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {storeTypeFocus || "Not Registered"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Employee Count</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={employeeCount}
+                  onChange={(e) => setEmployeeCount(e.target.value)}
+                  placeholder="e.g. 10"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {employeeCount || "Not Registered"}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        
+
+        {/* 6. Ratings & Reviews Section */}
         <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
           <div className="flex items-center gap-2">
             <Star className="w-5 h-5 text-[#00d26a] fill-[#00d26a]" />
@@ -721,7 +650,7 @@ export default function RetailerProfilePage() {
             </div>
 
             <div className="p-5 bg-white/5 border border-white/10 rounded-2xl max-w-sm text-stone-300 text-xs leading-relaxed font-medium text-center md:text-left">
-              You cannot review your own profile. Your average rating is calculated based on reviews from distributors.
+              You cannot review your own profile. Your average rating is calculated based on reviews from processors.
             </div>
           </div>
         </div>

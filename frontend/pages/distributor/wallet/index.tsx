@@ -23,7 +23,7 @@ import {
 export default function WalletDashboard() {
   const { data: session } = useSession();
 
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
   const distributorId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
 
   const [totalEarnings, setTotalEarnings] = useState<number>(0);

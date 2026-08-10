@@ -224,18 +224,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <Truck className="w-3.5 h-3.5" />
                           <span>Shipments</span>
                         </Link>
-                        <Link
-                          href="/processor/processorHub/reports"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/processor/processorHub/reports") || isActive("/processor/reports")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Reports</span>
-                        </Link>
                         
                       </motion.div>
                     )}
@@ -373,18 +361,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                           <Truck className="w-3.5 h-3.5" />
                           <span>Shipments</span>
-                        </Link>
-                        <Link
-                          href="/distributor/distributorHub/reports"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/distributor/distributorHub/reports")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Reports</span>
                         </Link>
                         
                       </motion.div>
@@ -524,18 +500,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <Truck className="w-3.5 h-3.5" />
                           <span>Shipments</span>
                         </Link>
-                        <Link
-                          href="/retailer/retailerHub/reports"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/retailerHub/reports")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Reports</span>
-                        </Link>
                         
                       </motion.div>
                     )}
@@ -661,18 +625,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                           <Truck className="w-3.5 h-3.5" />
                           <span>Shipments</span>
-                        </Link>
-                        <Link
-                          href="/farmer/farmerHub/reports"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/farmer/farmerHub/reports")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Reports</span>
                         </Link>
                         
                       </motion.div>

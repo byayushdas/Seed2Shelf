@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const Role = require('../models/Role');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -68,14 +67,6 @@ router.post('/signup', async (req, res) => {
         if (match) nextNum = parseInt(match[1]) + 1;
       }
       roleId = `S2S-RET-${String(nextNum).padStart(6, '0')}`;
-    } else if (role === "CUSTOMER") {
-      const lastUser = await User.findOne({ role: "CUSTOMER", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
-      let nextNum = 1;
-      if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-CUS-(d+)/);
-        if (match) nextNum = parseInt(match[1]) + 1;
-      }
-      roleId = `S2S-CUS-${String(nextNum).padStart(6, '0')}`;
     }
 
     const user = await User.create({
@@ -86,11 +77,7 @@ router.post('/signup', async (req, res) => {
       roleId
     });
 
-    const roleDoc = await Role.create({
-      _id: roleId,
-      userId: user._id,
-      role: role
-    });
+
 
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
@@ -102,7 +89,7 @@ router.post('/signup', async (req, res) => {
       message: "User created successfully", 
       userId: user._id,
       token,
-      user: { id: user._id, name: user.name, role: user.role, email: user.email, roleId: user.roleId, roleDetails: roleDoc }
+      user: { id: user._id, name: user.name, role: user.role, email: user.email, uniqueId: user.uniqueId }
     });
   } catch (error) {
     console.error("Signup error:", error);
@@ -134,10 +121,6 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid password credentials" });
     }
 
-    let roleDoc = {};
-    if (user.roleId) {
-      roleDoc = await Role.findById(user.roleId) || {};
-    }
 
     const token = jwt.sign(
       { id: user._id, role: user.role, email: user.email },
@@ -153,8 +136,7 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        roleId: user.roleId,
-        roleDetails: roleDoc
+        uniqueId: user.uniqueId
       }
     });
 

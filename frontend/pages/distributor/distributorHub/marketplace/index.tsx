@@ -37,10 +37,10 @@ export default function DistributorMarketplace() {
     const loadMarketplaceHarvests = async () => {
       setLoading(true);
       try {
-        const liveData = await marketplaceService.fetchAvailableHarvestsFromApi(searchQuery);
+        const liveData = await marketplaceService.fetchAvailableProcessedGoodsFromApi(searchQuery);
         setHarvests(liveData);
       } catch (err) {
-        console.error("Failed to load marketplace harvests:", err);
+        console.error("Failed to load distributor marketplace:", err);
       } finally {
         setLoading(false);
       }

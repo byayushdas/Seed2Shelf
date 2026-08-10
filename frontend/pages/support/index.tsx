@@ -24,9 +24,9 @@ import {
   RefreshCw
 } from "lucide-react";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
-type RoleType = "FARMER" | "PROCESSOR" | "DISTRIBUTOR" | "RETAILER" | "CUSTOMER";
+type RoleType = "FARMER" | "PROCESSOR" | "DISTRIBUTOR" | "RETAILER";
 
 interface RoleOption {
   key: RoleType;
@@ -38,8 +38,7 @@ const roleOptions: RoleOption[] = [
   { key: "FARMER", label: "Farmer", icon: Wheat },
   { key: "PROCESSOR", label: "Processor", icon: Factory },
   { key: "DISTRIBUTOR", label: "Distributor", icon: Truck },
-  { key: "RETAILER", label: "Retailer", icon: Store },
-  { key: "CUSTOMER", label: "Consumer", icon: ShoppingBag }
+  { key: "RETAILER", label: "Retailer", icon: Store }
 ];
 
 const categoriesByRole: Record<RoleType, string[]> = {
@@ -73,15 +72,6 @@ const categoriesByRole: Record<RoleType, string[]> = {
     "Distributor Bulk Purchase Settlement",
     "Consumer Return & Counterfeit Claim",
     "Platform Technical Bug / App Glitch",
-    "Other"
-  ],
-  CUSTOMER: [
-    "Product Lineage QR Code Verification Failure",
-    "Fake / Counterfeit Packaging Report",
-    "Retailer Purchase Receipt Dispute",
-    "Product Quality / Expiry & Health Feedback",
-    "Platform Technical Bug / App Glitch",
-    "Other"
   ]
 };
 
@@ -132,16 +122,6 @@ const defaultFaqsByRole: Record<RoleType, { q: string; a: string }[]> = {
     {
       q: "How do I connect my store inventory system to Seed2Shelf?",
       a: "You can sync inventory via automated API keys or bulk CSV uploads under Retailer Hub ➔ Store Inventory."
-    }
-  ],
-  CUSTOMER: [
-    {
-      q: "How can I verify the origin and farm location of my purchased food?",
-      a: "Scan the QR code printed on the product packaging using your phone camera or enter the Batch ID on the Seed2Shelf Trace page to view farm location, harvest date, processor quality audit, and lab certifications."
-    },
-    {
-      q: "What should I do if a scanned QR code shows a verification warning?",
-      a: "If a QR code fails verification or alerts of a counterfeit batch, select 'Fake / Counterfeit Packaging Report' under categories to notify our anti-counterfeiting compliance team immediately."
     }
   ]
 };

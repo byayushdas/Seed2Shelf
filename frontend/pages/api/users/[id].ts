@@ -16,11 +16,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (expressRes.ok) {
         const expressData = await expressRes.json();
         const u = expressData.data || {};
-        const p = u.profileDetails || {};
 
         return res.status(200).json({
           ...u,
-          ...p,
           id: u._id || userId,
           email: u.email || "",
           role: u.role || "FARMER",
@@ -51,11 +49,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (expressRes.ok) {
         const expressData = await expressRes.json();
         const u = expressData.data || {};
-        const p = u.profileDetails || {};
 
         return res.status(200).json({
           ...u,
-          ...p,
           id: u._id || userId,
           email: u.email || session.user.email,
           role: u.role || "FARMER",

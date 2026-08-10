@@ -35,11 +35,11 @@ export const authOptions: NextAuthOptions = {
             throw new Error("Invalid credentials");
         }
 
-        let farmerId = user.role === 'FARMER' ? user.roleId : undefined;
-        let processorId = user.role === 'PROCESSOR' ? user.roleId : undefined;
-        let adminId = user.role === 'ADMIN' ? user.roleId : undefined;
-        let distributorId = user.role === 'DISTRIBUTOR' ? user.roleId : undefined;
-        let retailerId = user.role === 'RETAILER' ? user.roleId : undefined;
+        let farmerId = user.role === 'FARMER' ? user.uniqueId : undefined;
+        let processorId = user.role === 'PROCESSOR' ? user.uniqueId : undefined;
+        let adminId = user.role === 'ADMIN' ? user.uniqueId : undefined;
+        let distributorId = user.role === 'DISTRIBUTOR' ? user.uniqueId : undefined;
+        let retailerId = user.role === 'RETAILER' ? user.uniqueId : undefined;
 
         return {
           id: user.id,
@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
           distributorId,
           retailerId,
           walletAddress: user.walletAddress || null,
-          image: user.profilePhoto || null
+          image: null
         };
       }
     })

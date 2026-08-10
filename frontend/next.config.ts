@@ -34,11 +34,7 @@ const nextConfig: NextConfig = {
         destination: '/retailer/retailerHub/dashboard',
         permanent: false,
       },
-      {
-        source: '/customer',
-        destination: '/customer/marketplace',
-        permanent: false,
-      },
+
     ];
   },
 };
