@@ -96,3 +96,12 @@ select:-webkit-autofill {
   caret-color: #ffffff !important;
   transition: background-color 50000s ease-in-out 0s !important;
 }
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

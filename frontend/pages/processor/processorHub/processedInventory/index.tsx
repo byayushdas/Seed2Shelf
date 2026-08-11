@@ -92,10 +92,11 @@ export default function ProductionHubPage() {
   const [price, setPrice] = useState("");
   const [productImage, setProductImage] = useState<string | null>(null);
 
-  // Calendar Date Picker State (Default to 24/07/2026)
-  const [selectedDay, setSelectedDay] = useState<number>(24);
-  const [selectedMonth, setSelectedMonth] = useState<number>(6); // 0-indexed: 6 = July
-  const [selectedYear, setSelectedYear] = useState<number>(2026);
+  // Calendar Date Picker State
+  const today = new Date();
+  const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
+  const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
 
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -171,11 +172,7 @@ export default function ProductionHubPage() {
 
   // Default Image Fallbacks
   const getProductImage = (item: InventoryItem) => {
-    if (item.productImage) return item.productImage;
-    if (item.category.includes("Fruit")) {
-      return "https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=600&q=80";
-    }
-    return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
+    return item.productImage || "";
   };
 
   // Register New Processed Product
@@ -620,7 +617,7 @@ export default function ProductionHubPage() {
                       {Array.from({ length: daysInMonth }).map((_, idx) => {
                         const dayNum = idx + 1;
                         const isSelected = dayNum === selectedDay;
-                        const isToday = dayNum === 24 && selectedMonth === 6 && selectedYear === 2026;
+                        const isToday = dayNum === today.getDate() && selectedMonth === today.getMonth() && selectedYear === today.getFullYear();
 
                         return (
                           <button
@@ -648,9 +645,9 @@ export default function ProductionHubPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setSelectedDay(24);
-                          setSelectedMonth(6);
-                          setSelectedYear(2026);
+                          setSelectedDay(today.getDate());
+                          setSelectedMonth(today.getMonth());
+                          setSelectedYear(today.getFullYear());
                           setIsCalendarOpen(false);
                         }}
                         className="text-emerald-400 hover:text-emerald-300 font-bold"
@@ -1053,11 +1050,11 @@ export default function ProductionHubPage() {
                         className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-4 space-y-3.5 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 flex flex-col justify-between"
                       >
                         <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-stone-950 border border-stone-800/80 group">
-                          <img
-                            src={imgUrl}
+                          {getProductImage(item) && <img
+                            src={getProductImage(item)}
                             alt={item.productName}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          />}
                           <div className="absolute top-2.5 left-2.5 bg-stone-950/90 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 shadow-md">
                             {item.id}
                           </div>

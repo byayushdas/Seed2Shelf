@@ -21,6 +21,11 @@ export interface FarmerHarvestItem {
   harvestDate: string;
   hasQrCode: boolean;
   imageUrl?: string;
+  variety?: string;
+  originalCropImage?: string;
+  traceUrl?: string;
+  parentRawBatchIds?: string[];
+  originDetails?: any;
 }
 
 export interface CartItem {

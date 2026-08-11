@@ -27,6 +27,12 @@ const distributorSchema = new mongoose.Schema({
   },
 
   date: { type: Date },
+  originDetails: { type: mongoose.Schema.Types.Mixed },
+
+  soldTo: { type: String },
+  soldDate: { type: Date },
+  totalSaleValue: { type: Number },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

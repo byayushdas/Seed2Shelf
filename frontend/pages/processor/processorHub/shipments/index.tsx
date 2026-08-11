@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -21,8 +21,11 @@ import {
   Clock
 } from "lucide-react";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+
 interface ShipmentItem {
   id: string;
+  rawId: string;
   batchId: string;
   productName: string;
   quantity: string;
@@ -57,6 +60,74 @@ export default function ProcessorShipmentsPage() {
   const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
 
   const [notification, setNotification] = useState<string | null>(null);
+  const processorId = (session?.user as any)?.processorId || "";
+
+  useEffect(() => {
+    const fetchIncoming = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/processor/shipments/incoming?userId=${processorId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setIncomingShipments(json.data.map((s: any) => ({
+              id: s.orderNumber || s._id,
+              rawId: s._id,
+              batchId: s.batchId,
+              productName: s.cropName,
+              quantity: `${s.quantityKg} kg`,
+              value: `₹ ${s.totalAmount?.toLocaleString() || 0}`,
+              sourceOrDestination: s.sellerName || "Farmer",
+              senderName: s.sellerName || "Farmer",
+              dispatchedDate: s.dispatchedAt ? new Date(s.dispatchedAt).toLocaleDateString() : "",
+              estimatedDelivery: "Today, 4:30 PM",
+              status: s.deliveryStatus === "DISPATCHED" ? "IN_TRANSIT" : s.deliveryStatus,
+              currentStep: s.deliveryStatus === "DELIVERED" || s.deliveryStatus === "REJECTED" ? 3 : 2,
+              rejectionReason: s.rejectionReason,
+              rejectedDate: s.deliveryStatus === "REJECTED" ? new Date(s.updatedAt).toLocaleDateString() : undefined,
+              acceptedDate: s.deliveredAt ? new Date(s.deliveredAt).toLocaleDateString() : undefined
+            })));
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const fetchOutgoing = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/processor/shipments/outgoing?userId=${processorId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setOutgoingShipments(json.data.map((s: any) => ({
+              id: s.orderNumber || s._id,
+              rawId: s._id,
+              batchId: s.batchId,
+              productName: s.cropName,
+              quantity: `${s.quantityKg} kg`,
+              value: `₹ ${s.totalAmount?.toLocaleString() || 0}`,
+              sourceOrDestination: s.buyerName || "Distributor Corp",
+              senderName: "Processor",
+              dispatchedDate: s.dispatchedAt ? new Date(s.dispatchedAt).toLocaleDateString() : "",
+              estimatedDelivery: "Today, 4:30 PM",
+              status: s.deliveryStatus === "DISPATCHED" ? "IN_TRANSIT" : s.deliveryStatus,
+              currentStep: s.deliveryStatus === "DELIVERED" || s.deliveryStatus === "REJECTED" ? 3 : 2,
+              rejectionReason: s.rejectionReason,
+              rejectedDate: s.deliveryStatus === "REJECTED" ? new Date(s.updatedAt).toLocaleDateString() : undefined,
+              acceptedDate: s.deliveredAt ? new Date(s.deliveredAt).toLocaleDateString() : undefined
+            })));
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (processorId) {
+      if (activeSignal === "INCOMING") fetchIncoming();
+      else fetchOutgoing();
+    }
+  }, [processorId, activeSignal]);
 
   // Rejection Modal State
   const [rejectModalItem, setRejectModalItem] = useState<ShipmentItem | null>(null);
@@ -64,29 +135,41 @@ export default function ProcessorShipmentsPage() {
   const [customReason, setCustomReason] = useState("");
 
   // Action: Accept Delivery & Release Escrow Payment
-  const handleAcceptDelivery = (shpId: string) => {
+  const handleAcceptDelivery = async (shpId: string) => {
     const isIncoming = activeSignal === "INCOMING";
     const updateFn = isIncoming ? setIncomingShipments : setOutgoingShipments;
+    const list = isIncoming ? incomingShipments : outgoingShipments;
+    const targetItem = list.find(s => s.id === shpId);
+    const targetId = targetItem?.rawId || shpId;
 
-    updateFn((prev) =>
-      prev.map((shp) =>
-        shp.id === shpId
-          ? {
-              ...shp,
-              status: "DELIVERED",
-              currentStep: 3,
-              acceptedDate: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
-          : shp
-      )
-    );
-
-    setNotification("Delivery accepted! Escrow payment released & moved to History.");
-    setTimeout(() => setNotification(null), 5000);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/shipments/${targetId}/receive`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        updateFn((prev) =>
+          prev.map((shp) =>
+            shp.id === shpId
+              ? {
+                  ...shp,
+                  status: "DELIVERED",
+                  currentStep: 3,
+                  acceptedDate: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+              : shp
+          )
+        );
+        setNotification("Delivery accepted! Escrow payment released & moved to History.");
+        setTimeout(() => setNotification(null), 5000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Action: Confirm Rejection & Refund Escrow Payment
-  const handleConfirmReject = () => {
+  const handleConfirmReject = async () => {
     if (!rejectModalItem) return;
     const details = customReason.trim();
     const finalReason = details
@@ -96,24 +179,36 @@ export default function ProcessorShipmentsPage() {
     const isIncoming = activeSignal === "INCOMING";
     const updateFn = isIncoming ? setIncomingShipments : setOutgoingShipments;
 
-    updateFn((prev) =>
-      prev.map((shp) =>
-        shp.id === rejectModalItem.id
-          ? {
-              ...shp,
-              status: "REJECTED",
-              currentStep: 3,
-              rejectionReason: finalReason,
-              rejectedDate: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            }
-          : shp
-      )
-    );
+    const targetId = rejectModalItem.rawId || rejectModalItem.id;
 
-    setNotification(`Delivery rejected! Cargo returned to seller & moved to History.`);
-    setTimeout(() => setNotification(null), 5000);
-    setRejectModalItem(null);
-    setCustomReason("");
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/shipments/${targetId}/reject`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: finalReason })
+      });
+      if (res.ok) {
+        updateFn((prev) =>
+          prev.map((shp) =>
+            shp.id === rejectModalItem.id
+              ? {
+                  ...shp,
+                  status: "REJECTED",
+                  currentStep: 3,
+                  rejectionReason: finalReason,
+                  rejectedDate: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+              : shp
+          )
+        );
+        setNotification(`Delivery rejected! Cargo returned to seller & moved to History.`);
+        setTimeout(() => setNotification(null), 5000);
+        setRejectModalItem(null);
+        setCustomReason("");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const currentList = activeSignal === "INCOMING" ? incomingShipments : outgoingShipments;

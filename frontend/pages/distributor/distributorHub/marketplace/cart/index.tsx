@@ -33,7 +33,7 @@ import { CartItem } from "@/types/processor";
 const DEFAULT_SAVED_ADDRESSES = [
   {
     id: "saved-1",
-    factoryName: "Central Grain Processing Plant #1",
+    warehouseName: "Central Distribution Hub #1",
     contactPerson: "Logistics Director",
     contactPhone: "+91 98765 43210",
     streetAddress: "Plot 42, Industrial Development Zone",
@@ -42,7 +42,7 @@ const DEFAULT_SAVED_ADDRESSES = [
   },
   {
     id: "saved-2",
-    factoryName: "East Zone Milling & Refinements Hub",
+    warehouseName: "East Zone Milling & Refinements Hub",
     contactPerson: "Warehouse Operations Lead",
     contactPhone: "+91 98123 76543",
     streetAddress: "Sector 5, Agritech Processing Park",
@@ -51,7 +51,7 @@ const DEFAULT_SAVED_ADDRESSES = [
   }
 ];
 
-export default function ProcessorCartPage() {
+export default function DistributorCartPage() {
   const { data: session } = useSession();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [totals, setTotals] = useState({ subtotal: 0, tax: 0, platformFee: 0, total: 0, itemCount: 0 });
@@ -65,7 +65,7 @@ export default function ProcessorCartPage() {
   const [isAddressSaved, setIsAddressSaved] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("razorpay");
 
-  const [factoryName, setFactoryName] = useState("Central Grain Processing Plant #1");
+  const [warehouseName, setFactoryName] = useState("Central Distribution Hub #1");
   const [contactPerson, setContactPerson] = useState("Logistics Director");
   const [contactPhone, setContactPhone] = useState("+91 98765 43210");
   const [streetAddress, setStreetAddress] = useState("Plot 42, Industrial Development Zone");
@@ -79,7 +79,7 @@ export default function ProcessorCartPage() {
     razorpayPaymentId?: string;
     items: CartItem[];
     totals: { subtotal: number; tax: number; platformFee: number; total: number };
-    factoryName: string;
+    warehouseName: string;
     streetAddress: string;
     cityState: string;
     contactPerson: string;
@@ -101,7 +101,7 @@ export default function ProcessorCartPage() {
 
   const handleSelectSavedAddress = (addr: typeof DEFAULT_SAVED_ADDRESSES[0]) => {
     setSelectedAddressId(addr.id);
-    setFactoryName(addr.factoryName);
+    setFactoryName(addr.warehouseName);
     setContactPerson(addr.contactPerson);
     setContactPhone(addr.contactPhone);
     setStreetAddress(addr.streetAddress);
@@ -138,7 +138,7 @@ export default function ProcessorCartPage() {
       if (addr.id === selectedAddressId) {
         return {
           ...addr,
-          factoryName,
+          warehouseName,
           contactPerson,
           contactPhone,
           streetAddress,
@@ -164,10 +164,10 @@ export default function ProcessorCartPage() {
 
   const handleProceedToPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedAddressId === "custom" && saveForFuture && factoryName) {
+    if (selectedAddressId === "custom" && saveForFuture && warehouseName) {
       const newAddr = {
         id: `saved-${Date.now()}`,
-        factoryName,
+        warehouseName,
         contactPerson,
         contactPhone,
         streetAddress,
@@ -225,7 +225,7 @@ export default function ProcessorCartPage() {
                 razorpayPaymentId: response.razorpay_payment_id || confirmedData.paymentId || `pay_test_${Date.now()}`,
                 items: [...cartItems],
                 totals: { ...totals },
-                factoryName,
+                warehouseName,
                 streetAddress,
                 cityState,
                 contactPerson,
@@ -241,8 +241,8 @@ export default function ProcessorCartPage() {
             }
           },
           prefill: {
-            name: session?.user?.name || contactPerson || "Processor Facility Manager",
-            email: session?.user?.email || "processor@seed2shelf.com",
+            name: session?.user?.name || contactPerson || "Distributor Logistics Manager",
+            email: session?.user?.email || "distributor@seed2shelf.com",
             contact: contactPhone || "+91 98765 43210",
           },
           theme: {
@@ -273,7 +273,7 @@ export default function ProcessorCartPage() {
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
-        <title>Checkout & Order Placement | Processor Portal</title>
+        <title>Checkout & Order Placement | Distributor Portal</title>
         <meta name="description" content="Review raw crop purchases and place B2B orders with farmers" />
       </Head>
 
@@ -300,7 +300,7 @@ export default function ProcessorCartPage() {
           </div>
 
           <Link
-            href="/processor/processorHub/marketplace"
+            href="/distributor/distributorHub/marketplace"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-semibold text-stone-300 hover:text-white transition"
           >
             <ArrowLeft className="h-4 w-4" /> Continue Shopping
@@ -313,7 +313,7 @@ export default function ProcessorCartPage() {
         {cartItems.length > 0 || checkoutStep === 3 ? (
           <div className="bg-stone-900/90 border border-stone-800/90 py-4 px-6 rounded-3xl max-w-3xl mx-auto flex items-center justify-between shadow-lg">
             {[
-              { step: 1, label: "Factory Address", icon: MapPin },
+              { step: 1, label: "Warehouse Address", icon: MapPin },
               { step: 2, label: "Payment", icon: CreditCard },
               { step: 3, label: "Confirmation", icon: CheckCircle2 }
             ].map((item, idx) => {
@@ -364,7 +364,7 @@ export default function ProcessorCartPage() {
             <h3 className="text-lg font-bold text-white">Your Shopping Cart is Empty</h3>
             <p className="text-stone-400 text-xs">Browse the market place to add raw crops for processing.</p>
             <Link
-              href="/processor/processorHub/marketplace"
+              href="/distributor/distributorHub/marketplace"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md"
             >
               Browse Marketplace
@@ -397,7 +397,7 @@ export default function ProcessorCartPage() {
                       <span className="truncate">
                         {selectedAddressId === "custom"
                           ? "New Custom Address"
-                          : savedAddresses.find(a => a.id === selectedAddressId)?.factoryName || "Select Location"}
+                          : savedAddresses.find(a => a.id === selectedAddressId)?.warehouseName || "Select Location"}
                       </span>
                     </div>
                     <span className="text-[9px] text-stone-500 ml-1">▼</span>
@@ -420,7 +420,7 @@ export default function ProcessorCartPage() {
                             <MapPin className="h-3 w-3 text-emerald-400 shrink-0" />
                             <div className="truncate">
                               <p className="truncate font-bold text-white text-[11px]">
-                                {addr.factoryName} {addr.isDefault && <span className="text-[8px] text-emerald-400 font-extrabold ml-1">(Default)</span>}
+                                {addr.warehouseName} {addr.isDefault && <span className="text-[8px] text-emerald-400 font-extrabold ml-1">(Default)</span>}
                               </p>
                               <p className="text-[9px] text-stone-400 truncate">{addr.streetAddress}</p>
                             </div>
@@ -457,13 +457,13 @@ export default function ProcessorCartPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
-                      Factory / Plant Name *
+                      Warehouse Name *
                     </label>
                     <input
                       type="text"
                       required
                       autoComplete="off"
-                      value={factoryName}
+                      value={warehouseName}
                       onChange={(e) => {
                         setFactoryName(e.target.value);
                         setIsAddressSaved(false);
@@ -525,7 +525,7 @@ export default function ProcessorCartPage() {
 
                 <div>
                   <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
-                    Factory Street Address & Landmark *
+                    Warehouse Street Address & Landmark *
                   </label>
                   <input
                     type="text"
@@ -563,7 +563,7 @@ export default function ProcessorCartPage() {
                 {selectedAddressId !== "custom" && (
                   <div className="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mt-2 shadow-inner">
                     <div className="flex items-center gap-2 text-stone-300 font-medium">
-                      <span>Using saved factory profile. Edit any field below to modify.</span>
+                      <span>Using saved warehouse profile. Edit any field below to modify.</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
@@ -606,7 +606,7 @@ export default function ProcessorCartPage() {
                       className="rounded accent-emerald-500"
                     />
                     <label htmlFor="saveAddressFuture" className="text-xs text-stone-300 font-medium cursor-pointer">
-                      Save this factory address for future orders
+                      Save this warehouse address for future orders
                     </label>
                   </div>
                 )}
@@ -793,7 +793,7 @@ export default function ProcessorCartPage() {
                 <div className="flex items-start gap-2 text-xs text-stone-300">
                   <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-white block">{factoryName}</strong>
+                    <strong className="text-white block">{warehouseName}</strong>
                     <p>{streetAddress}, {cityState}</p>
                     <p className="text-stone-400 text-[11px] mt-0.5">Contact: {contactPerson} ({contactPhone})</p>
                   </div>
@@ -898,7 +898,7 @@ export default function ProcessorCartPage() {
                 <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
                   Factory Delivery Location
                 </span>
-                <strong className="text-white text-sm block">{confirmedOrder.factoryName}</strong>
+                <strong className="text-white text-sm block">{confirmedOrder.warehouseName}</strong>
                 <p className="text-stone-300 mt-0.5">{confirmedOrder.streetAddress}</p>
                 <p className="text-stone-300">{confirmedOrder.cityState}</p>
               </div>
@@ -953,7 +953,7 @@ export default function ProcessorCartPage() {
                 <FileText className="h-4 w-4" /> Track Order Status
               </Link>
               <Link
-                href="/processor/processorHub/marketplace"
+                href="/distributor/distributorHub/marketplace"
                 className="px-6 py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs transition border border-stone-700 text-center flex items-center justify-center gap-2"
               >
                 Back to Marketplace

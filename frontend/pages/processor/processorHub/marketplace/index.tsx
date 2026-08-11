@@ -54,7 +54,8 @@ export default function ProcessorMarketplace() {
     return unsubscribe;
   }, [searchQuery]);
 
-  const handleAddToCart = async (item: FarmerHarvestItem, qty: number = 50) => {
+  const handleAddToCart = async (item: FarmerHarvestItem) => {
+    const qty = Math.min(1, item.quantity);
     cartService.addToCart(item, qty);
     try {
       await marketplaceService.addToCartApi(item.id, qty);
@@ -188,62 +189,7 @@ export default function ProcessorMarketplace() {
                 </div>
               </div>
 
-              {/* Quantity Selection Control */}
-              <div className="p-4 bg-stone-950 border border-stone-800 rounded-2xl flex items-center justify-between gap-4">
-                <div>
-                  <span className="text-xs font-bold text-stone-300 block">Select Purchase Quantity</span>
-                  <span className="text-[11px] text-emerald-400 font-semibold block mt-0.5">
-                    Batch Supply: {selectedItem.quantity} {selectedItem.unit}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 bg-stone-950 border border-stone-800 rounded-2xl p-1.5 shadow-inner">
-                  <button
-                    type="button"
-                    onClick={() => setModalQty(prev => Math.max(5, prev - 5))}
-                    className="w-8 h-8 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-emerald-400 flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
-                    title="Decrease by 5"
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </button>
-
-                  <div className="flex items-center justify-center px-1">
-                    <input
-                      type="number"
-                      min="1"
-                      max={selectedItem.quantity}
-                      step="5"
-                      value={modalQty === 0 ? "" : modalQty}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        if (raw === "") {
-                          setModalQty(0);
-                        } else {
-                          const val = parseInt(raw, 10);
-                          if (!isNaN(val) && val >= 0) {
-                            setModalQty(Math.min(selectedItem.quantity, val));
-                          }
-                        }
-                      }}
-                      onBlur={() => {
-                        if (modalQty <= 0) setModalQty(1);
-                        if (modalQty > selectedItem.quantity) setModalQty(selectedItem.quantity);
-                      }}
-                      className="w-14 bg-transparent text-center text-xs font-bold text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    />
-                    <span className="text-xs font-bold text-stone-400 select-none ml-1">{selectedItem.unit}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setModalQty(prev => Math.min(selectedItem.quantity, prev + 5))}
-                    className="w-8 h-8 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
-                    title="Increase by 5"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
+              {/* Quantity Selection Control Removed */}
 
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between text-xs">
                 <span className="font-bold text-emerald-300 flex items-center gap-1.5">
@@ -262,7 +208,7 @@ export default function ProcessorMarketplace() {
               </button>
               <button
                 onClick={() => {
-                  handleAddToCart(selectedItem, modalQty);
+                  handleAddToCart(selectedItem);
                   setSelectedItem(null);
                 }}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-md cursor-pointer flex items-center gap-2"

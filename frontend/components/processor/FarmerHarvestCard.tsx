@@ -13,11 +13,13 @@ export default function FarmerHarvestCard({ item, onViewDetails, onAddToCart }: 
     <div className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/30 rounded-3xl overflow-hidden transition shadow-sm flex flex-col justify-between">
       {/* Top Image & QR Badge */}
       <div className="relative h-44 w-full bg-stone-800 overflow-hidden">
-        <img
-          src={item.imageUrl || "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&auto=format&fit=crop&q=80"}
-          alt={item.cropName}
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-        />
+        {item.imageUrl && (
+          <img
+            src={item.imageUrl}
+            alt={item.cropName}
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+          />
+        )}
         {item.hasQrCode && (
           <span className="absolute top-3 right-3 bg-stone-950/90 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 backdrop-blur-md flex items-center gap-1">
             <QrCode className="h-3 w-3" /> Verified QR

@@ -22,19 +22,6 @@ import {
 
 type Timeframe = "WEEKLY" | "MONTHLY" | "YEARLY";
 
-interface ProductMetric {
-  name: string;
-  quantity: string;
-  revenue: string;
-  percentage: number;
-}
-
-interface TrendPoint {
-  period: string;
-  revenue: number;
-  volume: number;
-}
-
 interface AnalyticsData {
   produceTransformed: string;
   totalRevenue: string;
@@ -42,8 +29,8 @@ interface AnalyticsData {
   disputeRate: string;
   successfulShipments: number;
   totalOrders: number;
-  productBreakdown: ProductMetric[];
-  trendData: TrendPoint[];
+  productBreakdown?: any[];
+  cropBreakdown?: any[];
 }
 
 const analyticsByTimeframe: Record<Timeframe, AnalyticsData> = {
@@ -53,9 +40,7 @@ const analyticsByTimeframe: Record<Timeframe, AnalyticsData> = {
     escrowLocked: "₹ 0",
     disputeRate: "0.0%",
     successfulShipments: 0,
-    totalOrders: 0,
-    productBreakdown: [],
-    trendData: []
+    totalOrders: 0
   },
   MONTHLY: {
     produceTransformed: "0 kg",
@@ -63,9 +48,7 @@ const analyticsByTimeframe: Record<Timeframe, AnalyticsData> = {
     escrowLocked: "₹ 0",
     disputeRate: "0.0%",
     successfulShipments: 0,
-    totalOrders: 0,
-    productBreakdown: [],
-    trendData: []
+    totalOrders: 0
   },
   YEARLY: {
     produceTransformed: "0 kg",
@@ -73,9 +56,7 @@ const analyticsByTimeframe: Record<Timeframe, AnalyticsData> = {
     escrowLocked: "₹ 0",
     disputeRate: "0.0%",
     successfulShipments: 0,
-    totalOrders: 0,
-    productBreakdown: [],
-    trendData: []
+    totalOrders: 0
   }
 };
 function generatePdfBlob(title: string, timeframe: string, stats: any): Blob {
@@ -202,7 +183,7 @@ export default function ProcessorDashboardPage() {
     setTimeout(() => setDownloadSuccess(null), 3500);
   };
 
-  const maxRevenue = Math.max(...currentStats.trendData.map(d => d.revenue), 1);
+
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -390,81 +371,7 @@ export default function ProcessorDashboardPage() {
           </div>
         </div>
 
-        {/* ANALYTICS CHARTS & BREAKDOWN SECTION */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Revenue & Volume Trend Chart */}
-          <div className="lg:col-span-2 bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 space-y-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-base font-extrabold text-white">Revenue & Volume Trend</h3>
-              </div>
-              <span className="text-xs text-stone-400 font-medium">
-                {timeframe} Performance
-              </span>
-            </div>
 
-            {/* Custom Bar Visualization */}
-            <div className="space-y-4 pt-2">
-              <div className="h-44 flex items-end justify-between gap-3 sm:gap-6 pt-6 px-2">
-                {currentStats.trendData.map((data, idx) => {
-                  const heightPercent = maxRevenue > 0 ? (data.revenue / maxRevenue) * 100 : 0;
-                  return (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                      <span className="text-[10px] text-emerald-400 font-mono opacity-0 group-hover:opacity-100 transition">
-                        ₹{data.revenue}
-                      </span>
-                      <div className="w-full bg-stone-950 rounded-t-xl h-full flex items-end overflow-hidden border border-stone-800">
-                        <div 
-                          className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-xl transition-all duration-500"
-                          style={{ height: `${Math.max(heightPercent, 8)}%` }}
-                        />
-                      </div>
-                      <span className="text-[11px] font-bold text-stone-400">{data.period}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Processed Product Revenue Breakdown */}
-          <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 space-y-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-              <div className="flex items-center gap-2">
-                <PieChart className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-base font-extrabold text-white">Product Share</h3>
-              </div>
-              <span className="text-xs text-stone-400 font-medium">Output Share %</span>
-            </div>
-
-            <div className="space-y-4 pt-1">
-              {currentStats.productBreakdown.map((product, idx) => (
-                <div key={idx} className="space-y-1.5 p-3.5 bg-stone-950 rounded-2xl border border-stone-800">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-white">{product.name}</span>
-                    <span className="text-emerald-400 font-mono">{product.revenue}</span>
-                  </div>
-                  
-                  {/* Progress bar */}
-                  <div className="w-full h-2 bg-stone-900 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500 rounded-full"
-                      style={{ width: `${product.percentage}%` }}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5">
-                    <span>Volume: {product.quantity}</span>
-                    <span>{product.percentage}% of total</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
 
       </div>
     </div>

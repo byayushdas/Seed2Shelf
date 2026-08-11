@@ -13,7 +13,7 @@ router.post('/harvests', async (req, res) => {
   try {
     const {
       userId, roleId,
-      cropName, category, variety,
+      cropName, category,
       quantity, pricePerKg,
       harvestDate, cropImage, qrCode, traceUrl,
       batchId
@@ -31,7 +31,6 @@ router.post('/harvests', async (req, res) => {
       roleId: roleId || '',
       cropName,
       category: category || 'General',
-      variety: variety || 'Standard',
       quantity: parseFloat(quantity),
       originalQuantity: parseFloat(quantity),
       pricePerKg: parseFloat(pricePerKg),
@@ -204,6 +203,28 @@ router.put('/purchase-orders/:id/dispatch', async (req, res) => {
     });
 
     return res.json({ success: true, data: order });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// ============================================================
+// SHIPMENTS
+// ============================================================
+
+// GET /api/v1/farmer/shipments/outgoing?userId= — To Processors
+router.get('/shipments/outgoing', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
+
+    const shipments = await PurchaseOrder.find({
+      sellerId: userId,
+      sellerRole: 'FARMER',
+      deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED', 'REJECTED'] }
+    }).sort({ updatedAt: -1 });
+
+    return res.json({ success: true, data: shipments });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }

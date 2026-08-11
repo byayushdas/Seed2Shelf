@@ -45,14 +45,7 @@ interface InventoryItem {
 }
 
 const getCropImage = (item: InventoryItem) => {
-  if (item.cropImage) return item.cropImage;
-  const name = (item.cropName || "").toLowerCase();
-  if (name.includes("mango")) return "https://images.unsplash.com/photo-1553279768-865429fa0078?q=80&w=800&auto=format&fit=crop";
-  if (name.includes("rice") || name.includes("basmati")) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=800&auto=format&fit=crop";
-  if (name.includes("wheat") || name.includes("grain")) return "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?q=80&w=800&auto=format&fit=crop";
-  if (name.includes("cotton")) return "https://images.unsplash.com/photo-1606041008023-472dfb5e530f?q=80&w=800&auto=format&fit=crop";
-  if (name.includes("apple")) return "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?q=80&w=800&auto=format&fit=crop";
-  return "https://images.unsplash.com/photo-1595855759920-86582396756a?q=80&w=800&auto=format&fit=crop";
+  return item.cropImage || "";
 };
 
 export default function HarvestHub() {
@@ -67,7 +60,7 @@ export default function HarvestHub() {
   // Form State
   const [cropCategory, setCropCategory] = useState("Grains");
   const [cropName, setCropName] = useState("");
-  const [cropVariety, setCropVariety] = useState("Standard");
+
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [cropImage, setCropImage] = useState<string | null>(null);
@@ -167,9 +160,7 @@ export default function HarvestHub() {
     const qrUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://seed2shelf.com'}/trace/${batchId}`;
     const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 2, width: 300 });
 
-    const currentCrop = cropVariety && cropVariety !== "None"
-      ? `${cropVariety} ${cropName}`
-      : cropName || "Mangoes";
+    const currentCrop = cropName || "Mangoes";
 
     const dateToSave = new Date(selectedYear, selectedMonth, selectedDay).toISOString();
 
@@ -182,7 +173,7 @@ export default function HarvestHub() {
           roleId: roleId,
           cropName: currentCrop,
           category: cropCategory,
-          variety: cropVariety,
+
           quantity: quantity,
           pricePerKg: price,
           harvestDate: dateToSave,
@@ -394,53 +385,19 @@ export default function HarvestHub() {
                 </div>
               </div>
 
-              {/* FIELD 2 & 3: Crop Name and Crop Variety (Separate Boxes) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Crop Name Box */}
-                <div>
-                  <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
-                    Crop Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={cropName}
-                    onChange={(e) => setCropName(e.target.value)}
-                    placeholder="e.g. Mangoes, Rice, Wheat"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
-                    required
-                  />
-                </div>
-
-                {/* Crop Variety Box (Writeable input + Dropdown with ONLY "None" option) */}
-                <div>
-                  <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
-                    Crop Variety
-                  </label>
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={cropVariety}
-                      onChange={(e) => setCropVariety(e.target.value)}
-                      placeholder="Type variety (e.g. Alphonso)"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-2xl pl-4 pr-24 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
-                    />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value === "None") {
-                            setCropVariety("None");
-                          }
-                        }}
-                        value={cropVariety === "None" ? "None" : ""}
-                        className="bg-stone-900 border border-stone-800 text-stone-400 hover:text-white font-bold text-[11px] rounded-xl px-2.5 py-1.5 focus:outline-none cursor-pointer hover:border-emerald-500/50 transition appearance-none pr-6 pl-2.5"
-                        style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="%23a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}
-                      >
-                        <option value="" disabled hidden>Option</option>
-                        <option value="None">None</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+              {/* FIELD 2: Crop Name */}
+              <div>
+                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                  Crop Name *
+                </label>
+                <input
+                  type="text"
+                  value={cropName}
+                  onChange={(e) => setCropName(e.target.value)}
+                  placeholder="e.g. Mangoes, Rice, Wheat"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
+                  required
+                />
               </div>
 
               {/* Quantity & Price */}
@@ -527,7 +484,7 @@ export default function HarvestHub() {
                       {Array.from({ length: daysInMonth }).map((_, idx) => {
                         const dayNum = idx + 1;
                         const isSelected = dayNum === selectedDay;
-                        const isToday = dayNum === 20 && selectedMonth === 6 && selectedYear === 2026;
+                        const isToday = dayNum === today.getDate() && selectedMonth === today.getMonth() && selectedYear === today.getFullYear();
 
                         return (
                           <button

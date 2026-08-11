@@ -34,16 +34,18 @@ router.get('/marketplace', async (req, res) => {
       const distributorLocation = [distributor?.village, distributor?.district, distributor?.state]
         .filter(Boolean).join(', ') || 'India';
 
+      const farmerDetails = b.originDetails?.farmer || {};
+
       return {
         id: b._id,
         batchId: b._id,
         productName: b.productName,
-        cropName: b.productName,
+        cropName: farmerDetails.cropName || b.productName,
         category: b.category,
         distributorName,
         distributorLocation,
-        farmerName: distributorName,
-        farmerLocation: distributorLocation,
+        farmerName: farmerDetails.name || distributorName,
+        farmerLocation: farmerDetails.location || distributorLocation,
         quantity: b.quantity,
         unit: 'kg',
         pricePerUnit: b.pricePerUnit,
@@ -51,12 +53,16 @@ router.get('/marketplace', async (req, res) => {
         date: b.date
           ? new Date(b.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
           : 'Recently Added',
-        harvestDate: b.date
-          ? new Date(b.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-          : 'Recently Added',
+        harvestDate: farmerDetails.harvestDate
+          ? new Date(farmerDetails.harvestDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+          : (b.date ? new Date(b.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recently Added'),
         hasQrCode: !!b.qrCodeUrl,
-        imageUrl: b.productImage || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=600',
-        parentProcessedBatchId: b.parentProcessedBatchId
+        imageUrl: b.productImage || '',
+        parentProcessedBatchId: b.parentProcessedBatchId,
+        parentDistBatchIds: b.parentDistBatchIds || [],
+        originalCropImage: farmerDetails.cropImage || null,
+        traceUrl: b.traceUrl || farmerDetails.traceUrl || null,
+        originDetails: b.originDetails || {}
       };
     });
 
@@ -149,6 +155,36 @@ router.post('/inventory', async (req, res) => {
 
     const id = batchId || `RET-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    let originDetails = {};
+    const primaryBatchId = parentDistBatchId || (parentDistBatchIds && parentDistBatchIds.length > 0 ? parentDistBatchIds[0] : null);
+    
+    if (primaryBatchId) {
+      const dBatch = await DistributorBatch.findById(primaryBatchId).populate('distributorId', 'name district state village');
+      if (dBatch) {
+        const dUser = dBatch.distributorId;
+        const distributorName = dUser?.name || 'Unknown Distributor';
+        const distributorLocation = [dUser?.village, dUser?.district, dUser?.state].filter(Boolean).join(', ') || 'Unknown Location';
+        
+        originDetails = {
+          ...(dBatch.originDetails || {}),
+          distributor: {
+            batchId: dBatch._id,
+            name: distributorName,
+            location: distributorLocation,
+            productName: dBatch.productName,
+            category: dBatch.category,
+            quantity: dBatch.quantity,
+            pricePerUnit: dBatch.pricePerUnit,
+            date: dBatch.date,
+            productImage: dBatch.productImage,
+            qrCodeUrl: dBatch.qrCodeUrl,
+            traceUrl: dBatch.traceUrl,
+            parentProcessedBatchIds: dBatch.parentProcessedBatchIds && dBatch.parentProcessedBatchIds.length > 0 ? dBatch.parentProcessedBatchIds : (dBatch.parentDistBatchId ? [dBatch.parentDistBatchId] : [])
+          }
+        };
+      }
+    }
+
     const item = await RetailerBatch.create({
       _id: id,
       retailerId: userId,
@@ -164,7 +200,8 @@ router.post('/inventory', async (req, res) => {
       qrCodeUrl: qrCodeUrl || null,
       traceUrl: traceUrl || null,
       date: date ? new Date(date) : new Date(),
-      status: 'In Stock'
+      status: 'In Stock',
+      originDetails
     });
 
     return res.status(201).json({ success: true, data: item });
@@ -268,6 +305,24 @@ router.put('/purchase-orders/:id/accept', async (req, res) => {
   }
 });
 
+// PUT /api/v1/retailer/purchase-orders/:id/reject
+router.put('/purchase-orders/:id/reject', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const order = await PurchaseOrder.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    order.deliveryStatus = 'REJECTED';
+    order.rejectionReason = reason || 'No reason provided';
+    order.updatedAt = new Date();
+    await order.save();
+
+    return res.json({ success: true, data: order });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // PUT /api/v1/retailer/purchase-orders/:id/dispatch
 router.put('/purchase-orders/:id/dispatch', async (req, res) => {
   try {
@@ -339,6 +394,25 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
     order.deliveryStatus = 'DELIVERED';
     order.escrowStatus = 'RELEASED';
     order.deliveredAt = new Date();
+    order.updatedAt = new Date();
+    await order.save();
+
+    return res.json({ success: true, data: order });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// PUT /api/v1/retailer/shipments/:orderId/reject
+router.put('/shipments/:orderId/reject', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const order = await PurchaseOrder.findById(req.params.orderId);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    order.deliveryStatus = 'REJECTED';
+    order.rejectionReason = reason || 'Delivery rejected by buyer';
+    // optionally refund escrow if logic existed here
     order.updatedAt = new Date();
     await order.save();
 

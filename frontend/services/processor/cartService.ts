@@ -30,7 +30,7 @@ export const cartService = {
     const item = cartState.find(i => i.harvestItem.id === harvestItemId);
     if (item) {
       const maxAvailable = item.harvestItem.quantity || 100000;
-      item.selectedQuantity = Math.min(maxAvailable, Math.max(0, newQty));
+      item.selectedQuantity = Math.min(maxAvailable, Math.max(1, newQty));
       notify();
     }
   },

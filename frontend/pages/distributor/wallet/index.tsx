@@ -335,25 +335,7 @@ export default function WalletDashboard() {
                     </div>
                   </div>
 
-                  {/* Expanded Product Varieties Breakdown */}
-                  {isProductExpanded && (
-                    <div className="p-4 bg-stone-900/80 border-t border-stone-800 space-y-2 text-xs">
-                      <p className="font-bold text-stone-300 text-[11px] uppercase tracking-wider">
-                        Varieties Sold Breakdown
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {product.varieties.map((v: any, vIdx: number) => (
-                          <div key={vIdx} className="p-3 bg-stone-950 rounded-xl border border-stone-800 flex flex-col justify-between">
-                            <span className="text-stone-300 font-semibold">{v.varietyName}</span>
-                            <div className="mt-2 flex items-center justify-between">
-                              <span className="text-stone-400 text-[11px]">{v.qty}</span>
-                              <span className="text-emerald-400 font-bold">{v.earnings}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               );
             })}

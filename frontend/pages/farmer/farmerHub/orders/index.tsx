@@ -135,7 +135,7 @@ export default function FarmerOrders() {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
 
-      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders/${targetId}/start-delivery`, {
+      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders/${targetId}/dispatch`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: farmerId, carrierName: "Standard Agri Express" }),
@@ -169,6 +169,27 @@ export default function FarmerOrders() {
     }
     setNotification("Delivery initiated! Order is now in transit.");
     setTimeout(() => setNotification(null), 4000);
+  };
+
+  // Action: Reject Order
+  const handleRejectOrder = async (orderId: string) => {
+    try {
+      const targetOrder = orders.find(o => o.id === orderId);
+      const targetId = (targetOrder as any)?.rawId || orderId;
+
+      const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders/${targetId}/reject`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: farmerId, reason: "Rejected by seller" }),
+      });
+
+      if (res.ok) {
+        setOrders(orders.filter((ord) => ord.id !== orderId));
+        setNotification("Order rejected successfully.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Filtered orders list
@@ -369,12 +390,20 @@ export default function FarmerOrders() {
 
                   <div className="flex items-center gap-2">
                     {ord.status === "PENDING" && (
-                      <button
-                        onClick={() => handleAcceptOrder(ord.id)}
-                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
-                      >
-                        <span>Accept Order</span>
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRejectOrder(ord.id)}
+                          className="px-5 py-2.5 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span>Reject</span>
+                        </button>
+                        <button
+                          onClick={() => handleAcceptOrder(ord.id)}
+                          className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                        >
+                          <span>Accept Order</span>
+                        </button>
+                      </div>
                     )}
 
                     {ord.status === "ACCEPTED" && (

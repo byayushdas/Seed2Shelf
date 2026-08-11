@@ -54,28 +54,26 @@ export default function FarmerShipments() {
     const fetchShipments = async () => {
       try {
         setIsLoading(true);
-        const endpoint = mainTab === "ACTIVE" 
-          ? `${BACKEND_URL}/api/v1/farmer/shipment/active?userId=${farmerId}`
-          : `${BACKEND_URL}/api/v1/farmer/shipment/history?userId=${farmerId}`;
+        const endpoint = `${BACKEND_URL}/api/v1/farmer/shipments/outgoing?userId=${farmerId}`;
 
         const res = await fetch(endpoint);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
             const mapped = json.data.map((s: any) => ({
-              id: s.shipmentId || s.id,
+              id: s.orderNumber || s._id,
               batchId: s.batchId,
               cropName: s.cropName,
-              quantity: s.quantity,
-              value: s.value,
-              destination: s.destination,
-              dispatchedDate: s.dispatchedDate,
-              estimatedDelivery: s.estimatedDelivery || "Today, 4:30 PM",
-              status: s.status,
-              currentStep: s.currentStep || 2,
+              quantity: `${s.quantityKg} kg`,
+              value: `₹ ${s.totalAmount?.toLocaleString() || 0}`,
+              destination: s.buyerName || "Processor Corp",
+              dispatchedDate: s.dispatchedAt ? new Date(s.dispatchedAt).toLocaleDateString() : new Date(s.updatedAt).toLocaleDateString(),
+              estimatedDelivery: "Today, 4:30 PM",
+              status: s.deliveryStatus === "DISPATCHED" ? "IN_TRANSIT" : s.deliveryStatus,
+              currentStep: s.deliveryStatus === "DELIVERED" ? 3 : s.deliveryStatus === "REJECTED" ? 3 : 2,
               rejectionReason: s.rejectionReason,
-              rejectedDate: s.rejectedDate,
-              acceptedDate: s.acceptedDate
+              rejectedDate: s.deliveryStatus === "REJECTED" ? new Date(s.updatedAt).toLocaleDateString() : undefined,
+              acceptedDate: s.deliveredAt ? new Date(s.deliveredAt).toLocaleDateString() : undefined
             }));
             setShipments(mapped);
           }

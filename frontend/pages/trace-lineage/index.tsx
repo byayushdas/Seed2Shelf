@@ -72,7 +72,6 @@ const STAGE_LEVELS_DATA: StageData[] = [
     productInfo: [
       { label: "Harvest Quantity", value: "550 kg Raw Mangoes" },
       { label: "Farming Method", value: "Organic & Regenerative Agriculture" },
-      { label: "Crop Variety", value: "GI Tagged Alphonso Mango" },
       { label: "Harvest Season", value: "Monsoon Peak Harvest 2026" }
     ],
     qualityInfo: [

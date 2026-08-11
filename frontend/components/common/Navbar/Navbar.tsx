@@ -122,6 +122,7 @@ export default function Navbar() {
   const hubConfig = userRole ? getHubConfig(userRole) : null;
   const profileId = (session?.user as any)?.farmerId || (session?.user as any)?.processorId || (session?.user as any)?.adminId || session?.user?.id;
   const isAuthenticated = status === "authenticated";
+  const isHomePage = router.pathname === "/" || router.pathname === "/home";
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
 
@@ -294,6 +295,16 @@ export default function Navbar() {
 
             {/* Right Side Controls */}
             {isPortalUser ? (
+              isHomePage ? (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={hubConfig?.basePath || "/"}
+                    className="bg-[#00d26a] text-black font-black px-5 py-2.5 rounded-full hover:bg-[#00e676] transition shadow-lg shadow-[#00d26a]/20 text-sm"
+                  >
+                    Dashboard
+                  </Link>
+                </div>
+              ) : (
               /* Portal Top Navbar Controls: ONLY Hamburger + Bell + Profile Avatar */
               <div className="flex items-center gap-3">
                 
@@ -334,6 +345,7 @@ export default function Navbar() {
                 )}
 
               </div>
+              )
             ) : (
               /* Non-Farmer Top Navbar Controls */
               <div className="flex items-center gap-4">
@@ -479,14 +491,62 @@ function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: strin
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/v1/notifications?userId=${userId}`);
-        if (res.ok) {
-          const json = await res.json();
+        const [notifRes, profileRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/v1/notifications?userId=${userId}`),
+          fetch(`${BACKEND_URL}/api/profile/${userId}`)
+        ]);
+
+        let notifs = [];
+        let unread = 0;
+
+        if (notifRes.ok) {
+          const json = await notifRes.json();
           if (json.success && Array.isArray(json.data)) {
-            setNotifications(json.data);
-            setUnreadCount(json.unreadCount || 0);
+            notifs = json.data;
+            unread = json.unreadCount || 0;
           }
         }
+
+        if (profileRes.ok) {
+          const profileJson = await profileRes.json();
+          if (profileJson.success && profileJson.data) {
+            const user = profileJson.data;
+            let isProfileIncomplete = false;
+
+            if (user.role === 'FARMER' && (!user.farmName || !user.farmLocation || !user.totalLandArea || !user.mainCultivatedCrops || user.mainCultivatedCrops.length === 0 || !user.farmingPractice)) {
+              isProfileIncomplete = true;
+            } else if (user.role === 'PROCESSOR' && (!user.facilityName || !user.facilityLocation || !user.processingCapacity || !user.mainProcessedProducts || !user.complianceStandards)) {
+              isProfileIncomplete = true;
+            } else if (user.role === 'DISTRIBUTOR' && (!user.companyName || !user.location || !user.storageCapacity || !user.operatingFacilities || !user.transportFleet)) {
+              isProfileIncomplete = true;
+            } else if (user.role === 'RETAILER' && (!user.storeName || !user.storeLocation || !user.shelfCapacity || !user.storeTypeFocus || !user.employeeCount)) {
+              isProfileIncomplete = true;
+            }
+
+            const isVerificationPending = user.kycStatus !== 'Verified';
+
+            if (isProfileIncomplete || isVerificationPending) {
+              const actionMsg = isProfileIncomplete 
+                ? 'Please complete all your profile details to unlock platform features.' 
+                : 'Your KYC verification is pending. Please complete your KYC to access the marketplace.';
+              
+              const profileNotif = {
+                id: 'profile-alert-notif',
+                title: 'Action Required',
+                message: actionMsg,
+                type: 'SYSTEM',
+                isRead: false,
+                createdAt: new Date().toISOString()
+              };
+
+              notifs = [profileNotif, ...notifs];
+              unread += 1;
+            }
+          }
+        }
+
+        setNotifications(notifs);
+        setUnreadCount(unread);
       } catch (err) {
         console.warn("Notifications API unreachable, utilizing empty fallback", err);
       }
@@ -515,11 +575,13 @@ function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: strin
     try {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
-      await fetch(`${BACKEND_URL}/api/v1/notifications/${id}/read?userId=${encodeURIComponent(userId)}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
+      if (id !== 'profile-alert-notif') {
+        await fetch(`${BACKEND_URL}/api/v1/notifications/${id}/read?userId=${encodeURIComponent(userId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+      }
     } catch (err) {
       console.warn("Failed to mark single notification as read", err);
     }

@@ -31,8 +31,8 @@ export const marketplaceService = {
             ? [item.farmId.village, item.farmId.district, item.farmId.state].filter(Boolean).join(", ")
             : (item.farmLocation || "West Bengal, India");
 
-          const volume = item.availableVolume ?? item.harvestVolume ?? 0;
-          const price = item.sellingPrice ?? 0;
+          const volume = item.quantity ?? item.availableVolume ?? item.harvestVolume ?? 0;
+          const price = item.pricePerUnit ?? item.pricePerKg ?? item.sellingPrice ?? 0;
 
           return {
             id: item._id || item.id || item.batchId,
@@ -46,7 +46,7 @@ export const marketplaceService = {
             totalPrice: volume * price,
             harvestDate: item.harvestDate ? new Date(item.harvestDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "Recently Harvested",
             hasQrCode: item.verifiedBadge ?? true,
-            imageUrl: item.cropImage || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600",
+            imageUrl: item.cropImage || "",
           };
         });
       }
@@ -78,7 +78,7 @@ export const marketplaceService = {
           totalPrice: (item.quantity ?? 0) * (item.pricePerUnit ?? 0),
           harvestDate: item.processingDate || item.harvestDate || "Recently Processed",
           hasQrCode: item.hasQrCode ?? true,
-          imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=600",
+          imageUrl: item.imageUrl || "",
         }));
       }
     } catch (e) {
@@ -109,7 +109,7 @@ export const marketplaceService = {
           totalPrice: (item.quantity ?? 0) * (item.pricePerUnit ?? 0),
           harvestDate: item.date || item.harvestDate || "Recently Added",
           hasQrCode: item.hasQrCode ?? true,
-          imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=600",
+          imageUrl: item.imageUrl || "",
         }));
       }
     } catch (e) {

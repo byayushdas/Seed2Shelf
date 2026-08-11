@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -18,8 +18,11 @@ import {
   ArrowRight
 } from "lucide-react";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+
 interface DistributorOrder {
   id: string;
+  rawId: string;
   batchId: string;
   productName: string;
   category: string;
@@ -32,20 +35,106 @@ interface DistributorOrder {
 
 export default function ProcessorOrdersPage() {
   const { data: session } = useSession();
+  const processorId = (session?.user as any)?.processorId || "";
   const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED">("ALL");
 
   const [orders, setOrders] = useState<DistributorOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
-  const handleAcceptOrder = (id: string) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: "ACCEPTED" } : o))
-    );
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const endpoint = filterStatus === "ALL" 
+          ? `${BACKEND_URL}/api/v1/processor/purchase-orders?userId=${processorId}`
+          : filterStatus === "PENDING"
+          ? `${BACKEND_URL}/api/v1/processor/purchase-orders/pending?userId=${processorId}`
+          : `${BACKEND_URL}/api/v1/processor/purchase-orders/accepted?userId=${processorId}`;
+
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const mapped = json.data.map((o: any) => ({
+              id: o.orderNumber || o._id,
+              rawId: o._id,
+              batchId: o.batchId,
+              productName: o.cropName,
+              category: "Processed Goods",
+              buyer: o.buyerName || "Distributor Corp",
+              quantity: `${o.quantityKg} kg`,
+              totalPrice: `₹ ${o.totalAmount?.toLocaleString() || 0}`,
+              date: new Date(o.createdAt).toLocaleDateString(),
+              status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
+            }));
+            setOrders(mapped);
+          } else {
+            setOrders([]);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (processorId) fetchOrders();
+  }, [processorId, filterStatus]);
+
+  const handleAcceptOrder = async (id: string) => {
+    try {
+      const targetOrder = orders.find(o => o.id === id);
+      const targetId = targetOrder?.rawId || id;
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/accept`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "ACCEPTED" } : o)));
+        setNotification("Order accepted successfully.");
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleStartDelivery = (id: string) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: "DISPATCHED" } : o))
-    );
+  const handleRejectOrder = async (id: string) => {
+    try {
+      const targetOrder = orders.find(o => o.id === id);
+      const targetId = targetOrder?.rawId || id;
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/reject`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "Rejected by Processor" })
+      });
+      if (res.ok) {
+        setOrders((prev) => prev.filter((o) => o.id !== id));
+        setNotification("Order rejected.");
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStartDelivery = async (id: string) => {
+    try {
+      const targetOrder = orders.find(o => o.id === id);
+      const targetId = targetOrder?.rawId || id;
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/dispatch`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" }
+      });
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "DISPATCHED" } : o)));
+        setNotification("Delivery initiated.");
+        setTimeout(() => setNotification(null), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -118,6 +207,13 @@ export default function ProcessorOrdersPage() {
             </button>
           </div>
         </div>
+
+        {notification && (
+          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold flex items-center gap-2 animate-in fade-in duration-300">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>{notification}</span>
+          </div>
+        )}
 
         {/* ELEGANT ORDERS CARDS LIST */}
         <div className="space-y-4">
@@ -234,12 +330,20 @@ export default function ProcessorOrdersPage() {
 
                   <div className="flex items-center gap-2">
                     {ord.status === "PENDING" && (
-                      <button
-                        onClick={() => handleAcceptOrder(ord.id)}
-                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
-                      >
-                        <span>Accept Order</span>
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRejectOrder(ord.id)}
+                          className="px-5 py-2.5 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          <span>Reject</span>
+                        </button>
+                        <button
+                          onClick={() => handleAcceptOrder(ord.id)}
+                          className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                        >
+                          <span>Accept Order</span>
+                        </button>
+                      </div>
                     )}
 
                     {ord.status === "ACCEPTED" && (

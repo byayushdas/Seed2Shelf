@@ -54,7 +54,7 @@ let processedProducts: ProcessedProductItem[] = [
     unit: "kg",
     processingDate: "July 18, 2026",
     description: "Milled, polished, and packaged premium organic basmati rice",
-    imageUrl: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop&q=80",
+    imageUrl: "",
     qrCodeUrl: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PRC-BATCH-2026-901"
   },
   {
@@ -67,7 +67,7 @@ let processedProducts: ProcessedProductItem[] = [
     unit: "Liters",
     processingDate: "July 17, 2026",
     description: "Aseptic double-filtered Alphonso mango pulp without preservatives",
-    imageUrl: "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&auto=format&fit=crop&q=80",
+    imageUrl: "",
     qrCodeUrl: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PRC-BATCH-2026-902"
   },
   {
@@ -80,7 +80,7 @@ let processedProducts: ProcessedProductItem[] = [
     unit: "kg",
     processingDate: "July 15, 2026",
     description: "Traditional stone-ground whole wheat flour",
-    imageUrl: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&auto=format&fit=crop&q=80",
+    imageUrl: "",
     qrCodeUrl: "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PRC-BATCH-2026-903"
   }
 ];

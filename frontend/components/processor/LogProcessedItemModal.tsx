@@ -17,7 +17,7 @@ export default function LogProcessedItemModal({ isOpen, onClose, rawMaterials, o
   const [unit, setUnit] = useState("kg");
   const [processingDate, setProcessingDate] = useState("2026-07-24");
   const [description, setDescription] = useState("");
-  const [imageUrl, setImageUrl] = useState("https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&auto=format&fit=crop&q=80");
+  const [imageUrl, setImageUrl] = useState("");
 
   const [previewBatchId, setPreviewBatchId] = useState(`PRC-BATCH-2026-${Math.floor(100 + Math.random() * 900)}`);
 

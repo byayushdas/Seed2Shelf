@@ -7,7 +7,6 @@ const farmerSchema = new mongoose.Schema({
 
   cropName: { type: String, required: true },
   category: { type: String, required: true },
-  variety: { type: String, default: 'Standard' },
 
   quantity: { type: Number, required: true },  // in kg (remaining available)
   originalQuantity: { type: Number },           // initial quantity logged

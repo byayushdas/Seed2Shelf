@@ -230,6 +230,73 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </AnimatePresence>
                 </div>
 
+
+                {/* Wallet Dropdown */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setWalletExpanded(!walletExpanded)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <WalletIcon className={`w-4 h-4 ${isActive("/processor/wallet") ? "text-[#00d26a]" : "text-stone-400"}`} />
+                      <span>Wallet</span>
+                    </div>
+                    {walletExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {walletExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                      >
+                        <Link
+                          href="/processor/wallet"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/processor/wallet") && !isActive("/processor/wallet/transactions") && !isActive("/processor/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <WalletIcon className="w-3.5 h-3.5" />
+                          <span>Balance</span>
+                        </Link>
+                        <Link
+                          href="/processor/wallet/transactions"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/processor/wallet/transactions")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
+                          <span>Transactions</span>
+                        </Link>
+                        <Link
+                          href="/processor/wallet/invoices"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/processor/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          <span>Invoices</span>
+                        </Link>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 {/* Trace Lineage */}
                 <Link
                   href="/trace-lineage"
@@ -363,6 +430,73 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <span>Shipments</span>
                         </Link>
                         
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+
+                {/* Wallet Dropdown */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setWalletExpanded(!walletExpanded)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <WalletIcon className={`w-4 h-4 ${isActive("/distributor/wallet") ? "text-[#00d26a]" : "text-stone-400"}`} />
+                      <span>Wallet</span>
+                    </div>
+                    {walletExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {walletExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                      >
+                        <Link
+                          href="/distributor/wallet"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/distributor/wallet") && !isActive("/distributor/wallet/transactions") && !isActive("/distributor/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <WalletIcon className="w-3.5 h-3.5" />
+                          <span>Balance</span>
+                        </Link>
+                        <Link
+                          href="/distributor/wallet/transactions"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/distributor/wallet/transactions")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
+                          <span>Transactions</span>
+                        </Link>
+                        <Link
+                          href="/distributor/wallet/invoices"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/distributor/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          <span>Invoices</span>
+                        </Link>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -506,6 +640,73 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </AnimatePresence>
                 </div>
 
+
+                {/* Wallet Dropdown */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setWalletExpanded(!walletExpanded)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <WalletIcon className={`w-4 h-4 ${isActive("/retailer/wallet") ? "text-[#00d26a]" : "text-stone-400"}`} />
+                      <span>Wallet</span>
+                    </div>
+                    {walletExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {walletExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                      >
+                        <Link
+                          href="/retailer/wallet"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/retailer/wallet") && !isActive("/retailer/wallet/transactions") && !isActive("/retailer/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <WalletIcon className="w-3.5 h-3.5" />
+                          <span>Balance</span>
+                        </Link>
+                        <Link
+                          href="/retailer/wallet/transactions"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/retailer/wallet/transactions")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
+                          <span>Transactions</span>
+                        </Link>
+                        <Link
+                          href="/retailer/wallet/invoices"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/retailer/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          <span>Invoices</span>
+                        </Link>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 {/* Trace Lineage */}
                 <Link
                   href="/trace-lineage"
@@ -627,6 +828,73 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <span>Shipments</span>
                         </Link>
                         
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+
+                {/* Wallet Dropdown */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setWalletExpanded(!walletExpanded)}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                  >
+                    <div className="flex items-center gap-3">
+                      <WalletIcon className={`w-4 h-4 ${isActive("/farmer/wallet") ? "text-[#00d26a]" : "text-stone-400"}`} />
+                      <span>Wallet</span>
+                    </div>
+                    {walletExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {walletExpanded && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                      >
+                        <Link
+                          href="/farmer/wallet"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/farmer/wallet") && !isActive("/farmer/wallet/transactions") && !isActive("/farmer/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <WalletIcon className="w-3.5 h-3.5" />
+                          <span>Balance</span>
+                        </Link>
+                        <Link
+                          href="/farmer/wallet/transactions"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/farmer/wallet/transactions")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <ArrowLeftRight className="w-3.5 h-3.5" />
+                          <span>Transactions</span>
+                        </Link>
+                        <Link
+                          href="/farmer/wallet/invoices"
+                          onClick={onClose}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                            isActive("/farmer/wallet/invoices")
+                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
+                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          <span>Invoices</span>
+                        </Link>
                       </motion.div>
                     )}
                   </AnimatePresence>

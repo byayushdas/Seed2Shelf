@@ -32,6 +32,7 @@ export default function Home() {
         src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_015952_e1deeb12-8fb7-4071-a42a-60779fc64ab6.mp4"
       />
       <div
+        className="no-scrollbar"
         style={{
           scrollSnapType: "y mandatory",
           height: "100vh",
@@ -46,6 +47,20 @@ export default function Home() {
           name="description"
           content="Track every handoff from farmer to retailer with immutable blockchain records, automated payment protection, and QR-powered transparency."
         />
+        <style>{`
+          html, body {
+            overflow: hidden !important;
+          }
+          .no-scrollbar::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+          }
+        `}</style>
       </Head>
 
       {/* Global Navbar Overlay */}
@@ -85,7 +100,7 @@ export default function Home() {
           <h1
             style={{
               fontFamily: "'Instrument Serif', serif",
-              fontSize: "clamp(3rem, 7vw, 5.5rem)",
+              fontSize: "clamp(2.5rem, 5.5vw, 4.5rem)",
               fontWeight: 400,
               lineHeight: 1.1,
               color: "#1a1a1a",
@@ -99,22 +114,7 @@ export default function Home() {
             Supply
           </h1>
 
-          <p
-            style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "clamp(0.95rem, 1.5vw, 1.1rem)",
-              fontWeight: 400,
-              color: "rgba(255,255,255,0.88)",
-              lineHeight: 1.7,
-              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-              maxWidth: "520px",
-              margin: "0 auto 2.5rem auto",
-            }}
-          >
-            Track every handoff from farmer to retailer with immutable blockchain
-            records, automated payment protection, and QR-powered transparency
-            that lets consumers verify every journey.
-          </p>
+
 
           <button
             id="explore-platform-btn"
@@ -276,7 +276,7 @@ export default function Home() {
               fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)",
               fontWeight: 400,
               textAlign: "center",
-              color: "#fff",
+              color: "black",
               marginBottom: "48px",
               letterSpacing: "-0.01em",
               textShadow: "0 2px 12px rgba(0,0,0,0.3)",
