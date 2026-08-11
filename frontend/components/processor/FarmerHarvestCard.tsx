@@ -1,5 +1,6 @@
 import React from "react";
 import { QrCode, ShoppingCart, Eye, MapPin, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 import { FarmerHarvestItem } from "@/types/processor";
 
 interface Props {
@@ -10,7 +11,14 @@ interface Props {
 
 export default function FarmerHarvestCard({ item, onViewDetails, onAddToCart }: Props) {
   return (
-    <div className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/30 rounded-3xl overflow-hidden transition shadow-sm flex flex-col justify-between">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      whileHover={{ y: -5 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/30 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between"
+    >
       {/* Top Image & QR Badge */}
       <div className="relative h-44 w-full bg-stone-800 overflow-hidden">
         {item.imageUrl && (
@@ -77,6 +85,6 @@ export default function FarmerHarvestCard({ item, onViewDetails, onAddToCart }: 
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

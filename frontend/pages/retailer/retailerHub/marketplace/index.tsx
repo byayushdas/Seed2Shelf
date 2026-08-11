@@ -22,6 +22,7 @@ import FarmerHarvestCard from "@/components/processor/FarmerHarvestCard";
 import { marketplaceService } from "@/services/processor/marketplaceService";
 import { cartService } from "@/services/processor/cartService";
 import { FarmerHarvestItem } from "@/types/processor";
+import { useToast } from "@/context/ToastContext";
 
 export default function RetailerMarketplace() {
   const { data: session } = useSession();
@@ -30,6 +31,7 @@ export default function RetailerMarketplace() {
   const [selectedItem, setSelectedItem] = useState<FarmerHarvestItem | null>(null);
   const [modalQty, setModalQty] = useState(50);
   const [cartCount, setCartCount] = useState(0);
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
 
@@ -59,8 +61,10 @@ export default function RetailerMarketplace() {
     cartService.addToCart(item, qty);
     try {
       await marketplaceService.addToCartApi(item.id, qty);
+      toast(`Successfully added ${item.cropName} to cart!`, "success");
     } catch (e) {
       console.warn("Backend cart sync fallback", e);
+      toast(`Added ${item.cropName} to cart (local mode)`, "info");
     }
   };
 
