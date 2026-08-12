@@ -125,6 +125,7 @@ export default function Navbar() {
   const isHomePage = router.pathname === "/" || router.pathname === "/home";
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [showProfileWarning, setShowProfileWarning] = useState(false);
 
   useEffect(() => {
     const userId = session?.user?.id || session?.user?.email;
@@ -140,6 +141,29 @@ export default function Navbar() {
             const data = await res.json();
             if (data?.profilePhoto) {
               setProfilePhotoUrl(data.profilePhoto);
+            }
+          }
+
+          // Fetch robust profile status for warning
+          const profileRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001'}/api/profile/${userId}`);
+          if (profileRes.ok) {
+            const profileJson = await profileRes.json();
+            if (profileJson.success && profileJson.data) {
+              const user = profileJson.data;
+              let isProfileIncomplete = false;
+              if (user.role === 'FARMER' && (!user.farmName || !user.farmLocation || !user.totalLandArea || !user.mainCultivatedCrops || user.mainCultivatedCrops.length === 0 || !user.farmingPractice)) {
+                isProfileIncomplete = true;
+              } else if (user.role === 'PROCESSOR' && (!user.facilityName || !user.facilityLocation || !user.processingCapacity || !user.mainProcessedProducts || !user.complianceStandards)) {
+                isProfileIncomplete = true;
+              } else if (user.role === 'DISTRIBUTOR' && (!user.companyName || !user.location || !user.storageCapacity || !user.operatingFacilities || !user.transportFleet)) {
+                isProfileIncomplete = true;
+              } else if (user.role === 'RETAILER' && (!user.storeName || !user.storeLocation || !user.shelfCapacity || !user.storeTypeFocus || !user.employeeCount)) {
+                isProfileIncomplete = true;
+              }
+              const isVerificationPending = user.kycStatus !== 'Verified';
+              if (isProfileIncomplete || isVerificationPending) {
+                setShowProfileWarning(true);
+              }
             }
           }
         } catch (err) {
@@ -321,21 +345,28 @@ export default function Navbar() {
 
                 {/* Profile Avatar (For Farmer & Processor ONLY, NOT Admin) */}
                 {!isAdmin && (
-                  <Link
-                    href={isAdmin ? "/admin" : isProcessor ? "/processor/profile" : isDistributor ? "/distributor/profile" : isRetailer ? "/retailer/profile" : "/farmer/profile"}
-                    className="flex items-center gap-2 p-1 rounded-full border-2 border-[#00d26a]/40 hover:border-[#00d26a] transition cursor-pointer"
-                    title="Profile"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#162a1e] to-[#254d33] flex items-center justify-center font-black text-sm text-[#00d26a] overflow-hidden">
-                      {profilePhotoUrl ? (
-                        <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
-                      ) : session?.user?.image ? (
-                        <img src={session.user.image} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        session?.user?.name ? session.user.name[0].toUpperCase() : "U"
-                      )}
-                    </div>
-                  </Link>
+                  <div className="relative">
+                    <Link
+                      href={isAdmin ? "/admin" : isProcessor ? "/processor/profile" : isDistributor ? "/distributor/profile" : isRetailer ? "/retailer/profile" : "/farmer/profile"}
+                      className="flex items-center gap-2 p-1 rounded-full border-2 border-[#00d26a]/40 hover:border-[#00d26a] transition cursor-pointer"
+                      title="Profile"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#162a1e] to-[#254d33] flex items-center justify-center font-black text-sm text-[#00d26a] overflow-hidden">
+                        {profilePhotoUrl ? (
+                          <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                        ) : session?.user?.image ? (
+                          <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          session?.user?.name ? session.user.name[0].toUpperCase() : "U"
+                        )}
+                      </div>
+                    </Link>
+                    {showProfileWarning && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold border border-[#111]">
+                        !
+                      </div>
+                    )}
+                  </div>
                 )}
 
               </div>

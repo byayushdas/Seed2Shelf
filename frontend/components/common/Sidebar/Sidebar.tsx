@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useSession, signOut } from "next-auth/react";
@@ -42,6 +42,38 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [walletExpanded, setWalletExpanded] = useState(true);
   const [hubExpanded, setHubExpanded] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const [showProfileWarning, setShowProfileWarning] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001'}/api/profile/${session.user.id}`)
+        .then(res => res.json())
+        .then(profileJson => {
+          if (profileJson.success && profileJson.data) {
+            const user = profileJson.data;
+            let isProfileIncomplete = false;
+            
+            if (user.role === 'FARMER' && (!user.farmName || !user.farmLocation || !user.totalLandArea || !user.mainCultivatedCrops || user.mainCultivatedCrops.length === 0 || !user.farmingPractice)) {
+              isProfileIncomplete = true;
+            } else if (user.role === 'PROCESSOR' && (!user.facilityName || !user.facilityLocation || !user.processingCapacity || !user.mainProcessedProducts || !user.complianceStandards)) {
+              isProfileIncomplete = true;
+            } else if (user.role === 'DISTRIBUTOR' && (!user.companyName || !user.location || !user.storageCapacity || !user.operatingFacilities || !user.transportFleet)) {
+              isProfileIncomplete = true;
+            } else if (user.role === 'RETAILER' && (!user.storeName || !user.storeLocation || !user.shelfCapacity || !user.storeTypeFocus || !user.employeeCount)) {
+              isProfileIncomplete = true;
+            }
+
+            const isVerificationPending = user.kycStatus !== 'Verified';
+            
+            if (isProfileIncomplete || isVerificationPending) {
+              setShowProfileWarning(true);
+            }
+          }
+        })
+        .catch(console.error);
+    }
+  }, [session]);
 
   const userRole = session?.user?.role;
   const isAdmin = userRole === "ADMIN" || router.pathname.startsWith("/admin");
@@ -138,6 +170,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
+                  {showProfileWarning && (
+                    <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
+                  )}
                 </Link>
 
                 {/* 4. Processor Hub Dropdown */}
@@ -343,6 +378,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
+                  {showProfileWarning && (
+                    <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
+                  )}
                 </Link>
 
                 {/* 4. Distributor Hub Dropdown */}
@@ -548,6 +586,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
+                  {showProfileWarning && (
+                    <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
+                  )}
                 </Link>
 
                 {/* 4. Retailer Hub Dropdown */}
@@ -753,6 +794,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <User className="w-4 h-4 text-[#00d26a]" />
                   <span>Profile</span>
+                  {showProfileWarning && (
+                    <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
+                  )}
                 </Link>
 
                 {/* 4. Farmer Hub Dropdown */}
