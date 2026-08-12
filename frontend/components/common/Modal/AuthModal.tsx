@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UserPlus, LogIn, Mail, Lock, User, Shield, AlertCircle, ArrowRight } from "lucide-react";
+import { X, UserPlus, LogIn, Mail, Lock, User, Shield, AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
 import loginHero from "@/assets/images/auth/login-hero.jpg";
 
 interface AuthModalProps {
@@ -14,26 +14,28 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false }: AuthModalProps) {
   const router = useRouter();
   const [isSignUp, setIsSignUp] = useState(initialModeIsSignUp);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "FARMER",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const switchMode = (isSignUpMode: boolean) => {
+    setIsSignUp(isSignUpMode);
+    setFormData({ name: "", email: "", password: "", confirmPassword: "", role: "FARMER" });
+    setError("");
+    setShowPassword(false);
+  };
+
   // Force clean empty state when modal opens or switches tabs
   useEffect(() => {
-    setIsSignUp(initialModeIsSignUp);
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      role: "FARMER",
-    });
-    setError("");
+    switchMode(initialModeIsSignUp);
   }, [initialModeIsSignUp, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -56,26 +58,16 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (isSignUp && formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      if (!isSignUp) {
-        // Login
-        const res = await signIn("credentials", {
-          redirect: false,
-          email: formData.email.trim().toLowerCase(),
-          password: formData.password
-        });
-
-        if (res?.error) {
-          setError(res?.error || "Failed to login");
-        } else {
-          const sessionRes = await fetch("/api/auth/session");
-          const sessionData = await sessionRes.json();
-          onClose();
-          handleRedirect(sessionData?.user?.role);
-        }
-      } else {
+      if (isSignUp) {
         // Signup
         const res = await fetch("http://localhost:5001/api/auth/signup", {
           method: "POST",
@@ -86,31 +78,41 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
             password: formData.password,
             role: formData.role
           })
-        });
+        }).catch(() => null);
 
-        const data = await res.json();
+        if (!res) {
+          throw new Error("Server Issue Detected. Try Again Later.");
+        }
+
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(data.message || "Failed to sign up");
-        } else {
-          // Immediately log them in to set next-auth session
-          const signInRes = await signIn("credentials", {
-            redirect: false,
-            email: formData.email.trim().toLowerCase(),
-            password: formData.password
-          });
-          
-          if (signInRes?.error) {
-            setError("Signed up successfully, but failed to log in automatically.");
-          } else {
-            const sessionRes = await fetch("/api/auth/session");
-            const sessionData = await sessionRes.json();
-            onClose();
-            handleRedirect(sessionData?.user?.role);
-          }
+          throw new Error(data.message || "Server Issue Detected. Try Again Later.");
         }
       }
+
+      // Login
+      const res = await signIn("credentials", {
+        redirect: false,
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
+      });
+
+      if (res?.error) {
+        if (res.error.toLowerCase().includes("fetch") || res.error.toLowerCase().includes("network")) {
+          throw new Error("Server Issue Detected. Try Again Later.");
+        }
+        throw new Error(isSignUp ? "Signed up successfully, but failed to log in automatically." : (res.error || "Failed to login"));
+      }
+      
+      const sessionRes = await fetch("/api/auth/session").catch(() => null);
+      if (!sessionRes) throw new Error("Server Issue Detected. Try Again Later.");
+      
+      const sessionData = await sessionRes.json().catch(() => ({}));
+      onClose();
+      handleRedirect(sessionData?.user?.role);
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+      const msg = err.message || "Server Issue Detected. Try Again Later.";
+      setError(msg.toLowerCase().includes("fetch") || msg.toLowerCase().includes("network") || msg.toLowerCase().includes("failed to fetch") ? "Server Issue Detected. Try Again Later." : msg);
     } finally {
       setLoading(false);
     }
@@ -181,11 +183,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsSignUp(false);
-                      setFormData({ name: "", email: "", password: "", role: "FARMER" });
-                      setError("");
-                    }}
+                    onClick={() => switchMode(false)}
                     className={`flex-1 py-2.5 rounded-xl transition-colors duration-200 z-10 flex items-center justify-center gap-2 cursor-pointer ${
                       !isSignUp ? "text-black font-extrabold" : "text-stone-400 hover:text-white font-medium"
                     }`}
@@ -196,11 +194,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsSignUp(true);
-                      setFormData({ name: "", email: "", password: "", role: "FARMER" });
-                      setError("");
-                    }}
+                    onClick={() => switchMode(true)}
                     className={`flex-1 py-2.5 rounded-xl transition-colors duration-200 z-10 flex items-center justify-center gap-2 cursor-pointer ${
                       isSignUp ? "text-black font-extrabold" : "text-stone-400 hover:text-white font-medium"
                     }`}
@@ -268,21 +262,56 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">Password</label>
+                    <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">
+                      {isSignUp ? "Create Password" : "Password"}
+                    </label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-500" />
                       <input 
-                        type="password" 
+                        type={showPassword ? "text" : "password"} 
                         name="password" 
                         value={formData.password} 
                         onChange={handleChange} 
                         required 
                         autoComplete="new-password"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00d26a] focus:ring-1 focus:ring-[#00d26a]/50 transition" 
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00d26a] focus:ring-1 focus:ring-[#00d26a]/50 transition" 
                         placeholder="••••••••" 
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-2.5 p-1 text-stone-500 hover:text-stone-300 transition cursor-pointer focus:outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
+
+                  <AnimatePresence>
+                    {isSignUp && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <label className="block text-[11px] font-bold text-stone-400 uppercase tracking-wider mb-1">Confirm Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-stone-500" />
+                          <input 
+                            type={showPassword ? "text" : "password"} 
+                            name="confirmPassword" 
+                            value={formData.confirmPassword} 
+                            onChange={handleChange} 
+                            required={isSignUp}
+                            autoComplete="new-password"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-[#00d26a] focus:ring-1 focus:ring-[#00d26a]/50 transition" 
+                            placeholder="••••••••" 
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {isSignUp && (
                     <div>
@@ -323,11 +352,7 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                 {isSignUp ? "Already have an account?" : "Don't have an account yet?"}{" "}
                 <button 
                   type="button"
-                  onClick={() => {
-                    setIsSignUp(!isSignUp);
-                    setFormData({ name: "", email: "", password: "", role: "FARMER" });
-                    setError("");
-                  }} 
+                  onClick={() => switchMode(!isSignUp)} 
                   className="text-[#00d26a] font-bold hover:underline cursor-pointer ml-1"
                 >
                   {isSignUp ? "Log In" : "Sign Up"}

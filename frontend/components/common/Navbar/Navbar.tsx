@@ -105,7 +105,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -192,7 +192,9 @@ export default function Navbar() {
 
   const openModal = (signUp: boolean) => {
     setIsSignUpMode(signUp);
-    setIsAuthModalOpen(true);
+    setTimeout(() => {
+      setIsAuthModalOpen(true);
+    }, 250);
   };
 
   const handleLogoutConfirm = async () => {
@@ -379,18 +381,38 @@ export default function Navbar() {
                   </div>
                 ) : (
                   /* Single Segmented Pill Control for Authentication */
-                  <div className="bg-white/5 border border-white/10 p-1 rounded-full flex items-center shadow-inner">
+                  <div className="bg-white/5 border border-white/10 p-1 rounded-full flex items-center shadow-inner relative z-0">
                     <button 
                       onClick={() => openModal(false)}
-                      className="px-4 py-1.5 rounded-full text-xs font-bold text-stone-300 hover:text-white transition cursor-pointer"
+                      className={`relative px-4 py-1.5 rounded-full text-xs transition-colors duration-200 cursor-pointer ${
+                        !isSignUpMode ? "text-black font-extrabold" : "text-stone-300 hover:text-white font-bold"
+                      }`}
                     >
+                      {!isSignUpMode && (
+                        <motion.div
+                          layoutId="nav-auth-pill"
+                          className="absolute inset-0 rounded-full bg-[#00d26a] shadow-md shadow-[#00d26a]/20"
+                          style={{ zIndex: -1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                        />
+                      )}
                       Log In
                     </button>
-                    <span className="text-white/20 text-xs font-light px-0.5">|</span>
+                    <span className="text-white/20 text-xs font-light px-0.5 relative z-10 pointer-events-none">|</span>
                     <button 
                       onClick={() => openModal(true)}
-                      className="px-4 py-1.5 rounded-full text-xs font-extrabold bg-[#00d26a] hover:bg-[#00b25a] text-black transition shadow-md shadow-[#00d26a]/20 cursor-pointer"
+                      className={`relative px-4 py-1.5 rounded-full text-xs transition-colors duration-200 cursor-pointer ${
+                        isSignUpMode ? "text-black font-extrabold" : "text-stone-300 hover:text-white font-bold"
+                      }`}
                     >
+                      {isSignUpMode && (
+                        <motion.div
+                          layoutId="nav-auth-pill"
+                          className="absolute inset-0 rounded-full bg-[#00d26a] shadow-md shadow-[#00d26a]/20"
+                          style={{ zIndex: -1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                        />
+                      )}
                       Sign Up
                     </button>
                   </div>
