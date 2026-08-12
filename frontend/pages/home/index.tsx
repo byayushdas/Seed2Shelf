@@ -2,12 +2,30 @@ import Head from "next/head";
 import { useState, useRef } from "react";
 import AuthModal from "@/components/common/Modal/AuthModal";
 import Navbar from "@/components/common/Navbar/Navbar";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import type { ReactElement } from "react";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const featuresRef = useRef<HTMLDivElement>(null);
+
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  const getDashboardPath = (role?: string) => {
+    switch (role) {
+      case "FARMER": return "/farmer/farmerHub/dashboard";
+      case "PROCESSOR": return "/processor/processorHub/dashboard";
+      case "ADMIN": return "/admin/adminHub/dashboard";
+      case "DISTRIBUTOR": return "/distributor";
+      case "RETAILER": return "/retailer";
+      default: return null;
+    }
+  };
+
+  const dashboardPath = getDashboardPath(userRole);
 
   const scrollToFeatures = () => {
     featuresRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -116,41 +134,53 @@ export default function Home() {
 
 
 
-          <button
-            id="explore-platform-btn"
-            onClick={scrollToFeatures}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "14px 36px",
-              borderRadius: "9999px",
-              background: "#1c1c1c",
-              color: "#fff",
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "1rem",
-              fontWeight: 500,
-              letterSpacing: "0.01em",
-              border: "none",
-              cursor: "pointer",
-              transition: "transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.transform = "translateY(-2px)";
-              el.style.boxShadow = "0 8px 30px rgba(0,0,0,0.45)";
-              el.style.background = "#333";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLButtonElement;
-              el.style.transform = "translateY(0)";
-              el.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
-              el.style.background = "#1c1c1c";
-            }}
-          >
-            Explore Platform
-          </button>
+          <div style={{ display: "flex", gap: "16px", justifyContent: "center", alignItems: "center" }}>
+            <button
+              id="explore-platform-btn"
+              onClick={scrollToFeatures}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "14px 36px",
+                borderRadius: "9999px",
+                background: "#1c1c1c",
+                color: "#fff",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "1rem",
+                fontWeight: 500,
+                letterSpacing: "0.01em",
+                border: "none",
+                cursor: "pointer",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLButtonElement;
+                el.style.transform = "translateY(-2px)";
+                el.style.boxShadow = "0 8px 30px rgba(0,0,0,0.45)";
+                el.style.background = "#333";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLButtonElement;
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
+                el.style.background = "#1c1c1c";
+              }}
+            >
+              Explore Platform
+            </button>
+
+            {dashboardPath && (
+              <Link
+                href={dashboardPath}
+                className="bg-white/30 backdrop-blur-lg border border-white/40 text-black font-bold tracking-wide rounded-full hover:bg-white/40 hover:scale-[1.02] transition-all duration-300 shadow-xl shadow-black/10 flex items-center justify-center"
+                style={{ padding: "14px 36px", fontSize: "1rem" }}
+              >
+                Dashboard
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 

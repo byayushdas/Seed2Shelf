@@ -200,7 +200,8 @@ export default function Navbar() {
   const handleLogoutConfirm = async () => {
     try {
       setShowLogoutModal(false);
-      await signOut({ callbackUrl: "/" });
+      const data = await signOut({ redirect: false, callbackUrl: "/" });
+      window.location.href = data.url;
     } catch (err) {
       window.location.href = "/";
     }
@@ -210,7 +211,7 @@ export default function Navbar() {
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 glass-navbar transition-transform duration-300 ease-in-out ${isVisible ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="w-full px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className={`flex items-center justify-between ${isHomePage ? 'h-12' : 'h-16'}`}>
             
             {/* Far Left Side: SaaS Logo Image */}
             <Link href="/" className="flex items-center group select-none">
@@ -218,7 +219,7 @@ export default function Navbar() {
                 <Image 
                   src={logoIcon} 
                   alt="Seed2Shelf Logo" 
-                  className="w-auto h-9 sm:h-10 object-contain drop-shadow-[0_0_8px_rgba(0,210,106,0.3)] transition-transform duration-300 group-hover:scale-[1.03]"
+                  className={`w-auto object-contain drop-shadow-[0_0_8px_rgba(0,210,106,0.3)] transition-transform duration-300 group-hover:scale-[1.03] ${isHomePage ? 'h-7 sm:h-8' : 'h-9 sm:h-10'}`}
                   priority
                 />
               </div>
@@ -297,16 +298,7 @@ export default function Navbar() {
 
             {/* Right Side Controls */}
             {isPortalUser ? (
-              isHomePage ? (
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={hubConfig?.basePath || "/"}
-                    className="bg-[#00d26a] text-black font-black px-5 py-2.5 rounded-full hover:bg-[#00e676] transition shadow-lg shadow-[#00d26a]/20 text-sm"
-                  >
-                    Dashboard
-                  </Link>
-                </div>
-              ) : (
+              isHomePage ? null : (
               /* Portal Top Navbar Controls: ONLY Hamburger + Bell + Profile Avatar */
               <div className="flex items-center gap-3">
                 

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Navbar from "@/components/common/Navbar/Navbar";
 import ChatAndNotifications from "@/components/shared/Chat/ChatAndNotifications";
-import bgImage from "@/assets/images/bg.png";
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -10,8 +10,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div 
-      className="min-h-screen flex flex-col pt-16 text-white selection:bg-[#00d26a] selection:text-black relative bg-fixed bg-cover bg-center"
-      style={{ backgroundImage: `url(${bgImage.src})` }}
+      className="min-h-screen flex flex-col pt-16 text-white selection:bg-[#00d26a] selection:text-black relative bg-black"
     >
 
       <Navbar />

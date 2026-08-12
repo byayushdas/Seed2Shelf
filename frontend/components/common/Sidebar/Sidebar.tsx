@@ -54,7 +54,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const handleLogoutConfirm = async () => {
     try {
       setShowLogoutModal(false);
-      await signOut({ callbackUrl: "/" });
+      const data = await signOut({ redirect: false, callbackUrl: "/" });
+      window.location.href = data.url;
     } catch (err) {
       window.location.href = "/";
     }
