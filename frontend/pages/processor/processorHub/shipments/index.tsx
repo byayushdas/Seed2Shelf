@@ -60,7 +60,7 @@ export default function ProcessorShipmentsPage() {
   const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
 
   const [notification, setNotification] = useState<string | null>(null);
-  const processorId = (session?.user as any)?.processorId || "";
+  const processorId = (session?.user as any)?.id || (session?.user as any)?.processorId || "";
 
   useEffect(() => {
     const fetchIncoming = async () => {

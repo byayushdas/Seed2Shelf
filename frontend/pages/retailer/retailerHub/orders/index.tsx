@@ -36,7 +36,7 @@ interface OrderItem {
 export default function RetailerOrders() {
   const router = useRouter();
   const { data: session } = useSession();
-  const retailerId = (session?.user as any)?.retailerId || "";
+  const retailerId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";
 
   // Active Tab Filter
   const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED" | "DISPATCHED">("ALL");
@@ -62,14 +62,14 @@ export default function RetailerOrders() {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
             const mapped = json.data.map((o: any) => ({
-              id: o.orderNumber || o.id,
-              rawId: o.id,
+              id: o.orderNumber || o._id || o.id,
+              rawId: o._id || o.id,
               batchId: o.batchNumber || o.batchId,
               buyer: o.buyerName || "Processor Corp",
               cropName: o.cropName,
               quantity: `${o.quantityKg} kg`,
               totalPrice: `₹ ${o.totalAmount.toLocaleString()}`,
-              status: o.deliveryStatus === "PENDING_FARMER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
+              status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
               escrowLocked: o.escrowStatus === "LOCKED" || o.deliveryStatus === "ACCEPTED" || o.deliveryStatus === "DISPATCHED",
               date: new Date(o.createdAt).toLocaleDateString("en-GB")
             }));

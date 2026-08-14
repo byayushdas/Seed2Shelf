@@ -60,7 +60,7 @@ export default function RetailerShipmentsPage() {
   const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
 
   const [notification, setNotification] = useState<string | null>(null);
-  const retailerId = (session?.user as any)?.retailerId || "";
+  const retailerId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";
 
   useEffect(() => {
     const fetchIncoming = async () => {

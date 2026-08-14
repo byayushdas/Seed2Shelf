@@ -37,7 +37,7 @@ interface ShipmentItem {
 
 export default function FarmerShipments() {
   const { data: session } = useSession();
-  const farmerId = (session?.user as any)?.farmerId || "";
+  const farmerId = (session?.user as any)?.id || (session?.user as any)?.farmerId || "";
 
   // Main Navigation Tab ("ACTIVE" or "HISTORY")
   const [mainTab, setMainTab] = useState<"ACTIVE" | "HISTORY">("ACTIVE");

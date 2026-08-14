@@ -35,7 +35,7 @@ interface DistributorOrder {
 
 export default function ProcessorOrdersPage() {
   const { data: session } = useSession();
-  const processorId = (session?.user as any)?.processorId || "";
+  const processorId = (session?.user as any)?.id || (session?.user as any)?.processorId || "";
   const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED">("ALL");
 
   const [orders, setOrders] = useState<DistributorOrder[]>([]);

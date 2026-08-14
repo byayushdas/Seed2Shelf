@@ -60,7 +60,7 @@ export default function DistributorShipmentsPage() {
   const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
 
   const [notification, setNotification] = useState<string | null>(null);
-  const distributorId = (session?.user as any)?.distributorId || "";
+  const distributorId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
 
   useEffect(() => {
     const fetchIncoming = async () => {
