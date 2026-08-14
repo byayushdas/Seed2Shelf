@@ -1,4 +1,4 @@
-# Seed2Shelf (SEED2SELF)
+# Seed2Shelf
 
 ## Project Overview
 
