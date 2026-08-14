@@ -196,8 +196,8 @@ export default function RetailerCartPage() {
       );
 
       const paymentData = initiationResponse.data || initiationResponse;
-      const razorpayKey = paymentData.keyId || "rzp_test_TAwi9UQj2Q7wP5";
-      const razorpayOrderId = paymentData.orderId || `order_PRC_${Date.now()}`;
+      const razorpayKey = paymentData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_TAwi9UQj2Q7wP5";
+      const razorpayOrderId = paymentData.orderId || `order_RET_${Date.now()}`;
 
       // 3. Open official Razorpay Checkout SDK popup
       if (typeof window !== "undefined" && (window as any).Razorpay) {

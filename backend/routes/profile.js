@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
@@ -5,7 +6,12 @@ const User = require('../models/User');
 // GET Profile
 router.get('/:id', async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    let user;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      user = await User.findById(req.params.id).select('-password');
+    } else {
+      user = await User.findOne({ roleId: req.params.id }).select('-password');
+    }
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -26,7 +32,12 @@ router.put('/:id', async (req, res) => {
     const userId = req.params.id;
     const updateData = req.body;
     
-    const user = await User.findById(userId);
+    let user;
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+    } else {
+      user = await User.findOne({ roleId: userId });
+    }
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

@@ -99,6 +99,35 @@ export default function ProcessorCartPage() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const saved = localStorage.getItem("s2s_processor_addresses");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.length > 0) {
+          setSavedAddresses(parsed);
+          
+          // Only auto-select the first one if we hadn't already selected something custom
+          if (selectedAddressId.startsWith("saved-")) {
+            const first = parsed[0];
+            setSelectedAddressId(first.id);
+            setFactoryName(first.factoryName);
+            setContactPerson(first.contactPerson);
+            setContactPhone(first.contactPhone);
+            setStreetAddress(first.streetAddress);
+            setCityState(first.cityState);
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to load saved addresses from local storage", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("s2s_processor_addresses", JSON.stringify(savedAddresses));
+  }, [savedAddresses]);
+
   const handleSelectSavedAddress = (addr: typeof DEFAULT_SAVED_ADDRESSES[0]) => {
     setSelectedAddressId(addr.id);
     setFactoryName(addr.factoryName);
@@ -196,7 +225,7 @@ export default function ProcessorCartPage() {
       );
 
       const paymentData = initiationResponse.data || initiationResponse;
-      const razorpayKey = paymentData.keyId || "rzp_test_TAwi9UQj2Q7wP5";
+      const razorpayKey = paymentData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_TAwi9UQj2Q7wP5";
       const razorpayOrderId = paymentData.orderId || `order_PRC_${Date.now()}`;
 
       // 3. Open official Razorpay Checkout SDK popup
@@ -217,8 +246,26 @@ export default function ProcessorCartPage() {
                 factoryId: selectedAddressId || "saved-1",
               });
 
+              // 5. Call Checkout API to deduct inventory, create POs & Transactions
+              const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+              const checkoutRes = await fetch(`${BACKEND_URL}/api/v1/orders/checkout`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  buyerId: (session?.user as any)?.id || (session?.user as any)?.processorId || "",
+                  buyerRole: "PROCESSOR",
+                  items: cartItems,
+                  paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
+                  totalAmount: totals.total
+                })
+              });
+              const checkoutData = await checkoutRes.json();
+              if (!checkoutData.success) {
+                console.warn("Checkout API warning:", checkoutData.message);
+              }
+
               const confirmedData = verifyRes.data || verifyRes;
-              const orderId = confirmedData.orderNumber || confirmedData.orderReferenceId || `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+              const orderId = (checkoutData.orderNumbers && checkoutData.orderNumbers[0]) || confirmedData.orderNumber || confirmedData.orderReferenceId || `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
 
               setConfirmedOrder({
                 orderId,

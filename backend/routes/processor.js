@@ -110,6 +110,86 @@ router.post('/marketplace/order', async (req, res) => {
   }
 });
 
+// POST /api/v1/processor/marketplace/payment/initiate
+router.post('/marketplace/payment/initiate', async (req, res) => {
+  try {
+    const { factoryId, totalAmount } = req.body;
+    if (!totalAmount || totalAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid totalAmount required' });
+    }
+
+    const Razorpay = require('razorpay');
+    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_TAwi9UQj2Q7wP5';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'j41TrOzQZEd9WL9Mmu6oYahb';
+
+    const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const amountInPaisa = Math.round(parseFloat(totalAmount) * 100);
+
+    const order = await rzp.orders.create({
+      amount: amountInPaisa,
+      currency: 'INR',
+      receipt: `rcpt_proc_${Date.now()}`,
+      payment_capture: 1
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        keyId,
+        orderId: order.id,
+        amount: totalAmount,
+        currency: 'INR'
+      }
+    });
+  } catch (err) {
+    console.error('POST /marketplace/payment/initiate error:', err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Failed to initiate Razorpay payment'
+    });
+  }
+});
+
+// POST /api/v1/processor/marketplace/payment/verify
+router.post('/marketplace/payment/verify', async (req, res) => {
+  try {
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, factoryId } = req.body;
+    if (!razorpayPaymentId) {
+      return res.status(400).json({ success: false, message: 'razorpayPaymentId is required' });
+    }
+
+    const crypto = require('crypto');
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'j41TrOzQZEd9WL9Mmu6oYahb';
+
+    if (razorpayOrderId && razorpaySignature && keySecret) {
+      const body = razorpayOrderId + '|' + razorpayPaymentId;
+      const expectedSignature = crypto
+        .createHmac('sha256', keySecret)
+        .update(body)
+        .digest('hex');
+
+      if (expectedSignature !== razorpaySignature) {
+        return res.status(400).json({ success: false, message: 'Invalid Razorpay payment signature' });
+      }
+    }
+
+    const orderNumber = `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    return res.json({
+      success: true,
+      data: {
+        orderNumber,
+        paymentId: razorpayPaymentId,
+        paymentStatus: 'PAID & ESCROW LOCKED',
+        factoryId
+      }
+    });
+  } catch (err) {
+    console.error('POST /marketplace/payment/verify error:', err);
+    return res.status(500).json({ success: false, message: err.message || 'Payment verification failed' });
+  }
+});
+
+
 // ============================================================
 // PRODUCTION HUB — Processor's processed inventory
 // ============================================================

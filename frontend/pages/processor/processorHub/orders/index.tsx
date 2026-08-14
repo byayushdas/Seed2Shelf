@@ -46,28 +46,30 @@ export default function ProcessorOrdersPage() {
     const fetchOrders = async () => {
       try {
         setIsLoading(true);
-        const endpoint = filterStatus === "ALL" 
-          ? `${BACKEND_URL}/api/v1/processor/purchase-orders?userId=${processorId}`
-          : filterStatus === "PENDING"
-          ? `${BACKEND_URL}/api/v1/processor/purchase-orders/pending?userId=${processorId}`
-          : `${BACKEND_URL}/api/v1/processor/purchase-orders/accepted?userId=${processorId}`;
+        const endpoint = `${BACKEND_URL}/api/v1/orders?userId=${processorId}`;
 
         const res = await fetch(endpoint);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped = json.data.map((o: any) => ({
+            let mapped = json.data.map((o: any) => ({
               id: o.orderNumber || o._id,
               rawId: o._id,
               batchId: o.batchId,
               productName: o.cropName,
-              category: "Processed Goods",
-              buyer: o.buyerName || "Distributor Corp",
+              category: "Order",
+              buyer: o.buyerName || o.sellerName,
               quantity: `${o.quantityKg} kg`,
               totalPrice: `₹ ${o.totalAmount?.toLocaleString() || 0}`,
               date: new Date(o.createdAt).toLocaleDateString(),
               status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
             }));
+            
+            if (filterStatus === "PENDING") {
+              mapped = mapped.filter((m: any) => m.status === "PENDING");
+            } else if (filterStatus === "ACCEPTED") {
+              mapped = mapped.filter((m: any) => m.status === "ACCEPTED");
+            }
             setOrders(mapped);
           } else {
             setOrders([]);
@@ -86,9 +88,10 @@ export default function ProcessorOrdersPage() {
     try {
       const targetOrder = orders.find(o => o.id === id);
       const targetId = targetOrder?.rawId || id;
-      const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/accept`, {
+      const res = await fetch(`${BACKEND_URL}/api/v1/orders/${targetId}/status`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "ACCEPTED" })
       });
       if (res.ok) {
         setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "ACCEPTED" } : o)));

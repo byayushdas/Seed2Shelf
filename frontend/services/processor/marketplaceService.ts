@@ -46,7 +46,7 @@ export const marketplaceService = {
             totalPrice: volume * price,
             harvestDate: item.harvestDate ? new Date(item.harvestDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "Recently Harvested",
             hasQrCode: item.verifiedBadge ?? true,
-            imageUrl: item.cropImage || "",
+            imageUrl: item.imageUrl || item.cropImage || "",
           };
         });
       }

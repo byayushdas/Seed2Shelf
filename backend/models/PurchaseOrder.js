@@ -59,12 +59,11 @@ const purchaseOrderSchema = new mongoose.Schema({
 });
 
 // Auto-generate orderNumber before save
-purchaseOrderSchema.pre('save', async function (next) {
+purchaseOrderSchema.pre('save', async function () {
   if (!this.orderNumber) {
     const count = await mongoose.model('PurchaseOrder').countDocuments();
     this.orderNumber = `ORD-2026-${String(count + 1).padStart(5, '0')}`;
   }
-  next();
 });
 
 module.exports = mongoose.model('PurchaseOrder', purchaseOrderSchema);
