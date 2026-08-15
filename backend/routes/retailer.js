@@ -256,37 +256,6 @@ router.get('/purchase-orders', async (req, res) => {
   }
 });
 
-// GET /api/v1/retailer/purchase-orders/pending?userId=
-router.get('/purchase-orders/pending', async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const orders = await PurchaseOrder.find({
-      sellerId: userId,
-      sellerRole: 'RETAILER',
-      deliveryStatus: 'PENDING_SELLER_ACCEPTANCE'
-    }).sort({ createdAt: -1 });
-
-    return res.json({ success: true, data: orders });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-// GET /api/v1/retailer/purchase-orders/accepted?userId=
-router.get('/purchase-orders/accepted', async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const orders = await PurchaseOrder.find({
-      sellerId: userId,
-      sellerRole: 'RETAILER',
-      deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED'] }
-    }).sort({ createdAt: -1 });
-
-    return res.json({ success: true, data: orders });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
 
 // PUT /api/v1/retailer/purchase-orders/:id/accept
 router.put('/purchase-orders/:id/accept', async (req, res) => {
@@ -298,6 +267,15 @@ router.put('/purchase-orders/:id/accept', async (req, res) => {
     order.escrowStatus = 'LOCKED';
     order.updatedAt = new Date();
     await order.save();
+
+    // If batch is fully exhausted, mark it as Sold so it drops off active inventory
+    if (order.batchId) {
+      const batch = await RetailerBatch.findById(order.batchId);
+      if (batch && batch.quantity <= 0) {
+        batch.status = 'Sold';
+        await batch.save();
+      }
+    }
 
     return res.json({ success: true, data: order });
   } catch (err) {
@@ -312,10 +290,57 @@ router.put('/purchase-orders/:id/reject', async (req, res) => {
     const order = await PurchaseOrder.findById(req.params.id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
+    const Transaction = require('../models/Transaction');
+    
+    let refundId = null;
+    if (order.razorpayPaymentId) {
+      try {
+        const Razorpay = require('razorpay');
+        const rzp = new Razorpay({
+          key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TAwi9UQj2Q7wP5',
+          key_secret: process.env.RAZORPAY_KEY_SECRET || 'j41TrOzQZEd9WL9Mmu6oYahb'
+        });
+        const refund = await rzp.payments.refund(order.razorpayPaymentId, {
+          amount: Math.round(order.totalAmount * 100),
+          notes: { reason: 'Order rejected by seller' }
+        });
+        refundId = refund.id;
+        order.razorpayRefundId = refundId;
+      } catch (rzpErr) {
+        console.error('Razorpay refund error:', rzpErr);
+      }
+    }
+
     order.deliveryStatus = 'REJECTED';
+    order.escrowStatus = 'RELEASED';
     order.rejectionReason = reason || 'No reason provided';
     order.updatedAt = new Date();
     await order.save();
+
+    if (order.buyerId) {
+      const refundTx = new Transaction({
+        userId: order.buyerId,
+        transactionId: refundId || `ref_${Date.now()}`,
+        orderId: order.orderNumber,
+        amount: order.totalAmount,
+        type: 'CREDIT',
+        status: 'COMPLETED',
+        description: `Refund (Order Rejected)`
+      });
+      await refundTx.save();
+    }
+
+    // RESTOCK LOGIC
+    if (order.batchId) {
+      const batch = await RetailerBatch.findById(order.batchId);
+      if (batch) {
+        batch.quantity += order.quantityKg;
+        if (batch.status === 'Sold' || batch.status === 'Archived' || batch.status === 'Unlisted') {
+          batch.status = 'Listed';
+        }
+        await batch.save();
+      }
+    }
 
     return res.json({ success: true, data: order });
   } catch (err) {
@@ -397,6 +422,20 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
     order.updatedAt = new Date();
     await order.save();
 
+    const Transaction = require('../models/Transaction');
+    if (order.sellerId) {
+      const payoutTx = new Transaction({
+        userId: order.sellerId,
+        transactionId: `payout_${Date.now()}`,
+        orderId: order.orderNumber,
+        amount: order.totalAmount,
+        type: 'CREDIT',
+        status: 'COMPLETED',
+        description: `Escrow Released (Order Delivered)`
+      });
+      await payoutTx.save();
+    }
+
     return res.json({ success: true, data: order });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -410,11 +449,45 @@ router.put('/shipments/:orderId/reject', async (req, res) => {
     const order = await PurchaseOrder.findById(req.params.orderId);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
+    const Transaction = require('../models/Transaction');
+    
+    let refundId = null;
+    if (order.razorpayPaymentId) {
+      try {
+        const Razorpay = require('razorpay');
+        const rzp = new Razorpay({
+          key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TAwi9UQj2Q7wP5',
+          key_secret: process.env.RAZORPAY_KEY_SECRET || 'j41TrOzQZEd9WL9Mmu6oYahb'
+        });
+        const refund = await rzp.payments.refund(order.razorpayPaymentId, {
+          amount: Math.round(order.totalAmount * 100),
+          notes: { reason: 'Delivery rejected by buyer' }
+        });
+        refundId = refund.id;
+        order.razorpayRefundId = refundId;
+      } catch (rzpErr) {
+        console.error('Razorpay refund error:', rzpErr);
+      }
+    }
+
     order.deliveryStatus = 'REJECTED';
+    order.escrowStatus = 'RELEASED';
     order.rejectionReason = reason || 'Delivery rejected by buyer';
-    // optionally refund escrow if logic existed here
     order.updatedAt = new Date();
     await order.save();
+
+    if (order.buyerId) {
+      const refundTx = new Transaction({
+        userId: order.buyerId,
+        transactionId: refundId || `ref_${Date.now()}`,
+        orderId: order.orderNumber,
+        amount: order.totalAmount,
+        type: 'CREDIT',
+        status: 'COMPLETED',
+        description: `Refund (Delivery Rejected)`
+      });
+      await refundTx.save();
+    }
 
     return res.json({ success: true, data: order });
   } catch (err) {

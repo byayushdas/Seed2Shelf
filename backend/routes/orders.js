@@ -47,19 +47,28 @@ router.post('/checkout', async (req, res) => {
         sellerModel = FarmerBatch; sellerRole = 'FARMER';
       }
 
-      const batch = await sellerModel.findById(item.batchId || item.id);
-      if (!batch) continue; // Skip if batch not found
+      // Handle nested CartItem structure or flat item structure
+      const targetBatchId = item.batchId || item.id || (item.harvestItem && (item.harvestItem.id || item.harvestItem.batchId));
+      const qty = parseFloat(item.quantity || item.selectedQuantity);
+
+      if (!targetBatchId) {
+        console.warn('Skipping item missing batch ID:', item);
+        continue;
+      }
+
+      const batch = await sellerModel.findById(targetBatchId);
+      if (!batch) {
+        console.warn(`Skipping item, batch not found for ID: ${targetBatchId}`);
+        continue; // Skip if batch not found
+      }
 
       // Deduct quantity
-      const qty = parseFloat(item.quantity);
       batch.quantity -= qty;
       
-      // If empty, set status to Sold/Unlisted based on model
+      // If empty, set status to Unlisted so it hides from marketplace but stays in active inventory until accepted
       if (batch.quantity <= 0) {
         batch.quantity = 0;
-        if (sellerRole === 'FARMER') batch.status = 'Sold';
-        else if (sellerRole === 'PROCESSOR') batch.status = 'Archived';
-        else if (sellerRole === 'DISTRIBUTOR') batch.status = 'Sold';
+        batch.status = 'Unlisted';
       }
       await batch.save();
 
@@ -87,7 +96,8 @@ router.post('/checkout', async (req, res) => {
         pricePerUnit: batch.pricePerKg || batch.pricePerUnit,
         totalAmount: qty * (batch.pricePerKg || batch.pricePerUnit),
         deliveryStatus: 'PENDING_SELLER_ACCEPTANCE',
-        escrowStatus: 'LOCKED'
+        escrowStatus: 'LOCKED',
+        razorpayPaymentId: paymentId
       });
       await order.save();
       orderNumbers.push(order.orderNumber);

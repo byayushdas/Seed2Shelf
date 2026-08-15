@@ -54,8 +54,6 @@ export default function HarvestHub() {
   const roleId = (session?.user as any)?.roleId || "";
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
-  // Tab State for Active Inventory vs Sales History
-  const [farmerTab, setFarmerTab] = useState<"ACTIVE" | "SOLD_HISTORY">("ACTIVE");
 
   // Form State
   const [cropCategory, setCropCategory] = useState("Grains");
@@ -111,7 +109,6 @@ export default function HarvestHub() {
   // Format date display
   const formattedDateDisplay = `${String(selectedDay).padStart(2, "0")}/${String(selectedMonth + 1).padStart(2, "0")}/${selectedYear}`;
 
-  // Registered Inventory Items - Clean empty state
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
   // Fetch inventory from backend on mount
@@ -147,7 +144,7 @@ export default function HarvestHub() {
       }
     };
     fetchHarvests();
-  }, [farmerId]);
+  }, [farmerId, formattedDateDisplay]);
 
   const handleRegisterHarvest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,11 +227,7 @@ export default function HarvestHub() {
     );
   };
 
-  const activeCount = inventory.filter((i) => !i.isSold).length;
-  const soldCount = inventory.filter((i) => i.isSold).length;
-  const filteredFarmerInventory = inventory.filter((i) =>
-    farmerTab === "ACTIVE" ? !i.isSold : i.isSold
-  );
+  const activeInventory = inventory.filter((i) => !i.isSold);
 
   const handleDeleteItem = async (id: string) => {
     try {
@@ -617,48 +610,19 @@ export default function HarvestHub() {
               MY INVENTORY SECTION (RIGHT CARD - 6 COLS WITH SALES HISTORY TAB)
              ========================================================================= */}
           <div className="lg:col-span-6 bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
-            <div className="pb-3 border-b border-stone-800 flex items-center justify-between flex-wrap gap-2">
+            <div className="pb-3 border-b border-stone-800">
               <h2 className="text-base font-extrabold text-[#00d26a] flex items-center gap-2">
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
-
-              {/* FARMER TAB SWITCHER: Active Harvests vs Sales History */}
-              <div className="flex items-center bg-stone-950 p-1 rounded-2xl border border-stone-800 text-[10px] font-extrabold">
-                <button
-                  onClick={() => setFarmerTab("ACTIVE")}
-                  className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                    farmerTab === "ACTIVE"
-                      ? "bg-emerald-600 text-white shadow-md font-black"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Active Harvests</span>
-                </button>
-
-                <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-                <button
-                  onClick={() => setFarmerTab("SOLD_HISTORY")}
-                  className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                    farmerTab === "SOLD_HISTORY"
-                      ? "bg-emerald-600 text-white shadow-md font-black"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>History</span>
-                </button>
-              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredFarmerInventory.length === 0 ? (
+              {activeInventory.length === 0 ? (
                 <div className="col-span-full p-8 text-center text-stone-400 text-xs">
-                  {farmerTab === "ACTIVE"
-                    ? "No active harvest batches available. Log a batch using the form on the left."
-                    : "No sold crop history yet. Crops marked as sold will appear here."}
+                  No active harvest batches available. Log a batch using the form on the left.
                 </div>
               ) : (
-                filteredFarmerInventory.map((item) => {
+                activeInventory.map((item) => {
                   const imgUrl = item.cropImage || getCropImage(item);
                   return (
                     <div

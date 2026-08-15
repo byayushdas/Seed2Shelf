@@ -102,11 +102,8 @@ export default function SupplyHubPage() {
   const calendarRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter state for My Inventory (Primary Tabs: Distributed Products, Purchased Harvests, History)
-  const [inventoryFilter, setInventoryFilter] = useState<"DISTRIBUTED" | "RAW" | "HISTORY">("DISTRIBUTED");
-
-  // History Tab Category Filter (Distributed Products vs Purchased Harvests)
-  const [historyCategoryFilter, setHistoryCategoryFilter] = useState<"DISTRIBUTED_DISPATCHED" | "RAW_COMPLETED">("DISTRIBUTED_DISPATCHED");
+  // Filter state for My Inventory (Primary Tabs: Distributed Products, Purchased Harvests)
+  const [inventoryFilter, setInventoryFilter] = useState<"DISTRIBUTED" | "RAW">("DISTRIBUTED");
 
   // Submitted & Batch Info UI states
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -858,44 +855,6 @@ export default function SupplyHubPage() {
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
               
-              {/* PRIMARY FILTER TABS: Distributed Products vs Purchased Harvests vs History */}
-              <div className="flex items-center bg-stone-950 p-1 rounded-2xl border border-stone-800 text-[10px] font-extrabold flex-wrap sm:flex-nowrap gap-1">
-                <button
-                  onClick={() => setInventoryFilter("DISTRIBUTED")}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                    inventoryFilter === "DISTRIBUTED"
-                      ? "bg-emerald-600 text-white shadow-md font-black"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Distributed Products</span>
-                </button>
-
-                <div className="w-[1px] h-3.5 bg-stone-800 mx-0.5 shrink-0 hidden sm:block"></div>
-
-                <button
-                  onClick={() => setInventoryFilter("RAW")}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                    inventoryFilter === "RAW"
-                      ? "bg-emerald-600 text-white shadow-md font-black"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Purchased Harvests</span>
-                </button>
-
-                <div className="w-[1px] h-3.5 bg-stone-800 mx-0.5 shrink-0 hidden sm:block"></div>
-
-                <button
-                  onClick={() => setInventoryFilter("HISTORY")}
-                  className={`px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                    inventoryFilter === "HISTORY"
-                      ? "bg-emerald-600 text-white shadow-md font-black"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>History</span>
-                </button>
               </div>
             </div>
 
@@ -1143,125 +1102,9 @@ export default function SupplyHubPage() {
                   })
                 )}
               </div>
-            ) : (
-              /* =========================================================================
-                 TAB 3: HISTORY (PROCESSOR PRODUCTION & PURCHASES HISTORY)
-                 ========================================================================= */
-              <div className="space-y-4">
-                {/* SUB CATEGORY SELECTOR FOR HISTORY */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-stone-950 p-2.5 rounded-2xl border border-stone-800 text-[11px] font-bold gap-2">
-                  <span className="text-stone-400 text-xs font-bold pl-1">Distributor History Logs</span>
-                  <div className="flex items-center gap-1 bg-stone-900 p-1 rounded-xl border border-stone-800/80 text-[10px]">
-                    <button
-                      onClick={() => setHistoryCategoryFilter("DISTRIBUTED_DISPATCHED")}
-                      className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                        historyCategoryFilter === "DISTRIBUTED_DISPATCHED"
-                          ? "bg-emerald-600 text-white font-extrabold shadow-sm"
-                          : "text-stone-400 hover:text-stone-200"
-                      }`}
-                    >
-                      <span>Distributed Products</span>
-                    </button>
-
-                    <button
-                      onClick={() => setHistoryCategoryFilter("RAW_COMPLETED")}
-                      className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                        historyCategoryFilter === "RAW_COMPLETED"
-                          ? "bg-emerald-600 text-white font-extrabold shadow-sm"
-                          : "text-stone-400 hover:text-stone-200"
-                      }`}
-                    >
-                      <span>Purchased Harvests</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* HISTORY ITEMS LIST */}
-                {inventory.filter(i => {
-                  if (historyCategoryFilter === "RAW_COMPLETED") {
-                    return i.itemType === "RAW" && (i.processingStatus === "Fully Distributed" || parseQuantityAndUnit(i.remainingStock).num === 0);
-                  }
-                  return i.itemType === "DISTRIBUTED" && (i.status === "Dispatched" || i.status === "Archived");
-                }).length === 0 ? (
-                  <div className="p-8 text-center text-stone-400 text-xs">
-                    {historyCategoryFilter === "RAW_COMPLETED"
-                      ? "No 100% fully processed raw crop harvest history yet."
-                      : "No dispatched or archived processed product history yet."}
-                  </div>
-                ) : (
-                  inventory
-                    .filter(i => {
-                      if (historyCategoryFilter === "RAW_COMPLETED") {
-                        return i.itemType === "RAW" && (i.processingStatus === "Fully Distributed" || parseQuantityAndUnit(i.remainingStock).num === 0);
-                      }
-                      return i.itemType === "DISTRIBUTED" && (i.status === "Dispatched" || i.status === "Archived");
-                    })
-                    .map((item) => {
-                      const imgUrl = getProductImage(item);
-                      const isRaw = item.itemType === "RAW";
-
-                      return (
-                        <div
-                          key={item.id}
-                          className="bg-stone-950/90 border border-blue-500/30 rounded-2xl p-4 space-y-3 shadow-md"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800/80 pb-3">
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={imgUrl}
-                                alt={item.productName}
-                                className="w-12 h-12 rounded-xl object-cover border border-stone-800 shrink-0"
-                              />
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-xs font-extrabold text-emerald-400">{item.id}</span>
-                                  <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3" />
-                                    <span>Completed</span>
-                                  </span>
-                                </div>
-                                <h3 className="text-sm font-black text-white">{item.productName}</h3>
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => setSelectedQrModal(item)}
-                              className="px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 hover:text-white border border-stone-800 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-                            >
-                              <QrIcon className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>View QR</span>
-                            </button>
-                          </div>
-
-                          {/* Details Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-0.5">
-                            <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                              <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Category</span>
-                              <span className="text-stone-200 font-bold truncate block">{item.category}</span>
-                            </div>
-
-                            <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                              <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Total Quantity</span>
-                              <strong className="text-white font-extrabold">{item.quantity}</strong>
-                            </div>
-
-                            <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                              <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Completion Status</span>
-                              <strong className="text-blue-400 font-extrabold">Completed</strong>
-                            </div>
-
-                            <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                              <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Date Completed</span>
-                              <span className="text-stone-300 font-mono text-[10px]">{item.sentForProcessingDate || item.date}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                )}
-              </div>
             )}
+
+
 
           </div>
 

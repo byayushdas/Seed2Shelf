@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -36,15 +36,48 @@ export default function ProcessorTransactionsPage() {
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Processor financial transaction records
-  const transactions: any[] = [];
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTxs = async () => {
+      try {
+        const userId = (session?.user as any)?.id || (session?.user as any)?.processorId || "";
+        if (!userId) return;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/v1/wallet/transactions?userId=${userId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+             setTransactions(json.data.map((tx: any) => ({
+                id: tx._id,
+                shortId: tx.transactionId.substring(0, 8),
+                type: tx.type, 
+                title: tx.description || 'Transaction',
+                counterparty: tx.orderId || 'Unknown',
+                amount: `₹ ${tx.amount?.toLocaleString()}`,
+                date: new Date(tx.timestamp).toLocaleDateString(),
+                time: new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: tx.status,
+                orderId: tx.orderId || '',
+                productName: 'Crop Product',
+                method: tx.razorpayData ? (tx.razorpayData.method || tx.razorpayData.status) : 'Escrow Wallet',
+                razorpayId: tx.razorpayData?.id || tx.transactionId,
+                rzpData: tx.razorpayData
+             })));
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchTxs();
+  }, [session]);
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesFilter =
       filterType === "ALL" ||
-      (filterType === "CREDITS" && tx.type === "DISTRIBUTOR") ||
-      (filterType === "DEBITS" && tx.type === "FARMER_PAYMENT") ||
-      (filterType === "ESCROW" && tx.type === "ESCROW");
+      (filterType === "CREDITS" && tx.type === "CREDIT") ||
+      (filterType === "DEBITS" && tx.type === "DEBIT") ||
+      (filterType === "ESCROW" && tx.type === "ESCROW_HOLD");
 
     const matchesSearch =
       tx.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -323,11 +356,11 @@ export default function ProcessorTransactionsPage() {
                   
                   {/* Transaction ID */}
                   <div>
-                    <span className="text-[11px] text-stone-400 block">Transaction ID</span>
+                    <span className="text-[11px] text-stone-400 block">Transaction ID (Razorpay)</span>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <span className="font-mono text-stone-200 text-[11px] truncate">{selectedTx.id}</span>
+                      <span className="font-mono text-stone-200 text-[11px] truncate">{selectedTx.razorpayId || selectedTx.id}</span>
                       <button
-                        onClick={() => copyToClipboard(selectedTx.id, "id")}
+                        onClick={() => copyToClipboard(selectedTx.razorpayId || selectedTx.id, "id")}
                         className="text-stone-400 hover:text-emerald-400 p-1 transition cursor-pointer shrink-0"
                         title="Copy Transaction ID"
                       >
@@ -375,13 +408,21 @@ export default function ProcessorTransactionsPage() {
 
 
               {/* PhonePe-Style Action Buttons: ONLY Share Receipt & Support */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="grid grid-cols-3 gap-3 pt-1">
+                <button
+                  onClick={() => alert(`Viewing Invoice (Mockup) for ${selectedTx.orderId}`)}
+                  className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
+                >
+                  <ArrowDownLeft className="h-5 w-5 text-emerald-400 mb-1" />
+                  <span className="text-[11px] font-bold">View Invoice</span>
+                </button>
+
                 <button
                   onClick={() => alert(`Share Receipt link copied for ${selectedTx.shortId}`)}
                   className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
                 >
                   <Share2 className="h-5 w-5 text-emerald-400 mb-1" />
-                  <span className="text-xs font-bold">Share Receipt</span>
+                  <span className="text-[11px] font-bold">Share Receipt</span>
                 </button>
 
                 <button
@@ -389,7 +430,7 @@ export default function ProcessorTransactionsPage() {
                   className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
                 >
                   <HelpCircle className="h-5 w-5 text-emerald-400 mb-1" />
-                  <span className="text-xs font-bold">Contact Support</span>
+                  <span className="text-[11px] font-bold">Support</span>
                 </button>
               </div>
 

@@ -14,8 +14,8 @@ import {
   Calendar,
   Lock,
   ShieldCheck,
-  Check,
-  ArrowRight
+  Loader2,
+  XCircle
 } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
@@ -30,13 +30,12 @@ interface DistributorOrder {
   quantity: string;
   totalPrice: string;
   date: string;
-  status: "PENDING" | "ACCEPTED" | "DISPATCHED";
+  status: "PENDING" | "ACCEPTED" | "DISPATCHED" | "REJECTED" | "DELIVERED";
 }
 
 export default function ProcessorOrdersPage() {
   const { data: session } = useSession();
   const processorId = (session?.user as any)?.id || (session?.user as any)?.processorId || "";
-  const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED">("ALL");
 
   const [orders, setOrders] = useState<DistributorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -44,15 +43,17 @@ export default function ProcessorOrdersPage() {
 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!processorId) return;
       try {
         setIsLoading(true);
-        const endpoint = `${BACKEND_URL}/api/v1/orders?userId=${processorId}`;
-
-        const res = await fetch(endpoint);
+        const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders?userId=${processorId}`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            let mapped = json.data.map((o: any) => ({
+            const activeOrders = json.data.filter((o: any) => 
+              o.deliveryStatus !== "DISPATCHED" && o.deliveryStatus !== "DELIVERED"
+            );
+            const mapped = activeOrders.map((o: any) => ({
               id: o.orderNumber || o._id,
               rawId: o._id,
               batchId: o.batchId,
@@ -64,12 +65,6 @@ export default function ProcessorOrdersPage() {
               date: new Date(o.createdAt).toLocaleDateString(),
               status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
             }));
-            
-            if (filterStatus === "PENDING") {
-              mapped = mapped.filter((m: any) => m.status === "PENDING");
-            } else if (filterStatus === "ACCEPTED") {
-              mapped = mapped.filter((m: any) => m.status === "ACCEPTED");
-            }
             setOrders(mapped);
           } else {
             setOrders([]);
@@ -81,20 +76,20 @@ export default function ProcessorOrdersPage() {
         setIsLoading(false);
       }
     };
-    if (processorId) fetchOrders();
-  }, [processorId, filterStatus]);
+    fetchOrders();
+  }, [processorId]);
 
   const handleAcceptOrder = async (id: string) => {
     try {
       const targetOrder = orders.find(o => o.id === id);
       const targetId = targetOrder?.rawId || id;
-      const res = await fetch(`${BACKEND_URL}/api/v1/orders/${targetId}/status`, {
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/accept`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "ACCEPTED" })
+        body: JSON.stringify({ userId: processorId })
       });
       if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "ACCEPTED" } : o)));
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "ACCEPTED" } : o));
         setNotification("Order accepted successfully.");
         setTimeout(() => setNotification(null), 3000);
       }
@@ -113,8 +108,8 @@ export default function ProcessorOrdersPage() {
         body: JSON.stringify({ reason: "Rejected by Processor" })
       });
       if (res.ok) {
-        setOrders((prev) => prev.filter((o) => o.id !== id));
-        setNotification("Order rejected.");
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "REJECTED" } : o));
+        setNotification("Order rejected. Batch quantity restocked.");
         setTimeout(() => setNotification(null), 3000);
       }
     } catch (err) {
@@ -131,7 +126,7 @@ export default function ProcessorOrdersPage() {
         headers: { "Content-Type": "application/json" }
       });
       if (res.ok) {
-        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "DISPATCHED" } : o)));
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "DISPATCHED" } : o));
         setNotification("Delivery initiated.");
         setTimeout(() => setNotification(null), 3000);
       }
@@ -140,24 +135,16 @@ export default function ProcessorOrdersPage() {
     }
   };
 
-  const filteredOrders = orders.filter((o) => {
-    if (filterStatus === "PENDING") return o.status === "PENDING";
-    if (filterStatus === "ACCEPTED") return o.status === "ACCEPTED" || o.status === "DISPATCHED";
-    return true;
-  });
-
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
-        <title>Distributor Orders | Seed2Shelf Processor</title>
-        <meta name="description" content="Processor B2B Order Management for Distributor Purchase Orders" />
+        <title>Purchase Orders | Seed2Shelf Processor</title>
+        <meta name="description" content="Processor B2B Order Management for Purchase Orders" />
       </Head>
 
-      {/* Solid Dark Background Overlay */}
-
       <div className="max-w-6xl mx-auto space-y-7">
-        
-        {/* HEADER WITH TITLE ON LEFT AND FILTER SWITCHER ON RIGHT */}
+
+        {/* HEADER */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
@@ -169,46 +156,12 @@ export default function ProcessorOrdersPage() {
               </h1>
             </div>
           </div>
-
-          {/* RIGHT FILTER SWITCHER BAR */}
-          <div className="flex items-center bg-stone-950 p-1.5 rounded-full border border-stone-800 text-xs font-extrabold">
-            <button
-              onClick={() => setFilterStatus("ALL")}
-              className={`px-4 py-1.5 rounded-full transition cursor-pointer flex items-center justify-center ${
-                filterStatus === "ALL"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>All Orders</span>
-            </button>
-
-            <div className="w-[1px] h-4 bg-stone-800 mx-1.5 shrink-0"></div>
-
-            <button
-              onClick={() => setFilterStatus("PENDING")}
-              className={`px-4 py-1.5 rounded-full transition cursor-pointer flex items-center justify-center ${
-                filterStatus === "PENDING"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>Pending</span>
-            </button>
-
-            <div className="w-[1px] h-4 bg-stone-800 mx-1.5 shrink-0"></div>
-
-            <button
-              onClick={() => setFilterStatus("ACCEPTED")}
-              className={`px-4 py-1.5 rounded-full transition cursor-pointer flex items-center justify-center ${
-                filterStatus === "ACCEPTED"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>Accepted</span>
-            </button>
-          </div>
+          {isLoading && (
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Loading...</span>
+            </div>
+          )}
         </div>
 
         {notification && (
@@ -218,22 +171,22 @@ export default function ProcessorOrdersPage() {
           </div>
         )}
 
-        {/* ELEGANT ORDERS CARDS LIST */}
+        {/* ORDERS LIST */}
         <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center mx-auto text-stone-500">
                 <ClipboardList className="w-6 h-6" />
               </div>
-              <p className="text-stone-400 text-xs font-medium">No distributor purchase orders found matching this filter.</p>
+              <p className="text-stone-400 text-xs font-medium">No purchase orders found.</p>
             </div>
           ) : (
-            filteredOrders.map((ord) => (
+            orders.map((ord) => (
               <div
                 key={ord.id}
                 className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 sm:p-7 shadow-sm transition-all duration-200 hover:border-stone-700/80 space-y-5"
               >
-                {/* TOP HEADER LINE: IDs & Status Badge */}
+                {/* TOP HEADER */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-800">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <span className="text-xs text-stone-200 font-extrabold bg-stone-950 px-3 py-1 rounded-xl border border-stone-800">
@@ -243,29 +196,34 @@ export default function ProcessorOrdersPage() {
                       Batch: {ord.batchId}
                     </span>
                   </div>
-
                   <div className="flex items-center gap-3">
                     <span className="text-[11px] text-stone-400 font-medium flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-stone-500" />
                       {ord.date}
                     </span>
-
-                    {/* Status Pill */}
                     {ord.status === "PENDING" && (
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" /> Awaiting Acceptance
                       </span>
                     )}
-
                     {ord.status === "ACCEPTED" && (
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Accepted & Escrowed
                       </span>
                     )}
-
                     {ord.status === "DISPATCHED" && (
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
                         <Truck className="w-3.5 h-3.5 text-blue-400" /> In Transit
+                      </span>
+                    )}
+                    {ord.status === "REJECTED" && (
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1.5">
+                        <XCircle className="w-3.5 h-3.5 text-red-400" /> Rejected
+                      </span>
+                    )}
+                    {ord.status === "DELIVERED" && (
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Delivered
                       </span>
                     )}
                   </div>
@@ -273,55 +231,35 @@ export default function ProcessorOrdersPage() {
 
                 {/* MAIN CONTENT GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                  
-                  {/* Left Column: Product Info & Buyer Details */}
                   <div className="md:col-span-7 space-y-2.5">
                     <div>
-                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                        {ord.category}
-                      </span>
-                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                        {ord.productName}
-                      </h3>
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">{ord.category}</span>
+                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">{ord.productName}</h3>
                     </div>
-
                     <div className="flex items-center gap-2 text-xs text-stone-300">
                       <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span className="font-semibold text-stone-400">Buyer:</span>
                       <span className="font-extrabold text-white">{ord.buyer}</span>
                     </div>
                   </div>
-
-                  {/* Right Column: Quantity, Total & Escrow Status */}
                   <div className="md:col-span-5 bg-stone-950/60 border border-stone-800/80 rounded-2xl p-4 flex flex-col justify-center space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-stone-400 font-medium">Quantity Requested:</span>
                       <span className="font-extrabold text-white text-sm">{ord.quantity}</span>
                     </div>
-
                     <div className="flex items-center justify-between text-xs border-t border-stone-800/60 pt-2">
                       <span className="text-stone-400 font-medium">Total Offer Amount:</span>
                       <span className="text-base font-black text-emerald-400">{ord.totalPrice}</span>
                     </div>
-
-                    {/* Escrow Status Line */}
                     {(ord.status === "ACCEPTED" || ord.status === "DISPATCHED") && (
-                      <div className="pt-1 flex items-center justify-between text-[11px]">
-                        {ord.status === "ACCEPTED" && (
-                          <span className="text-amber-300 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-full justify-center">
-                            <Lock className="w-3.5 h-3.5 text-amber-400" /> Smart Contract Escrow Secured
-                          </span>
-                        )}
-
-                        {ord.status === "DISPATCHED" && (
-                          <span className="text-amber-300 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-full justify-center">
-                            <Lock className="w-3.5 h-3.5 text-amber-400" /> Escrow Secured • In Transit
-                          </span>
-                        )}
+                      <div className="pt-1">
+                        <span className="text-amber-300 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-full justify-center text-[11px]">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          {ord.status === "DISPATCHED" ? "Escrow Secured • In Transit" : "Smart Contract Escrow Secured"}
+                        </span>
                       </div>
                     )}
                   </div>
-
                 </div>
 
                 {/* BOTTOM ACTION BAR */}
@@ -330,7 +268,6 @@ export default function ProcessorOrdersPage() {
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     <span>Protected by Escrow Security Protocol</span>
                   </div>
-
                   <div className="flex items-center gap-2">
                     {ord.status === "PENDING" && (
                       <div className="flex gap-2">
@@ -348,7 +285,6 @@ export default function ProcessorOrdersPage() {
                         </button>
                       </div>
                     )}
-
                     {ord.status === "ACCEPTED" && (
                       <button
                         onClick={() => handleStartDelivery(ord.id)}
@@ -358,7 +294,6 @@ export default function ProcessorOrdersPage() {
                         <span>Start Delivery</span>
                       </button>
                     )}
-
                     {ord.status === "DISPATCHED" && (
                       <Link
                         href="/processor/processorHub/shipments"
@@ -369,12 +304,10 @@ export default function ProcessorOrdersPage() {
                     )}
                   </div>
                 </div>
-
               </div>
             ))
           )}
         </div>
-
       </div>
     </div>
   );

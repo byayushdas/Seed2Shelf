@@ -5,7 +5,6 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { 
   ClipboardList, 
   CheckCircle2, 
@@ -15,13 +14,15 @@ import {
   Building2,
   Calendar,
   Clock,
-  Loader2
+  Loader2,
+  XCircle
 } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 interface OrderItem {
   id: string;
+  rawId?: string;
   orderNumber?: string;
   batchId: string;
   buyer: string;
@@ -31,37 +32,30 @@ interface OrderItem {
   status: string;
   escrowLocked: boolean;
   date: string;
+  hasBeenDispatched?: boolean;
 }
 
 export default function FarmerOrders() {
-  const router = useRouter();
   const { data: session } = useSession();
   const farmerId = (session?.user as any)?.id || (session?.user as any)?.farmerId || "";
 
-  // Active Tab Filter
-  const [filterStatus, setFilterStatus] = useState<"ALL" | "PENDING" | "ACCEPTED" | "DISPATCHED">("ALL");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Orders State initialized as empty array
   const [orders, setOrders] = useState<OrderItem[]>([]);
-
   const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!farmerId) return;
       try {
         setIsLoading(true);
-        const endpoint = filterStatus === "ALL" 
-          ? `${BACKEND_URL}/api/v1/farmer/purchase-orders?userId=${farmerId}`
-          : filterStatus === "PENDING"
-          ? `${BACKEND_URL}/api/v1/farmer/purchase-orders/pending?userId=${farmerId}`
-          : `${BACKEND_URL}/api/v1/farmer/purchase-orders/accepted?userId=${farmerId}`;
-
-        const res = await fetch(endpoint);
+        const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders?userId=${farmerId}`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped = json.data.map((o: any) => ({
+            const activeOrders = json.data.filter((o: any) => 
+              o.deliveryStatus !== "DISPATCHED" && o.deliveryStatus !== "DELIVERED"
+            );
+            const mapped = activeOrders.map((o: any) => ({
               id: o.orderNumber || o._id || o.id,
               rawId: o._id || o.id,
               batchId: o.batchNumber || o.batchId,
@@ -71,132 +65,79 @@ export default function FarmerOrders() {
               totalPrice: `₹ ${o.totalAmount.toLocaleString()}`,
               status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
               escrowLocked: o.escrowStatus === "LOCKED" || o.deliveryStatus === "ACCEPTED" || o.deliveryStatus === "DISPATCHED",
-              date: new Date(o.createdAt).toLocaleDateString("en-GB")
+              date: new Date(o.createdAt).toLocaleDateString("en-GB"),
+              hasBeenDispatched: !!o.dispatchedAt
             }));
             setOrders(mapped);
+          } else {
+            setOrders([]);
           }
         }
       } catch (err) {
-        console.warn("Backend API offline or unreachable, utilizing local state fallback", err);
+        console.warn("Backend API offline or unreachable", err);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchOrders();
-  }, [farmerId, filterStatus]);
+  }, [farmerId]);
 
-  // Action: Accept Order
   const handleAcceptOrder = async (orderId: string) => {
     try {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
-
       const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders/${targetId}/accept`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: farmerId }),
       });
-
       if (res.ok) {
-        const json = await res.json();
-        setOrders((prev) =>
-          prev.map((ord) =>
-            ord.id === orderId
-              ? { ...ord, status: "ACCEPTED", escrowLocked: true }
-              : ord
-          )
-        );
-      } else {
-        setOrders((prev) =>
-          prev.map((ord) =>
-            ord.id === orderId
-              ? { ...ord, status: "ACCEPTED", escrowLocked: true }
-              : ord
-          )
-        );
+        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
       }
     } catch (err) {
-      setOrders((prev) =>
-        prev.map((ord) =>
-          ord.id === orderId
-            ? { ...ord, status: "ACCEPTED", escrowLocked: true }
-            : ord
-        )
-      );
+      setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
     }
     setNotification("Order accepted! Payment is now locked in Blockchain Escrow.");
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Action: Start Delivery (Dispatches order & shows View Live Shipment button)
   const handleStartDelivery = async (orderId: string) => {
     try {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
-
       const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders/${targetId}/dispatch`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: farmerId, carrierName: "Standard Agri Express" }),
       });
-
       if (res.ok) {
-        setOrders((prev) =>
-          prev.map((ord) =>
-            ord.id === orderId
-              ? { ...ord, status: "DISPATCHED" }
-              : ord
-          )
-        );
-      } else {
-        setOrders((prev) =>
-          prev.map((ord) =>
-            ord.id === orderId
-              ? { ...ord, status: "DISPATCHED" }
-              : ord
-          )
-        );
+        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
       }
     } catch (err) {
-      setOrders((prev) =>
-        prev.map((ord) =>
-          ord.id === orderId
-            ? { ...ord, status: "DISPATCHED" }
-            : ord
-        )
-      );
+      setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
     }
     setNotification("Delivery initiated! Order is now in transit.");
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Action: Reject Order
   const handleRejectOrder = async (orderId: string) => {
     try {
       const targetOrder = orders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
-
       const res = await fetch(`${BACKEND_URL}/api/v1/farmer/purchase-orders/${targetId}/reject`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: farmerId, reason: "Rejected by seller" }),
       });
-
       if (res.ok) {
-        setOrders(orders.filter((ord) => ord.id !== orderId));
-        setNotification("Order rejected successfully.");
+        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "REJECTED" } : ord));
+        setNotification("Order rejected. Batch quantity has been restocked.");
       }
     } catch (err) {
       console.error(err);
     }
+    setTimeout(() => setNotification(null), 4000);
   };
-
-  // Filtered orders list
-  const filteredOrders = orders.filter((ord) => {
-    if (filterStatus === "ALL") return true;
-    return ord.status === filterStatus;
-  });
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -206,8 +147,8 @@ export default function FarmerOrders() {
       </Head>
 
       <div className="max-w-6xl mx-auto space-y-7">
-        
-        {/* HEADER WITH TOP-RIGHT FILTER TABS */}
+
+        {/* HEADER */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
@@ -219,55 +160,12 @@ export default function FarmerOrders() {
               </h1>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            {isLoading && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Loading...</span>
-              </div>
-            )}
-
-            {/* FILTER TABS */}
-            <div className="flex items-center bg-stone-950 p-1 rounded-2xl border border-stone-800 text-[10px] sm:text-xs font-extrabold">
-              <button
-                onClick={() => setFilterStatus("ALL")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                  filterStatus === "ALL"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <span>All Orders</span>
-              </button>
-
-              <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-              <button
-                onClick={() => setFilterStatus("PENDING")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                  filterStatus === "PENDING"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <span>Pending</span>
-              </button>
-
-              <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-              <button
-                onClick={() => setFilterStatus("ACCEPTED")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center justify-center ${
-                  filterStatus === "ACCEPTED"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <span>Accepted</span>
-              </button>
+          {isLoading && (
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Loading...</span>
             </div>
-          </div>
+          )}
         </div>
 
         {notification && (
@@ -277,22 +175,22 @@ export default function FarmerOrders() {
           </div>
         )}
 
-        {/* ELEGANT ORDERS CARDS LIST */}
+        {/* ORDERS LIST */}
         <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center mx-auto text-stone-500">
                 <ClipboardList className="w-6 h-6" />
               </div>
-              <p className="text-stone-400 text-xs font-medium">No purchase orders found matching this filter.</p>
+              <p className="text-stone-400 text-xs font-medium">No purchase orders found.</p>
             </div>
           ) : (
-            filteredOrders.map((ord) => (
+            orders.map((ord) => (
               <div
                 key={ord.id}
                 className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 sm:p-7 shadow-sm transition-all duration-200 hover:border-stone-700/80 space-y-5"
               >
-                {/* TOP HEADER LINE: IDs & Status Badge */}
+                {/* TOP HEADER */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-800">
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <span className="text-xs text-stone-200 font-extrabold bg-stone-950 px-3 py-1 rounded-xl border border-stone-800">
@@ -308,23 +206,29 @@ export default function FarmerOrders() {
                       <Calendar className="w-3.5 h-3.5 text-stone-500" />
                       {ord.date}
                     </span>
-
-                    {/* Status Pill */}
                     {ord.status === "PENDING" && (
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5" /> Awaiting Acceptance
                       </span>
                     )}
-
                     {ord.status === "ACCEPTED" && (
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Accepted & Escrowed
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Order Accepted
                       </span>
                     )}
-
                     {ord.status === "DISPATCHED" && (
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
                         <Truck className="w-3.5 h-3.5 text-blue-400" /> In Transit
+                      </span>
+                    )}
+                    {ord.status === "REJECTED" && (
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1.5">
+                        <XCircle className="w-3.5 h-3.5 text-red-400" /> {ord.hasBeenDispatched ? "Rejected at Delivery" : "Rejected"}
+                      </span>
+                    )}
+                    {ord.status === "DELIVERED" && (
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Delivered
                       </span>
                     )}
                   </div>
@@ -332,16 +236,11 @@ export default function FarmerOrders() {
 
                 {/* MAIN CONTENT GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                  
-                  {/* Left Column: Crop Info & Buyer Details */}
                   <div className="md:col-span-7 space-y-2.5">
                     <div>
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Harvested Crop</span>
-                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                        {ord.cropName}
-                      </h3>
+                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">{ord.cropName}</h3>
                     </div>
-
                     <div className="flex items-center gap-2 text-xs text-stone-300">
                       <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
                       <span className="font-semibold text-stone-400">Buyer:</span>
@@ -349,36 +248,24 @@ export default function FarmerOrders() {
                     </div>
                   </div>
 
-                  {/* Right Column: Quantity, Total & Escrow Status */}
                   <div className="md:col-span-5 bg-stone-950/60 border border-stone-800/80 rounded-2xl p-4 flex flex-col justify-center space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-stone-400 font-medium">Quantity Requested:</span>
                       <span className="font-extrabold text-white text-sm">{ord.quantity}</span>
                     </div>
-
                     <div className="flex items-center justify-between text-xs border-t border-stone-800/60 pt-2">
                       <span className="text-stone-400 font-medium">Total Offer Amount:</span>
                       <span className="text-base font-black text-emerald-400">{ord.totalPrice}</span>
                     </div>
-
-                    {/* Escrow Status Line */}
                     {(ord.status === "ACCEPTED" || ord.status === "DISPATCHED") && (
-                      <div className="pt-1 flex items-center justify-between text-[11px]">
-                        {ord.status === "ACCEPTED" && (
-                          <span className="text-amber-300 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-full justify-center">
-                            <Lock className="w-3.5 h-3.5 text-amber-400" /> Smart Contract Escrow Secured
-                          </span>
-                        )}
-
-                        {ord.status === "DISPATCHED" && (
-                          <span className="text-amber-300 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-full justify-center">
-                            <Lock className="w-3.5 h-3.5 text-amber-400" /> Escrow Secured • In Transit
-                          </span>
-                        )}
+                      <div className="pt-1">
+                        <span className="text-amber-300 font-extrabold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 w-full justify-center text-[11px]">
+                          <Lock className="w-3.5 h-3.5 text-amber-400" />
+                          {ord.status === "DISPATCHED" ? "Escrow Secured • In Transit" : "Smart Contract Escrow Secured"}
+                        </span>
                       </div>
                     )}
                   </div>
-
                 </div>
 
                 {/* BOTTOM ACTION BAR */}
@@ -387,7 +274,6 @@ export default function FarmerOrders() {
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     <span>Protected by Escrow Security Protocol</span>
                   </div>
-
                   <div className="flex items-center gap-2">
                     {ord.status === "PENDING" && (
                       <div className="flex gap-2">
@@ -405,7 +291,6 @@ export default function FarmerOrders() {
                         </button>
                       </div>
                     )}
-
                     {ord.status === "ACCEPTED" && (
                       <button
                         onClick={() => handleStartDelivery(ord.id)}
@@ -415,7 +300,6 @@ export default function FarmerOrders() {
                         <span>Start Delivery</span>
                       </button>
                     )}
-
                     {ord.status === "DISPATCHED" && (
                       <Link
                         href="/farmer/farmerHub/shipments"
@@ -426,12 +310,10 @@ export default function FarmerOrders() {
                     )}
                   </div>
                 </div>
-
               </div>
             ))
           )}
         </div>
-
       </div>
     </div>
   );

@@ -296,7 +296,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           href="/processor/wallet"
                           onClick={onClose}
                           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/processor/wallet") && !isActive("/processor/wallet/transactions") && !isActive("/processor/wallet/invoices")
+                            isActive("/processor/wallet") && !isActive("/processor/wallet/transactions")
                               ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
                               : "text-stone-400 hover:text-white hover:bg-white/5"
                           }`}
@@ -315,18 +315,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
                           <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/processor/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/processor/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Receipt className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
                         </Link>
                       </motion.div>
                     )}
@@ -504,7 +492,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           href="/distributor/wallet"
                           onClick={onClose}
                           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/distributor/wallet") && !isActive("/distributor/wallet/transactions") && !isActive("/distributor/wallet/invoices")
+                            isActive("/distributor/wallet") && !isActive("/distributor/wallet/transactions")
                               ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
                               : "text-stone-400 hover:text-white hover:bg-white/5"
                           }`}
@@ -523,18 +511,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
                           <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/distributor/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/distributor/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Receipt className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
                         </Link>
                       </motion.div>
                     )}
@@ -712,7 +688,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           href="/retailer/wallet"
                           onClick={onClose}
                           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/wallet") && !isActive("/retailer/wallet/transactions") && !isActive("/retailer/wallet/invoices")
+                            isActive("/retailer/wallet") && !isActive("/retailer/wallet/transactions")
                               ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
                               : "text-stone-400 hover:text-white hover:bg-white/5"
                           }`}
@@ -731,18 +707,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
                           <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/retailer/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Receipt className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
                         </Link>
                       </motion.div>
                     )}
@@ -908,7 +872,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           href="/farmer/wallet"
                           onClick={onClose}
                           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/farmer/wallet") && !isActive("/farmer/wallet/transactions") && !isActive("/farmer/wallet/invoices")
+                            isActive("/farmer/wallet") && !isActive("/farmer/wallet/transactions")
                               ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
                               : "text-stone-400 hover:text-white hover:bg-white/5"
                           }`}
@@ -927,18 +891,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
                           <span>Transactions</span>
-                        </Link>
-                        <Link
-                          href="/farmer/wallet/invoices"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/farmer/wallet/invoices")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Receipt className="w-3.5 h-3.5" />
-                          <span>Invoices</span>
                         </Link>
                       </motion.div>
                     )}

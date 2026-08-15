@@ -43,6 +43,10 @@ const purchaseOrderSchema = new mongoose.Schema({
     default: 'PENDING_SELLER_ACCEPTANCE'
   },
 
+  // Razorpay Integration
+  razorpayPaymentId: { type: String },
+  razorpayRefundId: { type: String },
+
   // Escrow simulated as a status flag (no real payment)
   escrowStatus: {
     type: String,
