@@ -5,7 +5,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Factory } from "lucide-react";
+import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Factory, Building2 } from "lucide-react";
 import { KYCVerificationStatus, getKycStatusLabel } from "../../../types/kyc";
 
 export default function ProcessorProfilePage() {
@@ -37,6 +37,13 @@ export default function ProcessorProfilePage() {
   const [mainProcessedProducts, setMainProcessedProducts] = useState("");
   const [complianceStandards, setComplianceStandards] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+
+  // Bank Account Details
+  const [bankName, setBankName] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+  const [branchLocation, setBranchLocation] = useState("");
 
   const [kycStatus, setKycStatus] = useState("Pending Verification");
 
@@ -85,6 +92,12 @@ export default function ProcessorProfilePage() {
     setAadhaarFront(data.aadhaarFront || "");
     setAadhaarBack(data.aadhaarBack || "");
     setKycStatus(data.kycStatus || "Pending Verification");
+
+    setBankName(data.bankName || "");
+    setAccountHolderName(data.accountHolderName || "");
+    setAccountNumber(data.accountNumber || "");
+    setIfscCode(data.ifscCode || "");
+    setBranchLocation(data.branchLocation || "");
   };
 
   const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
@@ -177,6 +190,11 @@ export default function ProcessorProfilePage() {
           mainProcessedProducts,
           complianceStandards,
 
+          bankName,
+          accountHolderName,
+          accountNumber,
+          ifscCode,
+          branchLocation,
         };
 
         const res = await fetch(`/api/users/${targetUserId}`, {
@@ -385,13 +403,6 @@ export default function ProcessorProfilePage() {
                 {processorId}
               </div>
             </div>
-            
-            <div>
-              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Role</label>
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-bold text-white">
-                PROCESSOR
-              </div>
-            </div>
           </div>
         </div>
 
@@ -524,6 +535,101 @@ export default function ProcessorProfilePage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* 4.5. Bank Account Details */}
+        <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+          <h2 className="text-lg font-bold text-green-300 flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-[#00d26a]" />
+            Bank Account Details
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Bank Name</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  placeholder="e.g. State Bank of India"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {bankName || "Not Provided"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Account Holder Name</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={accountHolderName}
+                  onChange={(e) => setAccountHolderName(e.target.value)}
+                  placeholder="e.g. Arpan Ghosh"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {accountHolderName || "Not Provided"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Account Number</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  placeholder="e.g. 98765432104829"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition font-mono"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white font-mono">
+                  {accountNumber ? `•••• •••• ${accountNumber.slice(-4)}` : "Not Provided"}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">IFSC Code</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={ifscCode}
+                  onChange={(e) => setIfscCode(e.target.value)}
+                  placeholder="e.g. SBIN0001234"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition font-mono uppercase"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white font-mono uppercase">
+                  {ifscCode || "Not Provided"}
+                </div>
+              )}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="text-xs text-stone-400 font-bold uppercase block mb-2">Branch Location</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={branchLocation}
+                  onChange={(e) => setBranchLocation(e.target.value)}
+                  placeholder="e.g. Karnal Main Branch, Haryana"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00d26a] transition"
+                />
+              ) : (
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5 font-semibold text-white">
+                  {branchLocation || "Not Provided"}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

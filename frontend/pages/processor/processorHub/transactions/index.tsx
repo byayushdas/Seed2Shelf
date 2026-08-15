@@ -23,15 +23,7 @@ import {
 
 export default function ProcessorTransactionsPage() {
   const { data: session } = useSession();
-  const [filterType, setFilterType] = useState<"ALL" | "CREDITS" | "DEBITS" | "ESCROW">("ALL");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const processorFilterOptions: { value: "ALL" | "CREDITS" | "DEBITS" | "ESCROW"; label: string }[] = [
-    { value: "ALL", label: "All" },
-    { value: "CREDITS", label: "Bank Credits" },
-    { value: "DEBITS", label: "Bank Debits" },
-    { value: "ESCROW", label: "Escrow Locks" }
-  ];
+  const [filterType] = useState<"ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -54,14 +46,15 @@ export default function ProcessorTransactionsPage() {
                 title: tx.description || 'Transaction',
                 counterparty: tx.orderId || 'Unknown',
                 amount: `₹ ${tx.amount?.toLocaleString()}`,
-                date: new Date(tx.timestamp).toLocaleDateString(),
-                time: new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: (tx.razorpayData?.created_at ? new Date(tx.razorpayData.created_at * 1000) : new Date(tx.timestamp)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                time: (tx.razorpayData?.created_at ? new Date(tx.razorpayData.created_at * 1000) : new Date(tx.timestamp)).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
                 status: tx.status,
                 orderId: tx.orderId || '',
                 productName: 'Crop Product',
                 method: tx.razorpayData ? (tx.razorpayData.method || tx.razorpayData.status) : 'Escrow Wallet',
                 razorpayId: tx.razorpayData?.id || tx.transactionId,
-                rzpData: tx.razorpayData
+                rzpData: tx.razorpayData,
+                rawAmount: tx.amount
              })));
           }
         }
@@ -139,47 +132,11 @@ export default function ProcessorTransactionsPage() {
               />
             </div>
 
-            {/* Sleek Custom Filter Dropdown */}
+            {/* Single Filter Option */}
             <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="bg-stone-900 border border-stone-800 hover:border-stone-700 rounded-2xl px-4 py-2.5 text-xs text-white font-extrabold focus:outline-none transition cursor-pointer flex items-center justify-between gap-3 shadow-md"
-              >
-                <span>{processorFilterOptions.find(o => o.value === filterType)?.label || "All"}</span>
-                <ChevronDown className={`h-4 w-4 text-emerald-400 transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {isFilterOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsFilterOpen(false)} 
-                  />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-stone-900/95 border border-stone-800 rounded-2xl p-1.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                    {processorFilterOptions.map((opt) => {
-                      const isSelected = filterType === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setFilterType(opt.value);
-                            setIsFilterOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                            isSelected
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : "text-stone-300 hover:text-white hover:bg-stone-800/80"
-                          }`}
-                        >
-                          <span>{opt.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+              <div className="bg-stone-900 border border-emerald-500/30 text-emerald-400 rounded-2xl px-5 py-2.5 text-xs font-extrabold flex items-center justify-center shadow-md">
+                <span>All Transactions</span>
+              </div>
             </div>
 
           </div>
@@ -281,12 +238,16 @@ export default function ProcessorTransactionsPage() {
             
             {/* PhonePe Status Top Header Bar */}
             <div className={`p-4 sm:p-5 text-white flex items-center justify-between ${
-              selectedTx.type === 'ESCROW' ? 'bg-amber-600' : 'bg-emerald-700'
+              (selectedTx.type === 'ESCROW' || selectedTx.type === 'ESCROW_HOLD') 
+                ? (selectedTx.status === 'COMPLETED' ? 'bg-emerald-700' : 'bg-amber-600') 
+                : 'bg-emerald-700'
             }`}>
               <div className="space-y-0.5">
                 <h3 className="text-base sm:text-lg font-extrabold flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-white" />
-                  {selectedTx.status}
+                  {selectedTx.status === "COMPLETED" && (selectedTx.type === "ESCROW" || selectedTx.type === "ESCROW_HOLD") 
+                    ? "COMPLETED" 
+                    : selectedTx.status}
                 </h3>
                 <p className="text-xs text-emerald-100/90 font-medium pl-7">
                   {selectedTx.time} on {selectedTx.date}
@@ -342,6 +303,40 @@ export default function ProcessorTransactionsPage() {
                 </div>
               </div>
 
+              {/* NEW BREAKDOWN SECTION (Only for ESCROW payments) */}
+              {(selectedTx.type === "ESCROW_HOLD" || selectedTx.type === "ESCROW" || selectedTx.type === "DEBIT") && selectedTx.rawAmount && (
+                <div className="bg-stone-950 rounded-2xl p-4 border border-stone-800 space-y-3">
+                  <div className="flex items-center justify-between text-xs font-bold text-white border-b border-stone-800/80 pb-2.5">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Amount Breakdown
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-stone-400">Total Payment:</span>
+                      <strong className="text-stone-200">₹ {selectedTx.rawAmount?.toLocaleString()}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-400">Platform Fees (2%):</span>
+                      <strong className="text-red-400">- ₹ {Math.round((selectedTx.rawAmount / 1.07) * 0.02).toLocaleString()}</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-stone-400">GST (5%):</span>
+                      <strong className="text-red-400">- ₹ {Math.round((selectedTx.rawAmount / 1.07) * 0.05).toLocaleString()}</strong>
+                    </div>
+                    <div className="pt-2 border-t border-stone-800/60 flex justify-between items-center">
+                      <span className="text-stone-300 font-bold">Net Amount to Farmer:</span>
+                      <div className="text-right">
+                        <strong className="text-emerald-400 font-extrabold text-sm block">₹ {Math.round(selectedTx.rawAmount / 1.07).toLocaleString()}</strong>
+                        {selectedTx.status === "COMPLETED" && (
+                          <span className="text-[10px] text-emerald-500 font-medium">(Released)</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
 
               {/* Transfer Details Section */}
               <div className="bg-stone-950 rounded-2xl p-4 border border-stone-800 space-y-3">
@@ -356,9 +351,11 @@ export default function ProcessorTransactionsPage() {
                   
                   {/* Transaction ID */}
                   <div>
-                    <span className="text-[11px] text-stone-400 block">Transaction ID (Razorpay)</span>
+                    <span className="text-[11px] text-stone-400 block">Payment Method & ID (Razorpay)</span>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <span className="font-mono text-stone-200 text-[11px] truncate">{selectedTx.razorpayId || selectedTx.id}</span>
+                      <span className="font-mono text-stone-200 text-[11px] truncate">
+                        {selectedTx.rzpData?.method ? `${selectedTx.rzpData.method.charAt(0).toUpperCase() + selectedTx.rzpData.method.slice(1)} | ` : ''}{selectedTx.razorpayId || selectedTx.id}
+                      </span>
                       <button
                         onClick={() => copyToClipboard(selectedTx.razorpayId || selectedTx.id, "id")}
                         className="text-stone-400 hover:text-emerald-400 p-1 transition cursor-pointer shrink-0"

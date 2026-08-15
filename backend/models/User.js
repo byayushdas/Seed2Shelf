@@ -57,6 +57,13 @@ const userSchema = new mongoose.Schema({
   rejectionReason: { type: String },
   verificationDate: { type: Date },
 
+  // Bank Account Details
+  bankName: { type: String },
+  accountHolderName: { type: String },
+  accountNumber: { type: String },
+  ifscCode: { type: String },
+  branchLocation: { type: String },
+
   regDate: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }, { strict: false });

@@ -21,14 +21,7 @@ import {
 
 export default function WalletTransactions() {
   const { data: session } = useSession();
-  const [filterType, setFilterType] = useState<"ALL" | "PAYOUTS" | "ESCROW">("ALL");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const farmerFilterOptions: { value: "ALL" | "PAYOUTS" | "ESCROW"; label: string }[] = [
-    { value: "ALL", label: "All" },
-    { value: "PAYOUTS", label: "Bank Credits" },
-    { value: "ESCROW", label: "Escrow Locks" }
-  ];
+  const [filterType] = useState<"ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -51,8 +44,8 @@ export default function WalletTransactions() {
                 title: tx.description || 'Transaction',
                 buyer: tx.orderId || 'Unknown',
                 amount: `₹ ${tx.amount?.toLocaleString()}`,
-                date: new Date(tx.timestamp).toLocaleDateString(),
-                time: new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: (tx.razorpayData?.created_at ? new Date(tx.razorpayData.created_at * 1000) : new Date(tx.timestamp)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                time: (tx.razorpayData?.created_at ? new Date(tx.razorpayData.created_at * 1000) : new Date(tx.timestamp)).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
                 status: tx.status,
                 orderId: tx.orderId || '',
                 method: tx.razorpayData ? (tx.razorpayData.method || tx.razorpayData.status) : 'Escrow Wallet',
@@ -133,47 +126,11 @@ export default function WalletTransactions() {
               />
             </div>
 
-            {/* Sleek Custom Filter Dropdown */}
+            {/* Single Filter Option */}
             <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="bg-stone-900 border border-stone-800 hover:border-stone-700 rounded-2xl px-4 py-2.5 text-xs text-white font-extrabold focus:outline-none transition cursor-pointer flex items-center justify-between gap-3 shadow-md"
-              >
-                <span>{farmerFilterOptions.find(o => o.value === filterType)?.label || "All"}</span>
-                <ChevronDown className={`h-4 w-4 text-emerald-400 transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {isFilterOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsFilterOpen(false)} 
-                  />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-stone-900/95 border border-stone-800 rounded-2xl p-1.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                    {farmerFilterOptions.map((opt) => {
-                      const isSelected = filterType === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setFilterType(opt.value);
-                            setIsFilterOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                            isSelected
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : "text-stone-300 hover:text-white hover:bg-stone-800/80"
-                          }`}
-                        >
-                          <span>{opt.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+              <div className="bg-stone-900 border border-emerald-500/30 text-emerald-400 rounded-2xl px-5 py-2.5 text-xs font-extrabold flex items-center justify-center shadow-md">
+                <span>All Transactions</span>
+              </div>
             </div>
 
           </div>
@@ -333,9 +290,11 @@ export default function WalletTransactions() {
                   
                   {/* Transaction ID */}
                   <div>
-                    <span className="text-[11px] text-stone-400 block">Transaction ID (Razorpay)</span>
+                    <span className="text-[11px] text-stone-400 block">Payment Method & ID (Razorpay)</span>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <span className="font-mono text-stone-200 text-[11px] truncate">{selectedTx.razorpayId || selectedTx.id}</span>
+                      <span className="font-mono text-stone-200 text-[11px] truncate">
+                        {selectedTx.rzpData?.method ? `${selectedTx.rzpData.method.charAt(0).toUpperCase() + selectedTx.rzpData.method.slice(1)} | ` : ''}{selectedTx.razorpayId || selectedTx.id}
+                      </span>
                       <button
                         onClick={() => copyToClipboard(selectedTx.razorpayId || selectedTx.id, "id")}
                         className="text-stone-400 hover:text-emerald-400 p-1 transition cursor-pointer shrink-0"

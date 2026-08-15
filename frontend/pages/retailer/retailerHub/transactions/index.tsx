@@ -21,15 +21,7 @@ import {
 
 export default function WalletTransactions() {
   const { data: session } = useSession();
-  const [filterType, setFilterType] = useState<"ALL" | "PAYOUTS" | "ESCROW" | "BANK_DEBITS">("ALL");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const distributorFilterOptions: { value: "ALL" | "PAYOUTS" | "ESCROW" | "BANK_DEBITS"; label: string }[] = [
-    { value: "ALL", label: "All" },
-    { value: "PAYOUTS", label: "Bank Credits" },
-    { value: "BANK_DEBITS", label: "Bank Debits" },
-    { value: "ESCROW", label: "Escrow Locks" }
-  ];
+  const [filterType] = useState<"ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTx, setSelectedTx] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -39,7 +31,7 @@ export default function WalletTransactions() {
   useEffect(() => {
     const fetchTxs = async () => {
       try {
-        const userId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
+        const userId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";
         if (!userId) return;
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/v1/wallet/transactions?userId=${userId}`);
         if (res.ok) {
@@ -95,7 +87,7 @@ export default function WalletTransactions() {
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Wallet Transactions | Seed2Shelf</title>
-        <meta name="description" content="Payment history and escrow transaction logs for distributors" />
+        <meta name="description" content="Payment history and escrow transaction logs for retailers" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
@@ -135,47 +127,11 @@ export default function WalletTransactions() {
               />
             </div>
 
-            {/* Sleek Custom Filter Dropdown */}
+            {/* Single Filter Option */}
             <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="bg-stone-900 border border-stone-800 hover:border-stone-700 rounded-2xl px-4 py-2.5 text-xs text-white font-extrabold focus:outline-none transition cursor-pointer flex items-center justify-between gap-3 shadow-md"
-              >
-                <span>{distributorFilterOptions.find(o => o.value === filterType)?.label || "All"}</span>
-                <ChevronDown className={`h-4 w-4 text-emerald-400 transition-transform duration-200 ${isFilterOpen ? "rotate-180" : ""}`} />
-              </button>
-
-              {isFilterOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsFilterOpen(false)} 
-                  />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-stone-900/95 border border-stone-800 rounded-2xl p-1.5 shadow-2xl z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                    {distributorFilterOptions.map((opt) => {
-                      const isSelected = filterType === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setFilterType(opt.value);
-                            setIsFilterOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between cursor-pointer ${
-                            isSelected
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : "text-stone-300 hover:text-white hover:bg-stone-800/80"
-                          }`}
-                        >
-                          <span>{opt.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+              <div className="bg-stone-900 border border-emerald-500/30 text-emerald-400 rounded-2xl px-5 py-2.5 text-xs font-extrabold flex items-center justify-center shadow-md">
+                <span>All Transactions</span>
+              </div>
             </div>
 
           </div>
