@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -17,8 +17,11 @@ import {
   PieChart,
   ArrowUpRight,
   Activity,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Loader2
 } from "lucide-react";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
 type Timeframe = "WEEKLY" | "MONTHLY" | "YEARLY";
 
@@ -33,31 +36,13 @@ interface AnalyticsData {
   cropBreakdown?: any[];
 }
 
-const analyticsByTimeframe: Record<Timeframe, AnalyticsData> = {
-  WEEKLY: {
-    produceTransformed: "0 kg",
-    totalRevenue: "₹ 0",
-    escrowLocked: "₹ 0",
-    disputeRate: "0.0%",
-    successfulShipments: 0,
-    totalOrders: 0
-  },
-  MONTHLY: {
-    produceTransformed: "0 kg",
-    totalRevenue: "₹ 0",
-    escrowLocked: "₹ 0",
-    disputeRate: "0.0%",
-    successfulShipments: 0,
-    totalOrders: 0
-  },
-  YEARLY: {
-    produceTransformed: "0 kg",
-    totalRevenue: "₹ 0",
-    escrowLocked: "₹ 0",
-    disputeRate: "0.0%",
-    successfulShipments: 0,
-    totalOrders: 0
-  }
+const emptyAnalytics: AnalyticsData = {
+  produceTransformed: "0 kg",
+  totalRevenue: "₹ 0",
+  escrowLocked: "₹ 0",
+  disputeRate: "0.0%",
+  successfulShipments: 0,
+  totalOrders: 0
 };
 function generatePdfBlob(title: string, timeframe: string, stats: any): Blob {
   const dateStr = new Date().toLocaleString("en-IN");
@@ -129,10 +114,37 @@ ET`;
 
 export default function ProcessorDashboardPage() {
   const { data: session } = useSession();
+  const processorId = (session?.user as any)?.processorId || (session?.user as any)?.customId || (session?.user as any)?.id || "";
+
   const [timeframe, setTimeframe] = useState<Timeframe>("MONTHLY");
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStats, setCurrentStats] = useState<AnalyticsData>(emptyAnalytics);
 
-  const currentStats = analyticsByTimeframe[timeframe];
+  useEffect(() => {
+    if (!processorId) return;
+    const fetchAnalytics = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`${BACKEND_URL}/api/v1/processor/reports?userId=${processorId}&timeframe=${timeframe}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setCurrentStats(json.data);
+          } else {
+            setCurrentStats(emptyAnalytics);
+          }
+        }
+      } catch (err) {
+        console.warn("Backend API offline or unreachable, utilizing default zero state", err);
+        setCurrentStats(emptyAnalytics);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [processorId, timeframe]);
 
   const handleExportReport = (type: string) => {
     try {
@@ -209,8 +221,16 @@ export default function ProcessorDashboardPage() {
             </div>
           </div>
 
-          {/* TIMEFRAME SWITCHING OPTIONS */}
-          <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+          <div className="flex items-center gap-3">
+            {isLoading && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Generating...</span>
+              </div>
+            )}
+
+            {/* TIMEFRAME SWITCHING OPTIONS */}
+            <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
             <button
               onClick={() => setTimeframe("WEEKLY")}
               className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
@@ -247,6 +267,7 @@ export default function ProcessorDashboardPage() {
             >
               <span>Yearly</span>
             </button>
+          </div>
           </div>
         </div>
 

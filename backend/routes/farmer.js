@@ -255,4 +255,24 @@ router.get('/shipments/outgoing', async (req, res) => {
   }
 });
 
+// ============================================================
+// REPORTS
+// ============================================================
+
+// GET /api/v1/farmer/reports?userId=&timeframe=
+router.get('/reports', async (req, res) => {
+  try {
+    const { userId, timeframe } = req.query;
+    if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
+
+    const { getRoleAnalytics } = require('../utils/analytics');
+    const data = await getRoleAnalytics(userId, 'FARMER', timeframe || 'MONTHLY');
+    
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error('GET /farmer/reports error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
