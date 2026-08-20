@@ -848,9 +848,33 @@ export default function ProductionHubPage() {
              ========================================================================= */}
           <div className="lg:col-span-6 bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
             <div className="pb-3 border-b border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-base font-extrabold text-[#00d26a] flex items-center gap-2">
+              <h2 className="text-base font-extrabold text-emerald-400 flex items-center gap-2">
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
+              
+              {/* TAB SWITCHER */}
+              <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+                <button
+                  onClick={() => setInventoryFilter("PROCESSED")}
+                  className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+                    inventoryFilter === "PROCESSED"
+                      ? "bg-emerald-600 text-white shadow-md font-black border border-emerald-500/50"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <span>Processed Products</span>
+                </button>
+                <button
+                  onClick={() => setInventoryFilter("RAW")}
+                  className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+                    inventoryFilter === "RAW"
+                      ? "bg-emerald-600 text-white shadow-md font-black border border-emerald-500/50"
+                      : "text-stone-400 hover:text-stone-200"
+                  }`}
+                >
+                  <span>Purchased Harvests</span>
+                </button>
+              </div>
             </div>
 
             {/* MAIN TAB CONTENT */}
