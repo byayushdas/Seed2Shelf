@@ -142,6 +142,9 @@ export default function Navbar() {
             if (data?.profilePhoto) {
               setProfilePhotoUrl(data.profilePhoto);
             }
+            if (data?.profileImage) {
+              setProfilePhotoUrl(data.profileImage);
+            }
           }
 
           // Fetch robust profile status for warning
@@ -150,6 +153,9 @@ export default function Navbar() {
             const profileJson = await profileRes.json();
             if (profileJson.success && profileJson.data) {
               const user = profileJson.data;
+              if (user.profileImage) {
+                setProfilePhotoUrl(user.profileImage);
+              }
               let isProfileIncomplete = false;
               if (user.role === 'FARMER' && (!user.farmName || !user.farmLocation || !user.totalLandArea || !user.mainCultivatedCrops || user.mainCultivatedCrops.length === 0 || !user.farmingPractice)) {
                 isProfileIncomplete = true;

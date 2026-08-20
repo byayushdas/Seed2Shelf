@@ -37,7 +37,9 @@ export default function ProcessorOrdersPage() {
   const { data: session } = useSession();
   const processorId = (session?.user as any)?.id || (session?.user as any)?.processorId || "";
 
-  const [orders, setOrders] = useState<DistributorOrder[]>([]);
+  const [activeTab, setActiveTab] = useState<"INCOMING" | "OUTGOING">("INCOMING");
+  const [incomingOrders, setIncomingOrders] = useState<DistributorOrder[]>([]);
+  const [outgoingOrders, setOutgoingOrders] = useState<DistributorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -46,28 +48,50 @@ export default function ProcessorOrdersPage() {
       if (!processorId) return;
       try {
         setIsLoading(true);
-        const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders?userId=${processorId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const [incomingRes, outgoingRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/incoming?userId=${processorId}`),
+          fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/outgoing?userId=${processorId}`)
+        ]);
+        
+        if (incomingRes.ok) {
+          const json = await incomingRes.json();
+          if (json.success && Array.isArray(json.data)) {
             const activeOrders = json.data.filter((o: any) => 
               o.deliveryStatus !== "DISPATCHED" && o.deliveryStatus !== "DELIVERED"
             );
-            const mapped = activeOrders.map((o: any) => ({
+            setIncomingOrders(activeOrders.map((o: any) => ({
               id: o.orderNumber || o._id,
               rawId: o._id,
               batchId: o.batchId,
               productName: o.cropName,
-              category: "Order",
+              category: "Incoming Order",
               buyer: o.buyerName || o.sellerName,
               quantity: `${o.quantityKg} kg`,
               totalPrice: `₹ ${o.totalAmount?.toLocaleString() || 0}`,
               date: new Date(o.createdAt).toLocaleDateString(),
               status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
-            }));
-            setOrders(mapped);
-          } else {
-            setOrders([]);
+            })));
+          }
+        }
+        
+        if (outgoingRes.ok) {
+          const json = await outgoingRes.json();
+          if (json.success && Array.isArray(json.data)) {
+            const activeOrders = json.data.filter((o: any) => 
+              o.deliveryStatus !== "DISPATCHED" && o.deliveryStatus !== "DELIVERED"
+            );
+            setOutgoingOrders(activeOrders.map((o: any) => ({
+              id: o.orderNumber || o._id,
+              rawId: o._id,
+              batchId: o.batchId,
+              productName: o.cropName,
+              category: "Outgoing Order",
+              buyer: o.sellerName || o.buyerName,
+              quantity: `${o.quantityKg} kg`,
+              totalPrice: `₹ ${o.totalAmount?.toLocaleString() || 0}`,
+              date: new Date(o.createdAt).toLocaleDateString(),
+              status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
+            })));
           }
         }
       } catch (err) {
@@ -126,7 +150,8 @@ export default function ProcessorOrdersPage() {
         headers: { "Content-Type": "application/json" }
       });
       if (res.ok) {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "DISPATCHED" } : o));
+        const updateFn = activeTab === "INCOMING" ? setIncomingOrders : setOutgoingOrders;
+        updateFn(prev => prev.map(o => o.id === id ? { ...o, status: "DISPATCHED" } : o));
         setNotification("Delivery initiated.");
         setTimeout(() => setNotification(null), 3000);
       }
@@ -134,6 +159,8 @@ export default function ProcessorOrdersPage() {
       console.error(err);
     }
   };
+
+  const currentOrders = activeTab === "INCOMING" ? incomingOrders : outgoingOrders;
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -156,12 +183,40 @@ export default function ProcessorOrdersPage() {
               </h1>
             </div>
           </div>
-          {isLoading && (
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Loading...</span>
+          
+          <div className="flex items-center gap-4">
+            {isLoading && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Loading...</span>
+              </div>
+            )}
+            
+            {/* MAIN TAB SWITCHER */}
+            <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+              <button
+                onClick={() => setActiveTab("INCOMING")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+                  activeTab === "INCOMING"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Order Requests</span>
+              </button>
+              <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
+              <button
+                onClick={() => setActiveTab("OUTGOING")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+                  activeTab === "OUTGOING"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Procurement Requests</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {notification && (
@@ -173,15 +228,15 @@ export default function ProcessorOrdersPage() {
 
         {/* ORDERS LIST */}
         <div className="space-y-4">
-          {orders.length === 0 ? (
+          {currentOrders.length === 0 ? (
             <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center mx-auto text-stone-500">
                 <ClipboardList className="w-6 h-6" />
               </div>
-              <p className="text-stone-400 text-xs font-medium">No purchase orders found.</p>
+              <p className="text-stone-400 text-xs font-medium">No {activeTab === "INCOMING" ? "order requests" : "procurement requests"} found.</p>
             </div>
           ) : (
-            orders.map((ord) => (
+            currentOrders.map((ord) => (
               <div
                 key={ord.id}
                 className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 sm:p-7 shadow-sm transition-all duration-200 hover:border-stone-700/80 space-y-5"
@@ -238,7 +293,9 @@ export default function ProcessorOrdersPage() {
                     </div>
                     <div className="flex items-center gap-2 text-xs text-stone-300">
                       <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span className="font-semibold text-stone-400">Buyer:</span>
+                      <span className="font-semibold text-stone-400">
+                        {activeTab === "INCOMING" ? "Buyer:" : "Seller:"}
+                      </span>
                       <span className="font-extrabold text-white">{ord.buyer}</span>
                     </div>
                   </div>
@@ -269,7 +326,7 @@ export default function ProcessorOrdersPage() {
                     <span>Protected by Escrow Security Protocol</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    {ord.status === "PENDING" && (
+                    {activeTab === "INCOMING" && ord.status === "PENDING" && (
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleRejectOrder(ord.id)}
@@ -285,7 +342,7 @@ export default function ProcessorOrdersPage() {
                         </button>
                       </div>
                     )}
-                    {ord.status === "ACCEPTED" && (
+                    {activeTab === "INCOMING" && ord.status === "ACCEPTED" && (
                       <button
                         onClick={() => handleStartDelivery(ord.id)}
                         className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center gap-2"

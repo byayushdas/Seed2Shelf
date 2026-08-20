@@ -13,6 +13,7 @@ export default function ProcessorProfilePage() {
   const router = useRouter();
   const aadhaarFrontInputRef = useRef<HTMLInputElement>(null);
   const aadhaarBackInputRef = useRef<HTMLInputElement>(null);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
 
   const targetUserId = (router.query.id as string) || session?.user?.id;
 
@@ -23,6 +24,7 @@ export default function ProcessorProfilePage() {
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [name, setName] = useState("");
+  const [profileImage, setProfileImage] = useState("");
   const [aadhaarNumber, setAadhaarNumber] = useState("");
   const [aadhaarFront, setAadhaarFront] = useState("");
   const [aadhaarFrontPublicId, setAadhaarFrontPublicId] = useState("");
@@ -87,6 +89,7 @@ export default function ProcessorProfilePage() {
 
   const populateForm = (data: any) => {
     setName(data.name || "");
+    setProfileImage(data.profileImage || "");
 
     setAadhaarNumber(data.aadhaarNumber || "");
     setAadhaarFront(data.aadhaarFront || "");
@@ -118,6 +121,8 @@ export default function ProcessorProfilePage() {
         setAadhaarFront(base64);
       } else if (type === "aadhaar_back") {
         setAadhaarBack(base64);
+      } else if (type === "profile") {
+        setProfileImage(base64);
       }
 
       const res = await fetch("/api/users/upload", {
@@ -134,6 +139,8 @@ export default function ProcessorProfilePage() {
         } else if (type === "aadhaar_back") {
           setAadhaarBack(data.url);
           if (data.publicId) setAadhaarBackPublicId(data.publicId);
+        } else if (type === "profile") {
+          setProfileImage(data.url);
         }
         setMessage({ type: "success", text: "Image uploaded successfully." });
       }
@@ -175,6 +182,7 @@ export default function ProcessorProfilePage() {
       if (targetUserId) {
         const payload = {
           name,
+          profileImage,
           aadhaarNumber,
           aadhaarFront,
           aadhaarFrontPublicId,
@@ -210,7 +218,7 @@ export default function ProcessorProfilePage() {
         }
       }
       setEditMode(false);
-      window.dispatchEvent(new CustomEvent("profileUpdated", { detail: {} }));
+      window.dispatchEvent(new CustomEvent("profileUpdated", { detail: { profilePhoto: profileImage } }));
       setMessage({ type: "success", text: "Profile information & KYC documents saved successfully!" });
     } catch (err) {
       setEditMode(false);
@@ -297,9 +305,28 @@ export default function ProcessorProfilePage() {
               
               {/* Photo & Badge */}
               <div className="flex flex-col items-center shrink-0">
-                <div className="relative w-28 h-28 rounded-full border-2 border-[#00d26a]/40 overflow-hidden bg-gradient-to-br from-[#0d2a1a] to-[#081a10] flex items-center justify-center shadow-lg">
-                  <span className="text-4xl font-black text-[#00d26a]">{name ? name[0].toUpperCase() : "P"}</span>
+                <div 
+                  className={`relative w-28 h-28 rounded-full border-2 border-[#00d26a]/40 overflow-hidden bg-gradient-to-br from-[#0d2a1a] to-[#081a10] flex items-center justify-center shadow-lg ${editMode ? 'cursor-pointer hover:opacity-80 transition' : ''}`}
+                  onClick={() => editMode && profileImageInputRef.current?.click()}
+                >
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl font-black text-[#00d26a]">{name ? name[0].toUpperCase() : "P"}</span>
+                  )}
+                  {editMode && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  )}
                 </div>
+                <input 
+                  type="file" 
+                  ref={profileImageInputRef} 
+                  onChange={(e) => handleFileUpload(e, "profile")} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
 
                 {/* Reviews Pill Badge */}
                 {hasRealRating ? (

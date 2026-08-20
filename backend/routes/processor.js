@@ -310,13 +310,28 @@ router.delete('/inventory/:id', async (req, res) => {
 // PURCHASE ORDERS — Orders received from Distributors
 // ============================================================
 
-// GET /api/v1/processor/purchase-orders?userId=
-router.get('/purchase-orders', async (req, res) => {
+// GET /api/v1/processor/purchase-orders/incoming?userId=
+router.get('/purchase-orders/incoming', async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const orders = await PurchaseOrder.find({ sellerId: userId, sellerRole: 'PROCESSOR' })
+      .sort({ createdAt: -1 });
+
+    return res.json({ success: true, data: orders });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/v1/processor/purchase-orders/outgoing?userId=
+router.get('/purchase-orders/outgoing', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
+
+    const orders = await PurchaseOrder.find({ buyerId: userId, buyerRole: 'PROCESSOR' })
       .sort({ createdAt: -1 });
 
     return res.json({ success: true, data: orders });

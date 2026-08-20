@@ -23,16 +23,7 @@ router.post('/checkout', async (req, res) => {
 
     const orderNumbers = [];
 
-    // Create Buyer Debit Transaction
-    const debitTx = new Transaction({
-      userId: buyerId,
-      transactionId: paymentId || `pay_${Date.now()}`,
-      amount: totalAmount,
-      type: 'DEBIT',
-      status: 'COMPLETED',
-      description: `Marketplace Purchase (${items.length} items)`
-    });
-    await debitTx.save();
+
 
     for (const item of items) {
       // Determine which collection to deduct from based on buyerRole/sellerRole
@@ -114,6 +105,18 @@ router.post('/checkout', async (req, res) => {
       });
       await creditTx.save();
 
+      // Create Buyer Debit Hold Transaction
+      const buyerTx = new Transaction({
+        userId: buyerId,
+        transactionId: paymentId ? `${paymentId}_${order.orderNumber}` : `pay_${Date.now()}_${order.orderNumber}`,
+        orderId: order.orderNumber,
+        amount: order.totalAmount,
+        type: 'DEBIT_HOLD',
+        status: 'PENDING',
+        description: `Marketplace Purchase Hold for Order ${order.orderNumber}`
+      });
+      await buyerTx.save();
+
       // Create Notification for Seller
       const notif = new Notification({
         userId: sellerId,
@@ -170,6 +173,15 @@ router.put('/:id/status', async (req, res) => {
         tx.type = 'CREDIT';
         tx.description = `Payment Released for Order ${order.orderNumber}`;
         await tx.save();
+      }
+
+      // Update Buyer Debit Hold
+      const buyerTx = await Transaction.findOne({ orderId: order.orderNumber, type: 'DEBIT_HOLD' });
+      if (buyerTx) {
+        buyerTx.status = 'COMPLETED';
+        buyerTx.type = order.sellerRole === 'FARMER' ? 'FARMER_PAYMENT' : 'DEBIT';
+        buyerTx.description = `Marketplace Purchase Completed for Order ${order.orderNumber}`;
+        await buyerTx.save();
       }
 
       // Automatically Mint Inventory for Buyer

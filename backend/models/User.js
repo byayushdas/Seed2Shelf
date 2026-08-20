@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   roleId: { type: String },
 
   averageRating: { type: Number, default: 0 },
+  profileImage: { type: String }, // NEW
   reviews: [{
     reviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     rating: { type: Number, required: true },
