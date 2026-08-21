@@ -31,7 +31,7 @@ export default function WalletTransactions() {
 
   const getTransactionDisplay = (tx: any) => {
     if (tx.type === "PAYOUT") return { color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: <ArrowDownLeft className="h-5 w-5" />, label: "Received from:", sign: "+ ", amountColor: "text-emerald-400", modalBg: "bg-emerald-700" };
-    if (tx.type === "PAYMENT") return { color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20", icon: <ArrowUpRight className="h-5 w-5" />, label: "Paid to:", sign: "- ", amountColor: "text-rose-400", modalBg: "bg-rose-600" };
+    if (tx.type === "PAYMENT") return { color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: <ArrowUpRight className="h-5 w-5" />, label: "Paid to:", sign: "- ", amountColor: "text-emerald-400", modalBg: "bg-emerald-700" };
     if (tx.type === "REFUND") return { color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", icon: <ArrowDownLeft className="h-5 w-5" />, label: "Refund for:", sign: "+ ", amountColor: "text-blue-400", modalBg: "bg-blue-600" };
     return { color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", icon: <Lock className="h-5 w-5" />, label: "Escrow Locked:", sign: "", amountColor: "text-amber-300", modalBg: "bg-amber-600" };
   };

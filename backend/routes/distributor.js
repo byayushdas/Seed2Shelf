@@ -461,6 +461,14 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
       await payoutTx.save();
     }
 
+    if (order.buyerId) {
+      const buyerTx = await Transaction.findOne({ orderId: order.orderNumber, userId: order.buyerId, type: 'DEBIT' });
+      if (buyerTx) {
+        buyerTx.status = 'COMPLETED';
+        await buyerTx.save();
+      }
+    }
+
     // Automatically Mint Inventory for Distributor
     const DistributorBatch = require('../models/Distributor');
     const newBatch = new DistributorBatch({
