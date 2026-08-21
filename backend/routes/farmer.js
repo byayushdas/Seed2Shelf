@@ -73,6 +73,10 @@ router.put('/harvests/:id/list', async (req, res) => {
     const batch = await FarmerBatch.findById(req.params.id);
     if (!batch) return res.status(404).json({ success: false, message: 'Harvest not found' });
 
+    if (batch.status !== 'Listed' && batch.quantity <= 0) {
+      return res.status(400).json({ success: false, message: 'Cannot list a batch with 0kg available' });
+    }
+
     batch.status = batch.status === 'Listed' ? 'Unlisted' : 'Listed';
     batch.updatedAt = new Date();
     await batch.save();

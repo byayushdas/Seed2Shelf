@@ -388,6 +388,10 @@ router.put('/inventory/:id/list', async (req, res) => {
     const item = await ProcessorBatch.findById(req.params.id);
     if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
 
+    if (item.status !== 'Listed' && item.quantity <= 0) {
+      return res.status(400).json({ success: false, message: 'Cannot list an item with 0kg available' });
+    }
+
     item.status = item.status === 'Listed' ? 'In Stock' : 'Listed';
     item.updatedAt = new Date();
     await item.save();
