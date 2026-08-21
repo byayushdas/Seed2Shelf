@@ -62,7 +62,7 @@ export default function ProductionHubPage() {
           if (json.success && Array.isArray(json.data)) {
             const mapped = json.data.map((item: any) => ({
               id: item._id || item.batchId,
-              itemType: "PROCESSED",
+              itemType: item.itemType || "PROCESSED",
               productName: item.productName,
               category: item.category,
               quantity: `${item.quantity} kg`,
@@ -71,7 +71,14 @@ export default function ProductionHubPage() {
               status: item.status,
               parentRawBatchId: item.parentRawBatchId,
               productImage: item.productImage || undefined,
-              qrCodeUrl: item.qrCodeUrl || ""
+              qrCodeUrl: item.qrCodeUrl || "",
+              supplierFarmer: item.supplierFarmer,
+              processingStatus: item.processingStatus,
+              processingQuantity: item.processingQuantity ? `${item.processingQuantity} kg` : undefined,
+              remainingStock: item.remainingStock ? `${item.remainingStock} kg` : undefined,
+              consumedQuantity: item.consumedQuantity ? `${item.consumedQuantity} kg` : undefined,
+              processingHistory: item.processingHistory || [],
+              sentForProcessingDate: item.sentForProcessingDate ? new Date(item.sentForProcessingDate).toLocaleDateString("en-GB") : undefined
             }));
             setInventory(mapped);
           }
@@ -87,7 +94,8 @@ export default function ProductionHubPage() {
   const [category, setCategory] = useState("Processed Grains");
   const [customCategory, setCustomCategory] = useState("");
   const [productName, setProductName] = useState("");
-  const [parentRawBatchId, setParentRawBatchId] = useState("");
+  const [consumedBatches, setConsumedBatches] = useState<{ batchId: string; quantityUsed: number }[]>([]);
+  const [isTransformingExisting, setIsTransformingExisting] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [productImage, setProductImage] = useState<string | null>(null);
@@ -197,7 +205,8 @@ export default function ProductionHubPage() {
             category: finalCategory,
             quantity: quantity,
             pricePerUnit: price,
-            parentRawBatchId: parentRawBatchId,
+            consumedBatches: consumedBatches,
+            isTransformingExisting,
             productImage: productImage || getProductImage({ category: finalCategory } as any),
             qrCodeUrl: qrUrl,
             traceUrl: traceUrl,
@@ -207,8 +216,11 @@ export default function ProductionHubPage() {
         });
 
         if (res.ok) {
+          const json = await res.json();
+          const serverItem = json.data || {};
+          
           const newItem: InventoryItem = {
-            id: newBatchId,
+            id: serverItem._id || newBatchId,
             itemType: "PROCESSED",
             productName,
             category: finalCategory,
@@ -216,16 +228,66 @@ export default function ProductionHubPage() {
             pricePerUnit: `₹${price}/kg`,
             date: formattedDateDisplay,
             status: "In Stock",
-            parentRawBatchId,
+            parentRawBatchId: consumedBatches.length > 0 ? consumedBatches[0].batchId : undefined,
             productImage: productImage || getProductImage({ category: finalCategory } as any),
-            qrCodeUrl: qrUrl
+            qrCodeUrl: serverItem.qrCodeUrl || qrUrl
           };
 
-          setInventory(prev => [newItem, ...prev]);
+          setInventory(prev => {
+            const updatedPrev = prev.map(item => {
+              const consumed = consumedBatches.find(cb => cb.batchId === item.id);
+              if (consumed) {
+                const { num: currentRemaining, unit } = parseQuantityAndUnit(item.remainingStock || item.quantity);
+                const { num: currentProcessing } = parseQuantityAndUnit(item.processingQuantity);
+                
+                let qtyToConsume = consumed.quantityUsed;
+                let procStock = currentProcessing;
+                let remStock = currentRemaining;
+                
+                if (procStock >= qtyToConsume) {
+                  procStock -= qtyToConsume;
+                  qtyToConsume = 0;
+                } else {
+                  qtyToConsume -= procStock;
+                  procStock = 0;
+                }
+                
+                if (qtyToConsume > 0) {
+                  remStock -= qtyToConsume;
+                }
+
+                if (remStock <= 0 && procStock <= 0) {
+                  return {
+                    ...item,
+                    processingStatus: "Fully Processed",
+                    remainingStock: `0 ${unit}`,
+                    processingQuantity: `0 ${unit}`
+                  };
+                } else if (procStock > 0) {
+                   return {
+                    ...item,
+                    processingStatus: "Sent for Processing",
+                    remainingStock: `${remStock} ${unit}`,
+                    processingQuantity: `${procStock} ${unit}`
+                  };
+                } else {
+                  return {
+                    ...item,
+                    processingStatus: "Available for Processing",
+                    remainingStock: `${remStock} ${unit}`,
+                    processingQuantity: `0 ${unit}`
+                  };
+                }
+              }
+              return item;
+            });
+            
+            return [newItem, ...updatedPrev];
+          });
           setNewBatchInfo({
-            id: newBatchId,
-            qr: qrUrl,
-            url: traceUrl
+            id: serverItem._id || newBatchId,
+            qr: serverItem.qrCodeUrl || qrUrl,
+            url: serverItem.traceUrl || traceUrl
           });
           setSubmitted(true);
           setTimeout(() => setSubmitted(false), 5000);
@@ -236,6 +298,8 @@ export default function ProductionHubPage() {
           setQuantity("");
           setPrice("");
           setProductImage(null);
+          setConsumedBatches([]);
+          setIsTransformingExisting(false);
         }
       } catch (err) {
         console.error("Error saving processed product:", err);
@@ -316,7 +380,7 @@ export default function ProductionHubPage() {
   };
 
   // Confirm sending set quantity for processing
-  const handleConfirmSendForProcessing = (e: React.FormEvent) => {
+  const handleConfirmSendForProcessing = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!processingModalItem) return;
 
@@ -336,53 +400,92 @@ export default function ProductionHubPage() {
     }
 
     const itemId = processingModalItem.id;
+    const { num: currentRemainingNum, unit: u } = parseQuantityAndUnit(processingModalItem.remainingStock || processingModalItem.quantity);
+    const { num: currentProcNum } = parseQuantityAndUnit(processingModalItem.processingQuantity);
 
-    setInventory((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const { num: currentRemainingNum, unit: u } = parseQuantityAndUnit(item.remainingStock || item.quantity);
-          const { num: currentProcNum } = parseQuantityAndUnit(item.processingQuantity);
+    const newRemainingNum = Math.max(0, currentRemainingNum - amountToSendNum);
+    const newProcNum = currentProcNum + amountToSendNum;
+    const newStatus = newRemainingNum === 0 ? "Fully Processed" : "Sent for Processing";
+    const sentDate = new Date().toISOString();
 
-          const newRemainingNum = Math.max(0, currentRemainingNum - amountToSendNum);
-          const newProcNum = currentProcNum + amountToSendNum;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/v1/processor/inventory/${itemId}/processing-status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          processingStatus: newStatus,
+          remainingStock: newRemainingNum,
+          processingQuantity: newProcNum,
+          sentForProcessingDate: sentDate
+        })
+      });
 
-          const newStatus = newRemainingNum === 0 ? "Fully Processed" : "Sent for Processing";
-
-          return {
-            ...item,
-            processingStatus: newStatus,
-            sentForProcessingDate: formattedDateDisplay,
-            remainingStock: `${newRemainingNum} ${u}`,
-            processingQuantity: `${newProcNum} ${u}`
-          };
-        }
-        return item;
-      })
-    );
-
-    setProcessingModalItem(null);
-    setSendAmount("");
-    setSendError("");
+      if (res.ok) {
+        setInventory((prev) =>
+          prev.map((item) => {
+            if (item.id === itemId) {
+              return {
+                ...item,
+                processingStatus: newStatus,
+                sentForProcessingDate: new Date(sentDate).toLocaleDateString("en-GB"),
+                remainingStock: `${newRemainingNum} ${u}`,
+                processingQuantity: `${newProcNum} ${u}`
+              };
+            }
+            return item;
+          })
+        );
+        setProcessingModalItem(null);
+        setSendAmount("");
+        setSendError("");
+      } else {
+        setSendError("Failed to update status on server.");
+      }
+    } catch (err) {
+      console.error("Error updating processing status:", err);
+      setSendError("Network error. Please try again.");
+    }
   };
 
   // Revoke/Reset processing status back to available
-  const handleRevokeProcessing = (id: string) => {
+  const handleRevokeProcessing = async (id: string) => {
     if (confirm("Are you sure you want to reset processing status for this batch? All processing volume will be returned to available stock.")) {
-      setInventory((prev) =>
-        prev.map((item) => {
-          if (item.id === id) {
-            const { num: totalNum, unit } = parseQuantityAndUnit(item.quantity);
-            return {
-              ...item,
-              processingStatus: "Available for Processing",
-              sentForProcessingDate: undefined,
-              remainingStock: `${totalNum} ${unit}`,
-              processingQuantity: `0 ${unit}`
-            };
-          }
-          return item;
-        })
-      );
+      const itemToReset = inventory.find(i => i.id === id);
+      if (!itemToReset) return;
+
+      const { num: totalNum, unit } = parseQuantityAndUnit(itemToReset.quantity);
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/v1/processor/inventory/${id}/processing-status`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            processingStatus: "Available for Processing",
+            remainingStock: totalNum,
+            processingQuantity: 0,
+            sentForProcessingDate: null
+          })
+        });
+
+        if (res.ok) {
+          setInventory((prev) =>
+            prev.map((item) => {
+              if (item.id === id) {
+                return {
+                  ...item,
+                  processingStatus: "Available for Processing",
+                  sentForProcessingDate: undefined,
+                  remainingStock: `${totalNum} ${unit}`,
+                  processingQuantity: `0 ${unit}`
+                };
+              }
+              return item;
+            })
+          );
+        }
+      } catch (err) {
+        console.error("Error resetting processing status:", err);
+      }
     }
   };
 
@@ -497,29 +600,99 @@ export default function ProductionHubPage() {
               {/* FIELD 3: Linked Parent Farmer Crop Batch */}
               <div>
                 <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
-                  Source Raw Material Batch *
+                  Source Raw Material Batches *
                 </label>
-                <div className="relative">
-                  <select
-                    value={parentRawBatchId}
-                    onChange={(e) => setParentRawBatchId(e.target.value)}
-                    className={`w-full bg-stone-950 border border-stone-800 rounded-2xl pl-4 pr-10 py-3 focus:outline-none focus:border-emerald-500 transition cursor-pointer appearance-none text-xs font-semibold ${
-                      parentRawBatchId === "" ? "text-stone-500" : "text-white"
-                    }`}
-                    required
-                  >
-                    <option value="" disabled hidden className="text-stone-500">Select Source Raw Material Batch</option>
-                    {inventory.filter(i => i.itemType === "RAW").map((raw) => (
-                      <option key={raw.id} value={raw.id} className="text-white">
-                        {raw.id} - {raw.productName} ({raw.quantity})
-                      </option>
-                    ))}
-                    <option value="NONE" className="text-white">None</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                    <ChevronDown className="w-4 h-4 text-stone-400" />
-                  </div>
+                <div className="bg-stone-950 border border-stone-800 rounded-2xl p-4 max-h-48 overflow-y-auto space-y-3 custom-scrollbar">
+                  {inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Processed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).length === 0 ? (
+                    <div className="text-stone-500 text-xs font-semibold">No available raw batches.</div>
+                  ) : (
+                    inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Processed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).map((raw) => {
+                      const { num: availNum } = parseQuantityAndUnit(raw.remainingStock || raw.quantity);
+                      const isSelected = consumedBatches.some(cb => cb.batchId === raw.id);
+                      const selectedData = consumedBatches.find(cb => cb.batchId === raw.id);
+
+                      const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                        if (e.target.checked) {
+                          setConsumedBatches(prev => [...prev, { batchId: raw.id, quantityUsed: availNum }]);
+                        } else {
+                          setConsumedBatches(prev => prev.filter(cb => cb.batchId !== raw.id));
+                        }
+                      };
+
+                      const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                        let val = parseFloat(e.target.value);
+                        if (isNaN(val)) val = 0;
+                        if (val > availNum) val = availNum;
+                        if (val < 0) val = 0;
+                        setConsumedBatches(prev => prev.map(cb => cb.batchId === raw.id ? { ...cb, quantityUsed: val } : cb));
+                      };
+
+                      return (
+                        <div key={raw.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-stone-800/60 bg-stone-900/40">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={handleCheckboxChange}
+                              className="w-4 h-4 rounded-md border-stone-700 bg-stone-950 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-stone-950"
+                            />
+                            <div className="flex-1">
+                              <div className="text-xs font-bold text-white">{raw.id} - {raw.productName}</div>
+                              <div className="text-[10px] font-semibold text-emerald-400">Available: {availNum} kg</div>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <div className="pl-7 flex items-center gap-2">
+                              <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Qty to Process:</span>
+                              <input
+                                type="number"
+                                value={selectedData?.quantityUsed === 0 ? '' : selectedData?.quantityUsed}
+                                onChange={handleQuantityChange}
+                                max={availNum}
+                                min={0.1}
+                                step="0.1"
+                                className="w-24 bg-stone-950 border border-stone-800 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-emerald-500 transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                required={isSelected}
+                              />
+                              <span className="text-[10px] font-semibold text-stone-500">kg</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
+                {/* Full Consumption QR Transform Option */}
+                {consumedBatches.length === 1 && (
+                  (() => {
+                    const cb = consumedBatches[0];
+                    const rawBatch = inventory.find(i => i.id === cb.batchId);
+                    if (rawBatch) {
+                      const { num: availNum } = parseQuantityAndUnit(rawBatch.remainingStock || rawBatch.quantity);
+                      if (cb.quantityUsed === availNum) {
+                        return (
+                          <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isTransformingExisting}
+                              onChange={(e) => setIsTransformingExisting(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 rounded-md border-emerald-700 bg-emerald-950 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-stone-950"
+                            />
+                            <div className="flex-1">
+                              <label className="text-xs font-bold text-emerald-400 block cursor-pointer" onClick={() => setIsTransformingExisting(!isTransformingExisting)}>
+                                Link Existing QR Code
+                              </label>
+                              <p className="text-[10px] text-stone-400 mt-1 leading-relaxed font-medium">
+                                Since you are fully converting this single batch, you can link the original farmer crop QR code to this new processed product. The physical QR code will be preserved for complete traceability.
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                    }
+                    return null;
+                  })()
+                )}
               </div>
 
               {/* Quantity & Price */}
@@ -722,7 +895,7 @@ export default function ProductionHubPage() {
                 >
                   <PlusCircle className="w-4.5 h-4.5" />
                   <span>
-                    {parentRawBatchId !== "" && parentRawBatchId !== "NONE"
+                    {isTransformingExisting
                       ? "Update the Batch"
                       : "Save & Register Processed Item"}
                   </span>
@@ -733,7 +906,9 @@ export default function ProductionHubPage() {
 
             {/* BATCH INFORMATION SECTION */}
             {(() => {
-              const selectedParentRaw = inventory.find(i => i.id === parentRawBatchId);
+              const selectedParentRaw = (isTransformingExisting && consumedBatches.length === 1)
+                ? inventory.find(i => i.id === consumedBatches[0].batchId)
+                : null;
               const displayedQrUrl = newBatchInfo
                 ? newBatchInfo.qr
                 : selectedParentRaw
@@ -743,9 +918,9 @@ export default function ProductionHubPage() {
                 ? newBatchInfo.id
                 : selectedParentRaw
                 ? selectedParentRaw.id
-                : parentRawBatchId === "NONE"
-                ? "NEW-BATCH-GEN"
-                : "SELECT-SOURCE-BATCH";
+                : consumedBatches.length === 0
+                ? "SELECT-SOURCE-BATCH"
+                : "NEW-BATCH-GEN";
 
               return (
                 <div className="mt-6 p-5 bg-stone-950 border border-stone-800 rounded-2xl space-y-4 shadow-xl transition-all duration-300">
@@ -963,7 +1138,7 @@ export default function ProductionHubPage() {
                         </div>
 
                         {/* Specs Grid with Limit Tracking */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-0.5">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] pt-0.5">
                           <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
                             <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Supplier Farmer</span>
                             <span className="text-stone-200 font-bold truncate block">{raw.supplierFarmer || "Local Farmer"}</span>
@@ -982,6 +1157,11 @@ export default function ProductionHubPage() {
                           <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
                             <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Available Stock</span>
                             <strong className="text-emerald-400 font-extrabold">{raw.remainingStock || raw.quantity}</strong>
+                          </div>
+
+                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
+                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Consumed</span>
+                            <strong className="text-blue-400 font-extrabold">{raw.consumedQuantity || "0 kg"}</strong>
                           </div>
                         </div>
 
@@ -1008,6 +1188,29 @@ export default function ProductionHubPage() {
                             </span>
                           </div>
                         </div>
+
+                        {/* Processing History */}
+                        {Array.isArray(raw.processingHistory) && raw.processingHistory.length > 0 && (
+                          <div className="pt-2 mt-2 border-t border-stone-800/40">
+                            <h4 className="text-[10px] text-stone-400 font-bold uppercase mb-2 flex items-center gap-1">
+                              <Factory className="w-3 h-3" /> Processing History
+                            </h4>
+                            <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1 custom-scrollbar">
+                              {raw.processingHistory.map((historyItem: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-[10px] p-2 bg-stone-900/30 rounded-lg border border-stone-800/30">
+                                  <div>
+                                    <span className="text-stone-500 mr-1">Batch:</span>
+                                    <span className="font-mono text-emerald-400 font-bold">{historyItem.processedBatchId}</span>
+                                  </div>
+                                  <div className="flex gap-3">
+                                    <span className="text-white font-bold">{historyItem.quantityUsed} kg</span>
+                                    <span className="text-stone-500">{new Date(historyItem.date).toLocaleDateString("en-GB")}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })

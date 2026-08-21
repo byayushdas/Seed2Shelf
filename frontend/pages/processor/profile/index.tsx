@@ -270,7 +270,7 @@ export default function ProcessorProfilePage() {
     );
   }
 
-  const processorId = user?.processorId || (session?.user as any)?.processorId || "S2S-PRC-000001";
+  const processorId = user?.processorId || (session?.user as any)?.processorId || "S2S-PRC-0001";
   const currentKycStatus = kycStatus || "Pending Verification";
   const hasRealRating = user && (user.averageRating !== undefined && user.averageRating !== null && user.reviewCount);
 

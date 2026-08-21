@@ -215,7 +215,8 @@ router.post('/inventory', async (req, res) => {
       userId, roleId,
       productName, category,
       quantity, pricePerUnit,
-      parentRawBatchId, parentRawBatchIds,
+      consumedBatches,
+      isTransformingExisting,
       productImage, qrCodeUrl, traceUrl,
       processingDate, batchId
     } = req.body;
@@ -226,10 +227,89 @@ router.post('/inventory', async (req, res) => {
 
     const id = batchId || `PROC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    let finalQrCodeUrl = qrCodeUrl;
+    let finalTraceUrl = traceUrl;
+
+    if (isTransformingExisting && cBatches.length === 1) {
+      const transformId = cBatches[0].batchId;
+      const existingBatch = await ProcessorBatch.findById(transformId);
+      if (existingBatch) {
+        finalQrCodeUrl = existingBatch.qrCodeUrl;
+        finalTraceUrl = existingBatch.traceUrl;
+      }
+    }
+
+    // Process validations and updates for raw batches
+    const rawBatchUpdates = [];
+    for (const cBatch of cBatches) {
+      if (!cBatch.batchId || !cBatch.quantityUsed || cBatch.quantityUsed <= 0) {
+        return res.status(400).json({ success: false, message: 'Invalid consumed batch data.' });
+      }
+      
+      const rawBatch = await ProcessorBatch.findById(cBatch.batchId);
+      if (!rawBatch) {
+        return res.status(404).json({ success: false, message: `Raw batch ${cBatch.batchId} not found.` });
+      }
+
+      const procStock = rawBatch.processingQuantity || 0;
+      const remStock = rawBatch.remainingStock ?? rawBatch.quantity;
+      const totalAvail = procStock + remStock;
+
+      if (totalAvail < cBatch.quantityUsed) {
+        return res.status(400).json({ success: false, message: `Insufficient quantity in raw batch ${cBatch.batchId}. Available: ${totalAvail} kg, Requested: ${cBatch.quantityUsed} kg.` });
+      }
+
+      rawBatchUpdates.push({
+        batch: rawBatch,
+        used: cBatch.quantityUsed
+      });
+    }
+
+    // Apply updates
+    for (const update of rawBatchUpdates) {
+      const rawBatch = update.batch;
+      let qtyToConsume = update.used;
+      let procStock = rawBatch.processingQuantity || 0;
+      let remStock = rawBatch.remainingStock ?? rawBatch.quantity;
+
+      // Consume from processingQuantity first
+      if (procStock >= qtyToConsume) {
+        procStock -= qtyToConsume;
+        qtyToConsume = 0;
+      } else {
+        qtyToConsume -= procStock;
+        procStock = 0;
+      }
+
+      // Consume rest from remainingStock
+      if (qtyToConsume > 0) {
+        remStock -= qtyToConsume;
+      }
+
+      rawBatch.processingQuantity = procStock;
+      rawBatch.remainingStock = remStock;
+      rawBatch.consumedQuantity = (rawBatch.consumedQuantity || 0) + update.used;
+
+      if (rawBatch.remainingStock <= 0 && rawBatch.processingQuantity <= 0) {
+        rawBatch.processingStatus = 'Fully Processed';
+      } else if (rawBatch.processingQuantity > 0) {
+        rawBatch.processingStatus = 'Sent for Processing';
+      } else {
+        rawBatch.processingStatus = 'Available for Processing';
+      }
+
+      rawBatch.processingHistory.push({
+        processedBatchId: id,
+        quantityUsed: update.used
+      });
+
+      await rawBatch.save();
+    }
+
+    // Fetch primary batch origin details for traceability
     let originDetails = {};
-    const primaryBatchId = parentRawBatchId || (parentRawBatchIds && parentRawBatchIds.length > 0 ? parentRawBatchIds[0] : null);
-    
-    if (primaryBatchId) {
+    if (cBatches.length > 0) {
+      const primaryBatchId = cBatches[0].batchId;
       const fBatch = await FarmerBatch.findById(primaryBatchId).populate('farmerId', 'name district state village');
       if (fBatch) {
         const fUser = fBatch.farmerId;
@@ -263,8 +343,9 @@ router.post('/inventory', async (req, res) => {
       quantity: parseFloat(quantity),
       originalQuantity: parseFloat(quantity),
       pricePerUnit: parseFloat(pricePerUnit),
-      parentRawBatchId: parentRawBatchId || null,
-      parentRawBatchIds: parentRawBatchIds || [],
+      consumedBatches: cBatches,
+      parentRawBatchIds: cBatches.map(b => b.batchId),
+      parentRawBatchId: cBatches.length > 0 ? cBatches[0].batchId : null,
       productImage: productImage || null,
       qrCodeUrl: qrCodeUrl || null,
       traceUrl: traceUrl || null,
@@ -277,6 +358,27 @@ router.post('/inventory', async (req, res) => {
   } catch (err) {
     console.error('POST /processor/inventory error:', err);
     return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// PUT /api/v1/processor/inventory/:id/processing-status — Update processing limit
+router.put('/inventory/:id/processing-status', async (req, res) => {
+  try {
+    const { processingStatus, remainingStock, processingQuantity, sentForProcessingDate } = req.body;
+    
+    const item = await ProcessorBatch.findById(req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
+    
+    if (processingStatus !== undefined) item.processingStatus = processingStatus;
+    if (remainingStock !== undefined) item.remainingStock = remainingStock;
+    if (processingQuantity !== undefined) item.processingQuantity = processingQuantity;
+    if (sentForProcessingDate !== undefined) item.sentForProcessingDate = sentForProcessingDate;
+
+    await item.save();
+    return res.json({ success: true, data: item });
+  } catch (err) {
+    console.error('PUT /inventory/:id/processing-status error:', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 

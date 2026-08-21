@@ -31,42 +31,42 @@ router.post('/signup', async (req, res) => {
       const lastUser = await User.findOne({ role: "FARMER", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-FRM-(d+)/);
+        const match = lastUser.roleId.match(/S2S-FRM-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-FRM-${String(nextNum).padStart(6, '0')}`;
+      roleId = `S2S-FRM-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "PROCESSOR") {
       const lastUser = await User.findOne({ role: "PROCESSOR", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-PRC-(d+)/);
+        const match = lastUser.roleId.match(/S2S-PRC-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-PRC-${String(nextNum).padStart(6, '0')}`;
+      roleId = `S2S-PRC-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "ADMIN") {
       const lastUser = await User.findOne({ role: "ADMIN", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-ADM-(d+)/);
+        const match = lastUser.roleId.match(/S2S-ADM-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-ADM-${String(nextNum).padStart(6, '0')}`;
+      roleId = `S2S-ADM-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "DISTRIBUTOR") {
       const lastUser = await User.findOne({ role: "DISTRIBUTOR", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-DST-(d+)/);
+        const match = lastUser.roleId.match(/S2S-DST-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-DST-${String(nextNum).padStart(6, '0')}`;
+      roleId = `S2S-DST-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "RETAILER") {
       const lastUser = await User.findOne({ role: "RETAILER", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;
       if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-RET-(d+)/);
+        const match = lastUser.roleId.match(/S2S-RET-(\d+)/);
         if (match) nextNum = parseInt(match[1]) + 1;
       }
-      roleId = `S2S-RET-${String(nextNum).padStart(6, '0')}`;
+      roleId = `S2S-RET-${String(nextNum).padStart(4, '0')}`;
     }
 
     const user = await User.create({

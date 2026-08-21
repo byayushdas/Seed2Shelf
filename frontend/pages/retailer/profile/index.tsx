@@ -260,7 +260,7 @@ export default function RetailerProfilePage() {
     );
   }
 
-  const retailerId = user?.retailerId || (session?.user as any)?.retailerId || "S2S-FRM-000001";
+  const retailerId = user?.retailerId || (session?.user as any)?.retailerId || "S2S-RET-0001";
   const currentKycStatus = kycStatus || KYCVerificationStatus.PENDING;
   const hasRealRating = user && (user.averageRating !== undefined && user.averageRating !== null && user.reviewCount);
 

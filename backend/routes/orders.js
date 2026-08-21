@@ -71,7 +71,7 @@ router.post('/checkout', async (req, res) => {
 
       const seller = await User.findById(sellerId);
 
-      // Create Purchase Order
+      // Create Purchase Order (Auto-Delivered for seamless flow)
       const order = new PurchaseOrder({
         buyerRole,
         buyerId,
@@ -86,45 +86,97 @@ router.post('/checkout', async (req, res) => {
         quantityKg: qty,
         pricePerUnit: batch.pricePerKg || batch.pricePerUnit,
         totalAmount: qty * (batch.pricePerKg || batch.pricePerUnit),
-        deliveryStatus: 'PENDING_SELLER_ACCEPTANCE',
-        escrowStatus: 'LOCKED',
+        deliveryStatus: 'DELIVERED', // Instantly delivered
+        escrowStatus: 'RELEASED',    // Instantly released
         razorpayPaymentId: paymentId
       });
       await order.save();
       orderNumbers.push(order.orderNumber);
 
-      // Create Seller Escrow/Credit Transaction
+      // Create Seller Credit Transaction
       const creditTx = new Transaction({
         userId: sellerId,
         transactionId: `escrow_${order.orderNumber}`,
         orderId: order.orderNumber,
         amount: order.totalAmount,
-        type: 'ESCROW_HOLD',
-        status: 'PENDING',
-        description: `Escrow Hold for Order ${order.orderNumber}`
+        type: 'CREDIT',
+        status: 'COMPLETED',
+        description: `Payment Released for Order ${order.orderNumber}`
       });
       await creditTx.save();
 
-      // Create Buyer Debit Hold Transaction
+      // Create Buyer Debit Transaction
       const buyerTx = new Transaction({
         userId: buyerId,
         transactionId: paymentId ? `${paymentId}_${order.orderNumber}` : `pay_${Date.now()}_${order.orderNumber}`,
         orderId: order.orderNumber,
         amount: order.totalAmount,
-        type: 'DEBIT_HOLD',
-        status: 'PENDING',
-        description: `Marketplace Purchase Hold for Order ${order.orderNumber}`
+        type: order.sellerRole === 'FARMER' ? 'FARMER_PAYMENT' : 'DEBIT',
+        status: 'COMPLETED',
+        description: `Marketplace Purchase Completed for Order ${order.orderNumber}`
       });
       await buyerTx.save();
 
       // Create Notification for Seller
       const notif = new Notification({
         userId: sellerId,
-        title: 'New Crop Order Request',
-        message: `You have received a new order (${order.orderNumber}) for ${qty}kg of ${order.cropName}.`,
+        title: 'New Order Auto-Delivered',
+        message: `Your batch ${batch._id} was purchased (${qty}kg). The funds have been released to your wallet.`,
         type: 'ORDER_REQUEST'
       });
       await notif.save();
+
+      // Automatically Mint Inventory for Buyer
+      if (order.buyerRole === 'PROCESSOR') {
+        const newBatch = new ProcessorBatch({
+          _id: `RAW-PROC-${Date.now()}_${Math.floor(Math.random()*1000)}`,
+          processorId: order.buyerId,
+          roleId: order.buyerRoleId,
+          itemType: 'RAW',
+          productName: order.cropName,
+          category: 'Raw Material',
+          quantity: order.quantityKg,
+          originalQuantity: order.quantityKg,
+          pricePerUnit: order.pricePerUnit,
+          parentRawBatchId: order.batchId,
+          status: 'In Stock',
+          supplierFarmerId: order.sellerId,
+          supplierFarmer: order.sellerName,
+          remainingStock: order.quantityKg,
+          processingStatus: 'Available for Processing',
+          processingQuantity: 0
+        });
+        await newBatch.save();
+      } else if (order.buyerRole === 'DISTRIBUTOR') {
+        const newBatch = new DistributorBatch({
+          _id: `DIST-${Date.now()}_${Math.floor(Math.random()*1000)}`,
+          distributorId: order.buyerId,
+          roleId: order.buyerRoleId,
+          productName: order.cropName,
+          category: 'Processed Goods',
+          quantity: order.quantityKg,
+          originalQuantity: order.quantityKg,
+          pricePerUnit: order.pricePerUnit,
+          parentBatchId: order.batchId,
+          status: 'In Stock'
+        });
+        await newBatch.save();
+      } else if (order.buyerRole === 'RETAILER') {
+        const RetailerBatch = require('../models/Retailer');
+        const newBatch = new RetailerBatch({
+          _id: `RET-${Date.now()}_${Math.floor(Math.random()*1000)}`,
+          retailerId: order.buyerId,
+          roleId: order.buyerRoleId,
+          productName: order.cropName,
+          category: 'Retail Product',
+          quantity: order.quantityKg,
+          originalQuantity: order.quantityKg,
+          pricePerUnit: order.pricePerUnit,
+          parentDistBatchId: order.batchId,
+          status: 'In Stock'
+        });
+        await newBatch.save();
+      }
     }
 
     return res.json({ success: true, message: 'Checkout completed successfully', orderNumbers });
@@ -190,13 +242,19 @@ router.put('/:id/status', async (req, res) => {
           _id: `RAW-PROC-${Date.now()}`,
           processorId: order.buyerId,
           roleId: order.buyerRoleId,
+          itemType: 'RAW',
           productName: order.cropName,
           category: 'Raw Material',
           quantity: order.quantityKg,
           originalQuantity: order.quantityKg,
           pricePerUnit: order.pricePerUnit,
           parentRawBatchId: order.batchId,
-          status: 'In Stock'
+          status: 'In Stock',
+          supplierFarmerId: order.sellerId,
+          supplierFarmer: order.sellerName,
+          remainingStock: order.quantityKg,
+          processingStatus: 'Available for Processing',
+          processingQuantity: 0
         });
         await newBatch.save();
       } else if (order.buyerRole === 'DISTRIBUTOR') {

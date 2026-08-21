@@ -260,7 +260,7 @@ export default function DistributorProfilePage() {
     );
   }
 
-  const distributorId = user?.distributorId || (session?.user as any)?.distributorId || "S2S-FRM-000001";
+  const distributorId = user?.distributorId || (session?.user as any)?.distributorId || "S2S-DST-0001";
   const currentKycStatus = kycStatus || KYCVerificationStatus.PENDING;
   const hasRealRating = user && (user.averageRating !== undefined && user.averageRating !== null && user.reviewCount);
 

@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      uniqueId = `S2S-FRM-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-FRM-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "PROCESSOR") {
       const lastUser = await User.findOne({ role: "PROCESSOR", uniqueId: { $ne: null } })
         .sort({ uniqueId: -1 });
@@ -51,19 +51,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      uniqueId = `S2S-PRC-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-PRC-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "DISTRIBUTOR") {
       const lastUser = await User.findOne({ role: "DISTRIBUTOR", uniqueId: { $ne: null } })
         .sort({ uniqueId: -1 });
 
       let nextNum = 1;
       if (lastUser && lastUser.uniqueId) {
-        const match = lastUser.uniqueId.match(/S2S-DIS-(\d+)/);
+        const match = lastUser.uniqueId.match(/S2S-DST-(\d+)/);
         if (match) {
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      uniqueId = `S2S-DIS-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-DST-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "RETAILER") {
       const lastUser = await User.findOne({ role: "RETAILER", uniqueId: { $ne: null } })
         .sort({ uniqueId: -1 });
@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      uniqueId = `S2S-RET-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-RET-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "ADMIN") {
       const lastUser = await User.findOne({ role: "ADMIN", uniqueId: { $ne: null } })
         .sort({ uniqueId: -1 });
@@ -87,7 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           nextNum = parseInt(match[1]) + 1;
         }
       }
-      uniqueId = `S2S-ADM-${String(nextNum).padStart(6, '0')}`;
+      uniqueId = `S2S-ADM-${String(nextNum).padStart(4, '0')}`;
     }
 
     const user = await User.create({

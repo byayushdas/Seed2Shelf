@@ -7,14 +7,35 @@ const processorSchema = new mongoose.Schema({
 
   productName: { type: String, required: true },
   category: { type: String, required: true },
+  itemType: { type: String, enum: ['RAW', 'PROCESSED'], default: 'PROCESSED' },
 
   quantity: { type: Number, required: true },  // in kg/units remaining
   originalQuantity: { type: Number },
   pricePerUnit: { type: Number, required: true },
+  remainingStock: { type: Number }, // remaining available stock for raw items
+
+  // Raw Harvest Lifecycle
+  supplierFarmerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  supplierFarmer: { type: String },
+  processingStatus: { type: String, enum: ['Available for Processing', 'Sent for Processing', 'Fully Processed'] },
+  processingQuantity: { type: Number, default: 0 },
+  sentForProcessingDate: { type: Date },
+  consumedQuantity: { type: Number, default: 0 }, // tracks how much is fully converted to product
+
+  // History for raw items
+  processingHistory: [{
+    processedBatchId: { type: String },
+    quantityUsed: { type: Number },
+    date: { type: Date, default: Date.now }
+  }],
 
   // Link back to the raw harvest(s) used
   parentRawBatchId: { type: String },          // single raw batch ref
   parentRawBatchIds: [{ type: String }],        // multi-batch processing
+  consumedBatches: [{
+    batchId: { type: String },
+    quantityUsed: { type: Number }
+  }],
 
   productImage: { type: String },
   qrCodeUrl: { type: String },

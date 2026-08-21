@@ -267,7 +267,7 @@ export default function FarmerProfilePage() {
     );
   }
 
-  const farmerId = user?.farmerId || (session?.user as any)?.farmerId || "S2S-FRM-000001";
+  const farmerId = user?.farmerId || (session?.user as any)?.farmerId || "S2S-FRM-0001";
   const currentKycStatus = kycStatus || KYCVerificationStatus.PENDING;
   const hasRealRating = user && (user.averageRating !== undefined && user.averageRating !== null && user.reviewCount);
 
