@@ -252,10 +252,7 @@ router.get('/purchase-orders/incoming', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const orders = await PurchaseOrder.find({
-      $or: [
-        { sellerId: userId },
-        { sellerRoleId: userId }
-      ],
+      ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { sellerId: userId } : { sellerRoleId: userId } ),
       sellerRole: 'DISTRIBUTOR'
     }).sort({ createdAt: -1 });
 
@@ -272,10 +269,7 @@ router.get('/purchase-orders/outgoing', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const orders = await PurchaseOrder.find({
-      $or: [
-        { buyerId: userId },
-        { buyerRoleId: userId }
-      ],
+      ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { buyerId: userId } : { buyerRoleId: userId } ),
       buyerRole: 'DISTRIBUTOR'
     }).sort({ createdAt: -1 });
 
@@ -412,10 +406,7 @@ router.get('/shipments/incoming', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const shipments = await PurchaseOrder.find({
-      $or: [
-        { buyerId: userId },
-        { buyerRoleId: userId }
-      ],
+      ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { buyerId: userId } : { buyerRoleId: userId } ),
       buyerRole: 'DISTRIBUTOR',
       deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED'] }
     }).sort({ updatedAt: -1 });
@@ -433,10 +424,7 @@ router.get('/shipments/outgoing', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const shipments = await PurchaseOrder.find({
-      $or: [
-        { sellerId: userId },
-        { sellerRoleId: userId }
-      ],
+      ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { sellerId: userId } : { sellerRoleId: userId } ),
       sellerRole: 'DISTRIBUTOR',
       deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED'] }
     }).sort({ updatedAt: -1 });

@@ -333,7 +333,7 @@ export default function ProcessorDashboardPage() {
             <div className="p-6 bg-stone-950/80 border border-emerald-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/40 transition duration-300">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-emerald-400 uppercase tracking-wider block">
-                  TOTAL REVENUE
+                  TOTAL REVENUE 
                 </span>
                 <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
                   <IndianRupee className="w-4 h-4" />

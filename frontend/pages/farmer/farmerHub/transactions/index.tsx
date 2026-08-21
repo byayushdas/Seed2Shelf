@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   ArrowLeftRight,
   ArrowDownLeft,
+  ArrowUpRight,
   Lock,
   Building2,
   CheckCircle2,
@@ -27,6 +28,13 @@ export default function WalletTransactions() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const [transactions, setTransactions] = useState<any[]>([]);
+
+  const getTransactionDisplay = (tx: any) => {
+    if (tx.type === "PAYOUT") return { color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: <ArrowDownLeft className="h-5 w-5" />, label: "Received from:", sign: "+ ", amountColor: "text-emerald-400", modalBg: "bg-emerald-700" };
+    if (tx.type === "PAYMENT") return { color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20", icon: <ArrowUpRight className="h-5 w-5" />, label: "Paid to:", sign: "- ", amountColor: "text-rose-400", modalBg: "bg-rose-600" };
+    if (tx.type === "REFUND") return { color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", icon: <ArrowDownLeft className="h-5 w-5" />, label: "Refund for:", sign: "+ ", amountColor: "text-blue-400", modalBg: "bg-blue-600" };
+    return { color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", icon: <Lock className="h-5 w-5" />, label: "Escrow Locked:", sign: "", amountColor: "text-amber-300", modalBg: "bg-amber-600" };
+  };
 
   useEffect(() => {
     const fetchTxs = async () => {
@@ -156,7 +164,9 @@ export default function WalletTransactions() {
                 No transaction records found matching your query.
               </div>
             ) : (
-              filteredTransactions.map((tx) => (
+              filteredTransactions.map((tx) => {
+                const display = getTransactionDisplay(tx);
+                return (
                 <div
                   key={tx.id}
                   onClick={() => setSelectedTx(tx)}
@@ -164,45 +174,31 @@ export default function WalletTransactions() {
                 >
                   {/* Left Side: Icon + Title & Buyer */}
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div
-                      className={`p-2.5 rounded-xl border shrink-0 ${
-                        tx.type === "PAYOUT"
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                      }`}
-                    >
-                      {tx.type === "PAYOUT" ? (
-                        <ArrowDownLeft className="h-5 w-5" />
-                      ) : (
-                        <Lock className="h-5 w-5" />
-                      )}
+                    <div className={`p-2.5 rounded-xl border shrink-0 ${display.bg} ${display.color}`}>
+                      {display.icon}
                     </div>
 
                     <div className="min-w-0">
                       <h4 className="font-bold text-white text-sm tracking-tight truncate">
-                        {tx.cropName}
+                        {tx.cropName || tx.title || 'Transaction'}
                       </h4>
                       <p className="text-xs text-stone-400 truncate mt-0.5">
-                        Received from: <strong className="text-stone-300 font-semibold">{tx.buyer}</strong>
+                        {display.label} <strong className="text-stone-300 font-semibold">{tx.buyer}</strong>
                       </p>
                     </div>
                   </div>
 
                   {/* Right Side: Amount & Date */}
                   <div className="text-right shrink-0">
-                    <span
-                      className={`text-base font-extrabold block tracking-tight ${
-                        tx.type === "PAYOUT" ? "text-emerald-400" : "text-amber-300"
-                      }`}
-                    >
-                      {tx.type === "PAYOUT" ? `+ ${tx.amount}` : tx.amount}
+                    <span className={`text-base font-extrabold block tracking-tight ${display.amountColor}`}>
+                      {display.sign}{tx.amount}
                     </span>
                     <span className="text-xs text-stone-400 font-medium block mt-0.5">
                       {tx.date}
                     </span>
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
         </div>
@@ -218,9 +214,7 @@ export default function WalletTransactions() {
           <div className="bg-stone-900 border border-stone-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             
             {/* PhonePe Green Status Top Header Bar */}
-            <div className={`p-4 sm:p-5 text-white flex items-center justify-between ${
-              selectedTx.type === 'PAYOUT' ? 'bg-emerald-700' : 'bg-amber-600'
-            }`}>
+            <div className={`p-4 sm:p-5 text-white flex items-center justify-between ${getTransactionDisplay(selectedTx).modalBg}`}>
               <div className="space-y-0.5">
                 <h3 className="text-base sm:text-lg font-extrabold flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-white" />
@@ -245,7 +239,7 @@ export default function WalletTransactions() {
               {/* Paid By / Received From Card */}
               <div className="bg-stone-950 rounded-2xl p-4 border border-stone-800 space-y-3">
                 <span className="text-[11px] text-stone-400 font-semibold block uppercase tracking-wider">
-                  {selectedTx.type === "PAYOUT" ? "Received from" : "Escrow Payment from"}
+                  {getTransactionDisplay(selectedTx).label}
                 </span>
 
                 <div className="flex items-center justify-between gap-3 pb-3 border-b border-stone-800/80">
@@ -340,14 +334,16 @@ export default function WalletTransactions() {
 
 
               {/* PhonePe-Style Action Buttons: ONLY Share Receipt & Support */}
-              <div className="grid grid-cols-3 gap-3 pt-1">
-                <button
-                  onClick={() => alert(`Viewing Invoice (Mockup) for ${selectedTx.orderId}`)}
-                  className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
-                >
-                  <ArrowDownLeft className="h-5 w-5 text-emerald-400 mb-1" />
-                  <span className="text-[11px] font-bold">View Invoice</span>
-                </button>
+              <div className={`grid ${(selectedTx.status === "COMPLETED" || selectedTx.status === "SUCCESSFUL" || selectedTx.status === "REFUND" || selectedTx.status === "REFUNDED") ? 'grid-cols-3' : 'grid-cols-2'} gap-3 pt-1`}>
+                {(selectedTx.status === "COMPLETED" || selectedTx.status === "SUCCESSFUL" || selectedTx.status === "REFUND" || selectedTx.status === "REFUNDED") && (
+                  <button
+                    onClick={() => alert(`Viewing Invoice (Mockup) for ${selectedTx.orderId}`)}
+                    className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
+                  >
+                    <ArrowDownLeft className="h-5 w-5 text-emerald-400 mb-1" />
+                    <span className="text-[11px] font-bold">View Invoice</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => alert(`Share Receipt link copied for ${selectedTx.shortId}`)}

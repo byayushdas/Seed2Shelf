@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   ArrowLeftRight,
   ArrowDownLeft,
+  ArrowUpRight,
   Lock,
   Building2,
   CheckCircle2,
@@ -28,10 +29,17 @@ export default function WalletTransactions() {
 
   const [transactions, setTransactions] = useState<any[]>([]);
 
+  const getTransactionDisplay = (tx: any) => {
+    if (tx.type === "PAYOUT") return { color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", icon: <ArrowDownLeft className="h-5 w-5" />, label: "Received from:", sign: "+ ", amountColor: "text-emerald-400", modalBg: "bg-emerald-700" };
+    if (tx.type === "PAYMENT") return { color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20", icon: <ArrowUpRight className="h-5 w-5" />, label: "Paid to:", sign: "- ", amountColor: "text-rose-400", modalBg: "bg-rose-600" };
+    if (tx.type === "REFUND") return { color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", icon: <ArrowDownLeft className="h-5 w-5" />, label: "Refund for:", sign: "+ ", amountColor: "text-blue-400", modalBg: "bg-blue-600" };
+    return { color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", icon: <Lock className="h-5 w-5" />, label: "Escrow Locked:", sign: "", amountColor: "text-amber-300", modalBg: "bg-amber-600" };
+  };
+
   useEffect(() => {
     const fetchTxs = async () => {
       try {
-        const userId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
+        const userId = (session?.user as any)?.id || (session?.user as any)?.farmerId || "";
         if (!userId) return;
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001"}/api/v1/wallet/transactions?userId=${userId}`);
         if (res.ok) {
@@ -40,12 +48,12 @@ export default function WalletTransactions() {
              setTransactions(json.data.map((tx: any) => ({
                 id: tx._id,
                 shortId: tx.transactionId.substring(0, 8),
-                type: tx.type === 'CREDIT' ? 'PAYOUT' : (tx.type === 'DEBIT' ? 'BANK_DEBIT' : tx.type), 
+                type: tx.type === 'CREDIT' ? 'PAYOUT' : (tx.type === 'DEBIT' ? 'PAYMENT' : tx.type), 
                 title: tx.description || 'Transaction',
                 buyer: tx.orderId || 'Unknown',
                 amount: `₹ ${tx.amount?.toLocaleString()}`,
-                date: new Date(tx.timestamp).toLocaleDateString(),
-                time: new Date(tx.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                date: (tx.razorpayData?.created_at ? new Date(tx.razorpayData.created_at * 1000) : new Date(tx.timestamp)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                time: (tx.razorpayData?.created_at ? new Date(tx.razorpayData.created_at * 1000) : new Date(tx.timestamp)).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
                 status: tx.status,
                 orderId: tx.orderId || '',
                 method: tx.razorpayData ? (tx.razorpayData.method || tx.razorpayData.status) : 'Escrow Wallet',
@@ -65,14 +73,13 @@ export default function WalletTransactions() {
     const matchesFilter =
       filterType === "ALL" ||
       (filterType === "PAYOUTS" && tx.type === "PAYOUT") ||
-      (filterType === "BANK_DEBITS" && tx.type === "BANK_DEBIT") ||
       (filterType === "ESCROW" && tx.type === "ESCROW_HOLD");
 
     const matchesSearch =
-      tx.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.buyer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.orderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.shortId?.toLowerCase().includes(searchQuery.toLowerCase());
+      tx.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.buyer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.shortId.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesFilter && matchesSearch;
   });
@@ -86,8 +93,8 @@ export default function WalletTransactions() {
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
-        <title>Wallet Transactions | Seed2Shelf</title>
-        <meta name="description" content="Payment history and escrow transaction logs for distributors" />
+        <title>Distributor Wallet Transactions | Seed2Shelf</title>
+        <meta name="description" content="Payment history and escrow transaction logs for farmers" />
       </Head>
 
       {/* Solid Dark Background Overlay */}
@@ -120,7 +127,7 @@ export default function WalletTransactions() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-500" />
               <input
                 type="text"
-                placeholder="Search product, buyer, or Order ID..."
+                placeholder="Search crop, buyer, or Order ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-stone-900 border border-stone-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500/50 transition"
@@ -157,7 +164,9 @@ export default function WalletTransactions() {
                 No transaction records found matching your query.
               </div>
             ) : (
-              filteredTransactions.map((tx) => (
+              filteredTransactions.map((tx) => {
+                const display = getTransactionDisplay(tx);
+                return (
                 <div
                   key={tx.id}
                   onClick={() => setSelectedTx(tx)}
@@ -165,45 +174,31 @@ export default function WalletTransactions() {
                 >
                   {/* Left Side: Icon + Title & Buyer */}
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div
-                      className={`p-2.5 rounded-xl border shrink-0 ${
-                        tx.type === "PAYOUT"
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                      }`}
-                    >
-                      {tx.type === "PAYOUT" ? (
-                        <ArrowDownLeft className="h-5 w-5" />
-                      ) : (
-                        <Lock className="h-5 w-5" />
-                      )}
+                    <div className={`p-2.5 rounded-xl border shrink-0 ${display.bg} ${display.color}`}>
+                      {display.icon}
                     </div>
 
                     <div className="min-w-0">
                       <h4 className="font-bold text-white text-sm tracking-tight truncate">
-                        {tx.productName || tx.title}
+                        {tx.cropName || tx.title || 'Transaction'}
                       </h4>
                       <p className="text-xs text-stone-400 truncate mt-0.5">
-                        Received from: <strong className="text-stone-300 font-semibold">{tx.buyer}</strong>
+                        {display.label} <strong className="text-stone-300 font-semibold">{tx.buyer}</strong>
                       </p>
                     </div>
                   </div>
 
                   {/* Right Side: Amount & Date */}
                   <div className="text-right shrink-0">
-                    <span
-                      className={`text-base font-extrabold block tracking-tight ${
-                        tx.type === "PAYOUT" ? "text-emerald-400" : "text-amber-300"
-                      }`}
-                    >
-                      {tx.type === "PAYOUT" ? `+ ${tx.amount}` : tx.amount}
+                    <span className={`text-base font-extrabold block tracking-tight ${display.amountColor}`}>
+                      {display.sign}{tx.amount}
                     </span>
                     <span className="text-xs text-stone-400 font-medium block mt-0.5">
                       {tx.date}
                     </span>
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
         </div>
@@ -219,9 +214,7 @@ export default function WalletTransactions() {
           <div className="bg-stone-900 border border-stone-800 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
             
             {/* PhonePe Green Status Top Header Bar */}
-            <div className={`p-4 sm:p-5 text-white flex items-center justify-between ${
-              selectedTx.type === 'PAYOUT' ? 'bg-emerald-700' : 'bg-amber-600'
-            }`}>
+            <div className={`p-4 sm:p-5 text-white flex items-center justify-between ${getTransactionDisplay(selectedTx).modalBg}`}>
               <div className="space-y-0.5">
                 <h3 className="text-base sm:text-lg font-extrabold flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-white" />
@@ -246,13 +239,13 @@ export default function WalletTransactions() {
               {/* Paid By / Received From Card */}
               <div className="bg-stone-950 rounded-2xl p-4 border border-stone-800 space-y-3">
                 <span className="text-[11px] text-stone-400 font-semibold block uppercase tracking-wider">
-                  {selectedTx.type === "PAYOUT" ? "Received from" : "Escrow Payment from"}
+                  {getTransactionDisplay(selectedTx).label}
                 </span>
 
                 <div className="flex items-center justify-between gap-3 pb-3 border-b border-stone-800/80">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-extrabold text-sm flex items-center justify-center shrink-0">
-                      {selectedTx.buyer?.slice(0, 2).toUpperCase() || "??"}
+                      {selectedTx.buyer.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <h4 className="font-extrabold text-white text-sm">{selectedTx.buyer}</h4>
@@ -267,8 +260,8 @@ export default function WalletTransactions() {
 
                 <div className="text-xs text-stone-400 space-y-1 pt-1">
                   <div className="flex justify-between">
-                    <span>Product Item:</span>
-                    <strong className="text-stone-200">{selectedTx.productName || selectedTx.title}</strong>
+                    <span>Crop Item:</span>
+                    <strong className="text-stone-200">{selectedTx.cropName}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>Order ID:</span>
@@ -291,9 +284,11 @@ export default function WalletTransactions() {
                   
                   {/* Transaction ID */}
                   <div>
-                    <span className="text-[11px] text-stone-400 block">Transaction ID (Razorpay)</span>
+                    <span className="text-[11px] text-stone-400 block">Payment Method & ID (Razorpay)</span>
                     <div className="flex items-center justify-between gap-2 mt-0.5">
-                      <span className="font-mono text-stone-200 text-[11px] truncate">{selectedTx.razorpayId || selectedTx.id}</span>
+                      <span className="font-mono text-stone-200 text-[11px] truncate">
+                        {selectedTx.rzpData?.method ? `${selectedTx.rzpData.method.charAt(0).toUpperCase() + selectedTx.rzpData.method.slice(1)} | ` : ''}{selectedTx.razorpayId || selectedTx.id}
+                      </span>
                       <button
                         onClick={() => copyToClipboard(selectedTx.razorpayId || selectedTx.id, "id")}
                         className="text-stone-400 hover:text-emerald-400 p-1 transition cursor-pointer shrink-0"
@@ -339,14 +334,16 @@ export default function WalletTransactions() {
 
 
               {/* PhonePe-Style Action Buttons: ONLY Share Receipt & Support */}
-              <div className="grid grid-cols-3 gap-3 pt-1">
-                <button
-                  onClick={() => alert(`Viewing Invoice (Mockup) for ${selectedTx.orderId}`)}
-                  className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
-                >
-                  <ArrowDownLeft className="h-5 w-5 text-emerald-400 mb-1" />
-                  <span className="text-[11px] font-bold">View Invoice</span>
-                </button>
+              <div className={`grid ${(selectedTx.status === "COMPLETED" || selectedTx.status === "SUCCESSFUL" || selectedTx.status === "REFUND" || selectedTx.status === "REFUNDED") ? 'grid-cols-3' : 'grid-cols-2'} gap-3 pt-1`}>
+                {(selectedTx.status === "COMPLETED" || selectedTx.status === "SUCCESSFUL" || selectedTx.status === "REFUND" || selectedTx.status === "REFUNDED") && (
+                  <button
+                    onClick={() => alert(`Viewing Invoice (Mockup) for ${selectedTx.orderId}`)}
+                    className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
+                  >
+                    <ArrowDownLeft className="h-5 w-5 text-emerald-400 mb-1" />
+                    <span className="text-[11px] font-bold">View Invoice</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => alert(`Share Receipt link copied for ${selectedTx.shortId}`)}
@@ -357,7 +354,7 @@ export default function WalletTransactions() {
                 </button>
 
                 <button
-                  onClick={() => alert("Connecting to Support...")}
+                  onClick={() => alert("Connecting to Seed2Shelf Distributor Support...")}
                   className="flex flex-col items-center justify-center p-3 bg-stone-950 hover:bg-stone-800 rounded-2xl border border-stone-800 transition cursor-pointer text-stone-200 hover:text-white"
                 >
                   <HelpCircle className="h-5 w-5 text-emerald-400 mb-1" />

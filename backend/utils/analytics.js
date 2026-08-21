@@ -24,16 +24,17 @@ const getRoleAnalytics = async (userId, role, timeframe) => {
   // Exception: Retailers don't sell to anyone on this platform, they buy from Distributors.
   // So for RETAILER, we look at their purchases (buyerId).
   
+  const isObjectId = /^[0-9a-fA-F]{24}$/.test(userId);
   let orders = [];
   if (role === 'RETAILER') {
     orders = await PurchaseOrder.find({
-      buyerId: userId,
+      ...(isObjectId ? { buyerId: userId } : { buyerRoleId: userId }),
       buyerRole: role,
       updatedAt: dateFilter
     });
   } else {
     orders = await PurchaseOrder.find({
-      sellerId: userId,
+      ...(isObjectId ? { sellerId: userId } : { sellerRoleId: userId }),
       sellerRole: role,
       updatedAt: dateFilter
     });
