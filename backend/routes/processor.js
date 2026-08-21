@@ -583,6 +583,28 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
       await payoutTx.save();
     }
 
+    // Automatically Mint Inventory for Processor
+    const ProcessorBatch = require('../models/Processor');
+    const newBatch = new ProcessorBatch({
+      _id: `RAW-PROC-${Date.now()}`,
+      processorId: order.buyerId,
+      roleId: order.buyerRoleId,
+      itemType: 'RAW',
+      productName: order.cropName,
+      category: 'Raw Material',
+      quantity: order.quantityKg,
+      originalQuantity: order.quantityKg,
+      pricePerUnit: order.pricePerUnit,
+      parentRawBatchId: order.batchId,
+      status: 'In Stock',
+      supplierFarmerId: order.sellerId,
+      supplierFarmer: order.sellerName,
+      remainingStock: order.quantityKg,
+      processingStatus: 'Available for Processing',
+      processingQuantity: 0
+    });
+    await newBatch.save();
+
     return res.json({ success: true, data: order });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
