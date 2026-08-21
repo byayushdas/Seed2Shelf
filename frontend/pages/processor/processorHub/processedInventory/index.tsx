@@ -184,7 +184,13 @@ export default function ProductionHubPage() {
 
     const finalCategory = category === "Others" ? (customCategory.trim() || "Others") : category;
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const newBatchId = `PROC-2026-${randomDigits}`;
+    let newBatchId = `BATCH-2026-${randomDigits}`;
+    if (parentRawBatchIds.length === 1) {
+      const rawBatch = inventory.find(i => i.id === parentRawBatchIds[0]);
+      if (rawBatch && rawBatch.parentRawBatchId) {
+        newBatchId = rawBatch.parentRawBatchId;
+      }
+    }
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${newBatchId}`;
     const traceUrl = `https://seed2shelf.app/trace/${newBatchId}`;
 
@@ -216,6 +222,11 @@ export default function ProductionHubPage() {
           const json = await res.json();
           const serverItem = json.data || {};
           
+          const farmerBatchIds = parentRawBatchIds.map(rawId => {
+            const b = inventory.find(i => i.id === rawId);
+            return b ? (b.parentRawBatchId || b.id) : rawId;
+          });
+
           const newItem: InventoryItem = {
             id: serverItem._id || newBatchId,
             itemType: "PROCESSED",
@@ -225,7 +236,7 @@ export default function ProductionHubPage() {
             pricePerUnit: `₹${price}/kg`,
             date: formattedDateDisplay,
             status: "In Stock",
-            parentRawBatchId: parentRawBatchIds.length > 0 ? parentRawBatchIds[0] : undefined,
+            parentRawBatchId: farmerBatchIds.length > 0 ? farmerBatchIds[0] : undefined,
             productImage: productImage || getProductImage({ category: finalCategory } as any),
             qrCodeUrl: serverItem.qrCodeUrl || qrUrl
           };
@@ -452,9 +463,7 @@ export default function ProductionHubPage() {
 
   // Filtered inventory list
   const filteredInventory = inventory.filter((item) => {
-    if (inventoryFilter === "PROCESSED") return item.itemType === "PROCESSED";
-    if (inventoryFilter === "RAW") return item.itemType === "RAW";
-    return true;
+    return item.itemType === "PROCESSED";
   });
 
   return (
@@ -580,7 +589,7 @@ export default function ProductionHubPage() {
                             className="w-4 h-4 rounded border-stone-700 bg-stone-950 text-emerald-500 focus:ring-emerald-500/30 cursor-pointer"
                           />
                           <div className="flex-1">
-                            <span className="text-xs font-bold text-white group-hover:text-emerald-400 transition">{raw.id} - {raw.productName}</span>
+                            <span className="text-xs font-bold text-white group-hover:text-emerald-400 transition">{raw.parentRawBatchId || raw.id} - {raw.productName}</span>
                             <span className="text-[10px] font-semibold text-stone-500 ml-2">({raw.remainingStock || raw.quantity} available)</span>
                           </div>
                         </label>
@@ -831,7 +840,7 @@ export default function ProductionHubPage() {
               const displayedBatchId = newBatchInfo
                 ? newBatchInfo.id
                 : selectedParentRaw
-                ? selectedParentRaw.id
+                ? (selectedParentRaw.parentRawBatchId || selectedParentRaw.id)
                 : parentRawBatchIds.length === 0
                 ? "SELECT-SOURCE-BATCH"
                 : "NEW-BATCH-GEN";
@@ -856,11 +865,11 @@ export default function ProductionHubPage() {
                   {selectedParentRaw && (
                     <div className="p-3.5 bg-stone-900 border border-emerald-500/30 rounded-xl text-xs space-y-1.5 animate-in fade-in duration-150">
                       <div className="flex items-center justify-between text-emerald-400 font-bold">
-                        <span>Source Batch Lineage: {selectedParentRaw.id}</span>
+                        <span>Source Batch Lineage: {selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</span>
                         <span className="text-[10px] text-stone-400">Previous Data Loaded</span>
                       </div>
                       <p className="text-stone-300 text-[11px] leading-relaxed">
-                        Previous data stored under <strong className="text-white font-mono">{selectedParentRaw.id}</strong> ({selectedParentRaw.productName}) has been loaded. Clicking <strong className="text-emerald-400">Update the Batch</strong> will save the new processed run under this batch ID.
+                        Previous data stored under <strong className="text-white font-mono">{selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</strong> ({selectedParentRaw.productName}) has been loaded. Clicking <strong className="text-emerald-400">Update the Batch</strong> will save the new processed run under this batch ID.
                       </p>
                     </div>
                   )}

@@ -240,6 +240,8 @@ router.post('/inventory', async (req, res) => {
       }
     }
 
+    const actualFarmerBatchIds = [];
+
     // Process validations and updates for raw batches
     for (const rawBatchId of parsedRawBatchIds) {
       if (!rawBatchId) continue;
@@ -248,6 +250,8 @@ router.post('/inventory', async (req, res) => {
       if (!rawBatch) {
         return res.status(404).json({ success: false, message: `Raw batch ${rawBatchId} not found.` });
       }
+
+      actualFarmerBatchIds.push(rawBatch.parentRawBatchId || rawBatchId);
 
       // Mark as fully processed directly
       rawBatch.consumedQuantity = rawBatch.quantity;
@@ -265,8 +269,8 @@ router.post('/inventory', async (req, res) => {
 
     // Fetch primary batch origin details for traceability
     let originDetails = {};
-    if (parsedRawBatchIds.length > 0) {
-      const primaryBatchId = parsedRawBatchIds[0];
+    if (actualFarmerBatchIds.length > 0) {
+      const primaryBatchId = actualFarmerBatchIds[0];
       const fBatch = await FarmerBatch.findById(primaryBatchId).populate('farmerId', 'name district state village');
       if (fBatch) {
         const fUser = fBatch.farmerId;
@@ -300,8 +304,8 @@ router.post('/inventory', async (req, res) => {
       quantity: parseFloat(quantity),
       originalQuantity: parseFloat(quantity),
       pricePerUnit: parseFloat(pricePerUnit),
-      parentRawBatchIds: parsedRawBatchIds,
-      parentRawBatchId: parsedRawBatchIds.length > 0 ? parsedRawBatchIds[0] : null,
+      parentRawBatchIds: actualFarmerBatchIds,
+      parentRawBatchId: actualFarmerBatchIds.length > 0 ? actualFarmerBatchIds[0] : null,
       productImage: productImage || null,
       qrCodeUrl: finalQrCodeUrl || null,
       traceUrl: finalTraceUrl || null,
