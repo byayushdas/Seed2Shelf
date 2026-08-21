@@ -65,8 +65,10 @@ const purchaseOrderSchema = new mongoose.Schema({
 // Auto-generate orderNumber before save
 purchaseOrderSchema.pre('save', async function () {
   if (!this.orderNumber) {
-    const count = await mongoose.model('PurchaseOrder').countDocuments();
-    this.orderNumber = `ORD-2026-${String(count + 1).padStart(5, '0')}`;
+    // Generate a unique ID using timestamp and a random number to prevent E11000 duplicate errors
+    const randomPart = Math.floor(1000 + Math.random() * 9000);
+    const timePart = Date.now().toString().slice(-4);
+    this.orderNumber = `ORD-2026-${timePart}${randomPart}`;
   }
 });
 
