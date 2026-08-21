@@ -251,8 +251,13 @@ router.get('/purchase-orders', async (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
-    const orders = await PurchaseOrder.find({ sellerId: userId, sellerRole: 'RETAILER' })
-      .sort({ createdAt: -1 });
+    const orders = await PurchaseOrder.find({
+      $or: [
+        { sellerId: userId },
+        { sellerRoleId: userId }
+      ],
+      sellerRole: 'RETAILER'
+    }).sort({ createdAt: -1 });
 
     return res.json({ success: true, data: orders });
   } catch (err) {
@@ -385,7 +390,10 @@ router.get('/shipments/incoming', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const shipments = await PurchaseOrder.find({
-      buyerId: userId,
+      $or: [
+        { buyerId: userId },
+        { buyerRoleId: userId }
+      ],
       buyerRole: 'RETAILER',
       deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED'] }
     }).sort({ updatedAt: -1 });
@@ -403,7 +411,10 @@ router.get('/shipments/outgoing', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const shipments = await PurchaseOrder.find({
-      sellerId: userId,
+      $or: [
+        { sellerId: userId },
+        { sellerRoleId: userId }
+      ],
       sellerRole: 'RETAILER',
       deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED'] }
     }).sort({ updatedAt: -1 });

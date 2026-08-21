@@ -245,20 +245,46 @@ router.delete('/inventory/:id', async (req, res) => {
 // PURCHASE ORDERS — Orders from Retailers
 // ============================================================
 
-// GET /api/v1/distributor/purchase-orders?userId=
-router.get('/purchase-orders', async (req, res) => {
+// GET /api/v1/distributor/purchase-orders/incoming?userId= (From Retailers)
+router.get('/purchase-orders/incoming', async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
-    const orders = await PurchaseOrder.find({ sellerId: userId, sellerRole: 'DISTRIBUTOR' })
-      .sort({ createdAt: -1 });
+    const orders = await PurchaseOrder.find({
+      $or: [
+        { sellerId: userId },
+        { sellerRoleId: userId }
+      ],
+      sellerRole: 'DISTRIBUTOR'
+    }).sort({ createdAt: -1 });
 
     return res.json({ success: true, data: orders });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
+// GET /api/v1/distributor/purchase-orders/outgoing?userId= (To Processors)
+router.get('/purchase-orders/outgoing', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
+
+    const orders = await PurchaseOrder.find({
+      $or: [
+        { buyerId: userId },
+        { buyerRoleId: userId }
+      ],
+      buyerRole: 'DISTRIBUTOR'
+    }).sort({ createdAt: -1 });
+
+    return res.json({ success: true, data: orders });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 
 
 // PUT /api/v1/distributor/purchase-orders/:id/accept
@@ -386,7 +412,10 @@ router.get('/shipments/incoming', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const shipments = await PurchaseOrder.find({
-      buyerId: userId,
+      $or: [
+        { buyerId: userId },
+        { buyerRoleId: userId }
+      ],
       buyerRole: 'DISTRIBUTOR',
       deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED'] }
     }).sort({ updatedAt: -1 });
@@ -404,7 +433,10 @@ router.get('/shipments/outgoing', async (req, res) => {
     if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
 
     const shipments = await PurchaseOrder.find({
-      sellerId: userId,
+      $or: [
+        { sellerId: userId },
+        { sellerRoleId: userId }
+      ],
       sellerRole: 'DISTRIBUTOR',
       deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED'] }
     }).sort({ updatedAt: -1 });

@@ -38,8 +38,10 @@ export default function DistributorOrders() {
   const { data: session } = useSession();
   const distributorId = (session?.user as any)?.id || (session?.user as any)?.distributorId || "";
 
+  const [activeTab, setActiveTab] = useState<"INCOMING" | "OUTGOING">("INCOMING");
+  const [incomingOrders, setIncomingOrders] = useState<OrderItem[]>([]);
+  const [outgoingOrders, setOutgoingOrders] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [orders, setOrders] = useState<OrderItem[]>([]);
   const [notification, setNotification] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,28 +49,50 @@ export default function DistributorOrders() {
       if (!distributorId) return;
       try {
         setIsLoading(true);
-        const res = await fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders?userId=${distributorId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const [incomingRes, outgoingRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/incoming?userId=${distributorId}`),
+          fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/outgoing?userId=${distributorId}`)
+        ]);
+        
+        if (incomingRes.ok) {
+          const json = await incomingRes.json();
+          if (json.success && Array.isArray(json.data)) {
             const activeOrders = json.data.filter((o: any) => 
               o.deliveryStatus !== "DISPATCHED" && o.deliveryStatus !== "DELIVERED"
             );
-            const mapped = activeOrders.map((o: any) => ({
+            setIncomingOrders(activeOrders.map((o: any) => ({
               id: o.orderNumber || o._id || o.id,
               rawId: o._id || o.id,
               batchId: o.batchNumber || o.batchId,
-              buyer: o.buyerName || "Retailer Corp",
+              buyer: o.buyerName || o.sellerName || "Retailer",
               cropName: o.cropName,
               quantity: `${o.quantityKg} kg`,
-              totalPrice: `₹ ${o.totalAmount.toLocaleString()}`,
+              totalPrice: `₹ ${o.totalAmount?.toLocaleString() || 0}`,
               status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
               escrowLocked: o.escrowStatus === "LOCKED" || o.deliveryStatus === "ACCEPTED" || o.deliveryStatus === "DISPATCHED",
               date: new Date(o.createdAt).toLocaleDateString("en-GB")
-            }));
-            setOrders(mapped);
-          } else {
-            setOrders([]);
+            })));
+          }
+        }
+        
+        if (outgoingRes.ok) {
+          const json = await outgoingRes.json();
+          if (json.success && Array.isArray(json.data)) {
+            const activeOrders = json.data.filter((o: any) => 
+              o.deliveryStatus !== "DISPATCHED" && o.deliveryStatus !== "DELIVERED"
+            );
+            setOutgoingOrders(activeOrders.map((o: any) => ({
+              id: o.orderNumber || o._id || o.id,
+              rawId: o._id || o.id,
+              batchId: o.batchNumber || o.batchId,
+              buyer: o.sellerName || o.buyerName || "Processor",
+              cropName: o.cropName,
+              quantity: `${o.quantityKg} kg`,
+              totalPrice: `₹ ${o.totalAmount?.toLocaleString() || 0}`,
+              status: o.deliveryStatus === "PENDING_SELLER_ACCEPTANCE" ? "PENDING" : o.deliveryStatus,
+              escrowLocked: o.escrowStatus === "LOCKED" || o.deliveryStatus === "ACCEPTED" || o.deliveryStatus === "DISPATCHED",
+              date: new Date(o.createdAt).toLocaleDateString("en-GB")
+            })));
           }
         }
       } catch (err) {
@@ -82,7 +106,7 @@ export default function DistributorOrders() {
 
   const handleAcceptOrder = async (orderId: string) => {
     try {
-      const targetOrder = orders.find(o => o.id === orderId);
+      const targetOrder = incomingOrders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
       const res = await fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/${targetId}/accept`, {
         method: "PUT",
@@ -90,10 +114,10 @@ export default function DistributorOrders() {
         body: JSON.stringify({ userId: distributorId }),
       });
       if (res.ok) {
-        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
+        setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
       }
     } catch (err) {
-      setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
+      setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
     }
     setNotification("Order accepted! Payment is now locked in Blockchain Escrow.");
     setTimeout(() => setNotification(null), 4000);
@@ -101,7 +125,7 @@ export default function DistributorOrders() {
 
   const handleStartDelivery = async (orderId: string) => {
     try {
-      const targetOrder = orders.find(o => o.id === orderId);
+      const targetOrder = incomingOrders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
       const res = await fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/${targetId}/dispatch`, {
         method: "PUT",
@@ -109,10 +133,10 @@ export default function DistributorOrders() {
         body: JSON.stringify({ userId: distributorId, carrierName: "Standard Agri Express" }),
       });
       if (res.ok) {
-        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
+        setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
       }
     } catch (err) {
-      setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
+      setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
     }
     setNotification("Delivery initiated! Order is now in transit.");
     setTimeout(() => setNotification(null), 4000);
@@ -120,7 +144,7 @@ export default function DistributorOrders() {
 
   const handleRejectOrder = async (orderId: string) => {
     try {
-      const targetOrder = orders.find(o => o.id === orderId);
+      const targetOrder = incomingOrders.find(o => o.id === orderId);
       const targetId = (targetOrder as any)?.rawId || orderId;
       const res = await fetch(`${BACKEND_URL}/api/v1/distributor/purchase-orders/${targetId}/reject`, {
         method: "PUT",
@@ -128,7 +152,7 @@ export default function DistributorOrders() {
         body: JSON.stringify({ userId: distributorId, reason: "Rejected by distributor" }),
       });
       if (res.ok) {
-        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "REJECTED" } : ord));
+        setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "REJECTED" } : ord));
         setNotification("Order rejected. Batch quantity has been restocked.");
       }
     } catch (err) {
@@ -136,6 +160,8 @@ export default function DistributorOrders() {
     }
     setTimeout(() => setNotification(null), 4000);
   };
+
+  const currentOrders = activeTab === "INCOMING" ? incomingOrders : outgoingOrders;
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -158,12 +184,40 @@ export default function DistributorOrders() {
               </h1>
             </div>
           </div>
-          {isLoading && (
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Loading...</span>
+          
+          <div className="flex items-center gap-4">
+            {isLoading && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Loading...</span>
+              </div>
+            )}
+            
+            {/* MAIN TAB SWITCHER */}
+            <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+              <button
+                onClick={() => setActiveTab("OUTGOING")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+                  activeTab === "OUTGOING"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Order Requests</span>
+              </button>
+              <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
+              <button
+                onClick={() => setActiveTab("INCOMING")}
+                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+                  activeTab === "INCOMING"
+                    ? "bg-emerald-600 text-white shadow-md font-black"
+                    : "text-stone-400 hover:text-stone-200"
+                }`}
+              >
+                <span>Procurement Requests</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {notification && (
@@ -175,15 +229,15 @@ export default function DistributorOrders() {
 
         {/* ORDERS LIST */}
         <div className="space-y-4">
-          {orders.length === 0 ? (
+          {currentOrders.length === 0 ? (
             <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center mx-auto text-stone-500">
                 <ClipboardList className="w-6 h-6" />
               </div>
-              <p className="text-stone-400 text-xs font-medium">No purchase orders found.</p>
+              <p className="text-stone-400 text-xs font-medium">No {activeTab === "OUTGOING" ? "order requests" : "procurement requests"} found.</p>
             </div>
           ) : (
-            orders.map((ord) => (
+            currentOrders.map((ord) => (
               <div
                 key={ord.id}
                 className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-6 sm:p-7 shadow-sm transition-all duration-200 hover:border-stone-700/80 space-y-5"
@@ -240,7 +294,7 @@ export default function DistributorOrders() {
                     </div>
                     <div className="flex items-center gap-2 text-xs text-stone-300">
                       <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span className="font-semibold text-stone-400">Buyer:</span>
+                      <span className="font-semibold text-stone-400">{activeTab === "OUTGOING" ? "Seller:" : "Buyer:"}</span>
                       <span className="font-extrabold text-white">{ord.buyer}</span>
                     </div>
                   </div>
@@ -264,48 +318,67 @@ export default function DistributorOrders() {
                   </div>
                 </div>
 
-                {/* BOTTOM ACTION BAR */}
-                <div className="pt-3 border-t border-stone-800/70 flex items-center justify-between flex-wrap gap-3">
-                  <div className="text-[11px] text-stone-400 font-medium flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Protected by Escrow Security Protocol</span>
+                {/* BOTTOM ACTION BAR - ONLY FOR INCOMING ORDERS */}
+                {activeTab === "INCOMING" ? (
+                  <div className="pt-3 border-t border-stone-800/70 flex items-center justify-between flex-wrap gap-3">
+                    <div className="text-[11px] text-stone-400 font-medium flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Protected by Escrow Security Protocol</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {ord.status === "PENDING" && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleRejectOrder(ord.id)}
+                            className="px-5 py-2.5 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <span>Reject</span>
+                          </button>
+                          <button
+                            onClick={() => handleAcceptOrder(ord.id)}
+                            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                          >
+                            <span>Accept Order</span>
+                          </button>
+                        </div>
+                      )}
+                      {ord.status === "ACCEPTED" && (
+                        <button
+                          onClick={() => handleStartDelivery(ord.id)}
+                          className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center gap-2"
+                        >
+                          <Truck className="w-4 h-4" />
+                          <span>Start Delivery</span>
+                        </button>
+                      )}
+                      {ord.status === "DISPATCHED" && (
+                        <Link
+                          href="/distributor/distributorHub/shipments"
+                          className="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-400 font-extrabold text-xs transition cursor-pointer border border-stone-700 flex items-center justify-center"
+                        >
+                          <span>View Live Shipment</span>
+                        </Link>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                ) : (
+                  <div className="pt-3 border-t border-stone-800/70 flex items-center justify-between flex-wrap gap-3">
+                    <div className="text-[11px] text-stone-400 font-medium flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Order placed to Processor</span>
+                    </div>
                     {ord.status === "PENDING" && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleRejectOrder(ord.id)}
-                          className="px-5 py-2.5 rounded-xl bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-400 font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          <span>Reject</span>
-                        </button>
-                        <button
-                          onClick={() => handleAcceptOrder(ord.id)}
-                          className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
-                        >
-                          <span>Accept Order</span>
-                        </button>
+                      <div className="text-xs font-semibold text-amber-400">
+                        Waiting for processor to accept
                       </div>
                     )}
                     {ord.status === "ACCEPTED" && (
-                      <button
-                        onClick={() => handleStartDelivery(ord.id)}
-                        className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-md flex items-center gap-2"
-                      >
-                        <Truck className="w-4 h-4" />
-                        <span>Start Delivery</span>
-                      </button>
-                    )}
-                    {ord.status === "DISPATCHED" && (
-                      <Link
-                        href="/distributor/distributorHub/shipments"
-                        className="px-4 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-400 font-extrabold text-xs transition cursor-pointer border border-stone-700 flex items-center justify-center"
-                      >
-                        <span>View Live Shipment</span>
-                      </Link>
+                      <div className="text-xs font-semibold text-emerald-400">
+                        Processor accepted, waiting for dispatch
+                      </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             ))
           )}
