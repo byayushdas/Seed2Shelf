@@ -215,7 +215,7 @@ router.post('/inventory', async (req, res) => {
       userId, roleId,
       productName, category,
       quantity, pricePerUnit,
-      consumedBatches,
+      parentRawBatchIds,
       isTransformingExisting,
       productImage, qrCodeUrl, traceUrl,
       processingDate, batchId
@@ -226,12 +226,13 @@ router.post('/inventory', async (req, res) => {
     }
 
     const id = batchId || `PROC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const parsedRawBatchIds = Array.isArray(parentRawBatchIds) ? parentRawBatchIds : [];
 
     let finalQrCodeUrl = qrCodeUrl;
     let finalTraceUrl = traceUrl;
 
-    if (isTransformingExisting && cBatches.length === 1) {
-      const transformId = cBatches[0].batchId;
+    if (isTransformingExisting && parsedRawBatchIds.length === 1) {
+      const transformId = parsedRawBatchIds[0];
       const existingBatch = await ProcessorBatch.findById(transformId);
       if (existingBatch) {
         finalQrCodeUrl = existingBatch.qrCodeUrl;
@@ -240,67 +241,23 @@ router.post('/inventory', async (req, res) => {
     }
 
     // Process validations and updates for raw batches
-    const rawBatchUpdates = [];
-    for (const cBatch of cBatches) {
-      if (!cBatch.batchId || !cBatch.quantityUsed || cBatch.quantityUsed <= 0) {
-        return res.status(400).json({ success: false, message: 'Invalid consumed batch data.' });
-      }
+    for (const rawBatchId of parsedRawBatchIds) {
+      if (!rawBatchId) continue;
       
-      const rawBatch = await ProcessorBatch.findById(cBatch.batchId);
+      const rawBatch = await ProcessorBatch.findById(rawBatchId);
       if (!rawBatch) {
-        return res.status(404).json({ success: false, message: `Raw batch ${cBatch.batchId} not found.` });
+        return res.status(404).json({ success: false, message: `Raw batch ${rawBatchId} not found.` });
       }
 
-      const procStock = rawBatch.processingQuantity || 0;
-      const remStock = rawBatch.remainingStock ?? rawBatch.quantity;
-      const totalAvail = procStock + remStock;
-
-      if (totalAvail < cBatch.quantityUsed) {
-        return res.status(400).json({ success: false, message: `Insufficient quantity in raw batch ${cBatch.batchId}. Available: ${totalAvail} kg, Requested: ${cBatch.quantityUsed} kg.` });
-      }
-
-      rawBatchUpdates.push({
-        batch: rawBatch,
-        used: cBatch.quantityUsed
-      });
-    }
-
-    // Apply updates
-    for (const update of rawBatchUpdates) {
-      const rawBatch = update.batch;
-      let qtyToConsume = update.used;
-      let procStock = rawBatch.processingQuantity || 0;
-      let remStock = rawBatch.remainingStock ?? rawBatch.quantity;
-
-      // Consume from processingQuantity first
-      if (procStock >= qtyToConsume) {
-        procStock -= qtyToConsume;
-        qtyToConsume = 0;
-      } else {
-        qtyToConsume -= procStock;
-        procStock = 0;
-      }
-
-      // Consume rest from remainingStock
-      if (qtyToConsume > 0) {
-        remStock -= qtyToConsume;
-      }
-
-      rawBatch.processingQuantity = procStock;
-      rawBatch.remainingStock = remStock;
-      rawBatch.consumedQuantity = (rawBatch.consumedQuantity || 0) + update.used;
-
-      if (rawBatch.remainingStock <= 0 && rawBatch.processingQuantity <= 0) {
-        rawBatch.processingStatus = 'Fully Processed';
-      } else if (rawBatch.processingQuantity > 0) {
-        rawBatch.processingStatus = 'Sent for Processing';
-      } else {
-        rawBatch.processingStatus = 'Available for Processing';
-      }
+      // Mark as fully processed directly
+      rawBatch.consumedQuantity = rawBatch.quantity;
+      rawBatch.remainingStock = 0;
+      rawBatch.processingQuantity = 0;
+      rawBatch.processingStatus = 'Fully Processed';
 
       rawBatch.processingHistory.push({
         processedBatchId: id,
-        quantityUsed: update.used
+        quantityUsed: rawBatch.quantity
       });
 
       await rawBatch.save();
@@ -308,8 +265,8 @@ router.post('/inventory', async (req, res) => {
 
     // Fetch primary batch origin details for traceability
     let originDetails = {};
-    if (cBatches.length > 0) {
-      const primaryBatchId = cBatches[0].batchId;
+    if (parsedRawBatchIds.length > 0) {
+      const primaryBatchId = parsedRawBatchIds[0];
       const fBatch = await FarmerBatch.findById(primaryBatchId).populate('farmerId', 'name district state village');
       if (fBatch) {
         const fUser = fBatch.farmerId;
@@ -343,12 +300,11 @@ router.post('/inventory', async (req, res) => {
       quantity: parseFloat(quantity),
       originalQuantity: parseFloat(quantity),
       pricePerUnit: parseFloat(pricePerUnit),
-      consumedBatches: cBatches,
-      parentRawBatchIds: cBatches.map(b => b.batchId),
-      parentRawBatchId: cBatches.length > 0 ? cBatches[0].batchId : null,
+      parentRawBatchIds: parsedRawBatchIds,
+      parentRawBatchId: parsedRawBatchIds.length > 0 ? parsedRawBatchIds[0] : null,
       productImage: productImage || null,
-      qrCodeUrl: qrCodeUrl || null,
-      traceUrl: traceUrl || null,
+      qrCodeUrl: finalQrCodeUrl || null,
+      traceUrl: finalTraceUrl || null,
       processingDate: processingDate ? new Date(processingDate) : new Date(),
       status: 'In Stock',
       originDetails

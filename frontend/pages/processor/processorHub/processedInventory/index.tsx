@@ -94,7 +94,7 @@ export default function ProductionHubPage() {
   const [category, setCategory] = useState("Processed Grains");
   const [customCategory, setCustomCategory] = useState("");
   const [productName, setProductName] = useState("");
-  const [consumedBatches, setConsumedBatches] = useState<{ batchId: string; quantityUsed: number }[]>([]);
+  const [parentRawBatchIds, setParentRawBatchIds] = useState<string[]>([]);
   const [isTransformingExisting, setIsTransformingExisting] = useState(false);
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -109,9 +109,6 @@ export default function ProductionHubPage() {
 
   const calendarRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-
-  // Filter state for My Inventory (Primary Tabs: Processed Products, Purchased Harvests)
-  const [inventoryFilter, setInventoryFilter] = useState<"PROCESSED" | "RAW">("PROCESSED");
 
   // Submitted & Batch Info UI states
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -205,7 +202,7 @@ export default function ProductionHubPage() {
             category: finalCategory,
             quantity: quantity,
             pricePerUnit: price,
-            consumedBatches: consumedBatches,
+            parentRawBatchIds: parentRawBatchIds,
             isTransformingExisting,
             productImage: productImage || getProductImage({ category: finalCategory } as any),
             qrCodeUrl: qrUrl,
@@ -228,56 +225,20 @@ export default function ProductionHubPage() {
             pricePerUnit: `₹${price}/kg`,
             date: formattedDateDisplay,
             status: "In Stock",
-            parentRawBatchId: consumedBatches.length > 0 ? consumedBatches[0].batchId : undefined,
+            parentRawBatchId: parentRawBatchIds.length > 0 ? parentRawBatchIds[0] : undefined,
             productImage: productImage || getProductImage({ category: finalCategory } as any),
             qrCodeUrl: serverItem.qrCodeUrl || qrUrl
           };
 
           setInventory(prev => {
             const updatedPrev = prev.map(item => {
-              const consumed = consumedBatches.find(cb => cb.batchId === item.id);
-              if (consumed) {
-                const { num: currentRemaining, unit } = parseQuantityAndUnit(item.remainingStock || item.quantity);
-                const { num: currentProcessing } = parseQuantityAndUnit(item.processingQuantity);
-                
-                let qtyToConsume = consumed.quantityUsed;
-                let procStock = currentProcessing;
-                let remStock = currentRemaining;
-                
-                if (procStock >= qtyToConsume) {
-                  procStock -= qtyToConsume;
-                  qtyToConsume = 0;
-                } else {
-                  qtyToConsume -= procStock;
-                  procStock = 0;
-                }
-                
-                if (qtyToConsume > 0) {
-                  remStock -= qtyToConsume;
-                }
-
-                if (remStock <= 0 && procStock <= 0) {
-                  return {
-                    ...item,
-                    processingStatus: "Fully Processed",
-                    remainingStock: `0 ${unit}`,
-                    processingQuantity: `0 ${unit}`
-                  };
-                } else if (procStock > 0) {
-                   return {
-                    ...item,
-                    processingStatus: "Sent for Processing",
-                    remainingStock: `${remStock} ${unit}`,
-                    processingQuantity: `${procStock} ${unit}`
-                  };
-                } else {
-                  return {
-                    ...item,
-                    processingStatus: "Available for Processing",
-                    remainingStock: `${remStock} ${unit}`,
-                    processingQuantity: `0 ${unit}`
-                  };
-                }
+              if (parentRawBatchIds.includes(item.id)) {
+                return {
+                  ...item,
+                  processingStatus: "Fully Processed",
+                  remainingStock: `0 kg`,
+                  processingQuantity: `0 kg`
+                };
               }
               return item;
             });
@@ -298,7 +259,7 @@ export default function ProductionHubPage() {
           setQuantity("");
           setPrice("");
           setProductImage(null);
-          setConsumedBatches([]);
+          setParentRawBatchIds([]);
           setIsTransformingExisting(false);
         }
       } catch (err) {
@@ -600,98 +561,51 @@ export default function ProductionHubPage() {
               {/* FIELD 3: Linked Parent Farmer Crop Batch */}
               <div>
                 <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
-                  Source Raw Material Batches *
+                  Source Raw Material Batches (Select multiple to combine) *
                 </label>
-                <div className="bg-stone-950 border border-stone-800 rounded-2xl p-4 max-h-48 overflow-y-auto space-y-3 custom-scrollbar">
+                <div className="bg-stone-950 border border-stone-800 rounded-2xl p-4 max-h-48 overflow-y-auto space-y-2 custom-scrollbar">
                   {inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Processed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).length === 0 ? (
-                    <div className="text-stone-500 text-xs font-semibold">No available raw batches.</div>
+                    <div className="text-stone-500 text-xs italic">No available raw batches.</div>
                   ) : (
                     inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Processed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).map((raw) => {
-                      const { num: availNum } = parseQuantityAndUnit(raw.remainingStock || raw.quantity);
-                      const isSelected = consumedBatches.some(cb => cb.batchId === raw.id);
-                      const selectedData = consumedBatches.find(cb => cb.batchId === raw.id);
-
-                      const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                        if (e.target.checked) {
-                          setConsumedBatches(prev => [...prev, { batchId: raw.id, quantityUsed: availNum }]);
-                        } else {
-                          setConsumedBatches(prev => prev.filter(cb => cb.batchId !== raw.id));
-                        }
-                      };
-
-                      const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                        let val = parseFloat(e.target.value);
-                        if (isNaN(val)) val = 0;
-                        if (val > availNum) val = availNum;
-                        if (val < 0) val = 0;
-                        setConsumedBatches(prev => prev.map(cb => cb.batchId === raw.id ? { ...cb, quantityUsed: val } : cb));
-                      };
-
                       return (
-                        <div key={raw.id} className="flex flex-col gap-2 p-2.5 rounded-xl border border-stone-800/60 bg-stone-900/40">
-                          <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={handleCheckboxChange}
-                              className="w-4 h-4 rounded-md border-stone-700 bg-stone-950 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-stone-950"
-                            />
-                            <div className="flex-1">
-                              <div className="text-xs font-bold text-white">{raw.id} - {raw.productName}</div>
-                              <div className="text-[10px] font-semibold text-emerald-400">Available: {availNum} kg</div>
-                            </div>
+                        <label key={raw.id} className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-stone-900/50 transition group">
+                          <input
+                            type="checkbox"
+                            checked={parentRawBatchIds.includes(raw.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setParentRawBatchIds(prev => [...prev, raw.id]);
+                              else setParentRawBatchIds(prev => prev.filter(id => id !== raw.id));
+                            }}
+                            className="w-4 h-4 rounded border-stone-700 bg-stone-950 text-emerald-500 focus:ring-emerald-500/30 cursor-pointer"
+                          />
+                          <div className="flex-1">
+                            <span className="text-xs font-bold text-white group-hover:text-emerald-400 transition">{raw.id} - {raw.productName}</span>
+                            <span className="text-[10px] font-semibold text-stone-500 ml-2">({raw.remainingStock || raw.quantity} available)</span>
                           </div>
-                          {isSelected && (
-                            <div className="pl-7 flex items-center gap-2">
-                              <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider">Qty to Process:</span>
-                              <input
-                                type="number"
-                                value={selectedData?.quantityUsed === 0 ? '' : selectedData?.quantityUsed}
-                                onChange={handleQuantityChange}
-                                max={availNum}
-                                min={0.1}
-                                step="0.1"
-                                className="w-24 bg-stone-950 border border-stone-800 rounded-lg px-2 py-1 text-white focus:outline-none focus:border-emerald-500 transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                required={isSelected}
-                              />
-                              <span className="text-[10px] font-semibold text-stone-500">kg</span>
-                            </div>
-                          )}
-                        </div>
+                        </label>
                       );
                     })
                   )}
                 </div>
                 {/* Full Consumption QR Transform Option */}
-                {consumedBatches.length === 1 && (
-                  (() => {
-                    const cb = consumedBatches[0];
-                    const rawBatch = inventory.find(i => i.id === cb.batchId);
-                    if (rawBatch) {
-                      const { num: availNum } = parseQuantityAndUnit(rawBatch.remainingStock || rawBatch.quantity);
-                      if (cb.quantityUsed === availNum) {
-                        return (
-                          <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-3">
-                            <input
-                              type="checkbox"
-                              checked={isTransformingExisting}
-                              onChange={(e) => setIsTransformingExisting(e.target.checked)}
-                              className="mt-0.5 w-4 h-4 rounded-md border-emerald-700 bg-emerald-950 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-stone-950"
-                            />
-                            <div className="flex-1">
-                              <label className="text-xs font-bold text-emerald-400 block cursor-pointer" onClick={() => setIsTransformingExisting(!isTransformingExisting)}>
-                                Link Existing QR Code
-                              </label>
-                              <p className="text-[10px] text-stone-400 mt-1 leading-relaxed font-medium">
-                                Since you are fully converting this single batch, you can link the original farmer crop QR code to this new processed product. The physical QR code will be preserved for complete traceability.
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-                    }
-                    return null;
-                  })()
+                {parentRawBatchIds.length === 1 && (
+                  <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isTransformingExisting}
+                      onChange={(e) => setIsTransformingExisting(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded-md border-emerald-700 bg-emerald-950 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-stone-950"
+                    />
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-emerald-400 block cursor-pointer" onClick={() => setIsTransformingExisting(!isTransformingExisting)}>
+                        Link Existing QR Code
+                      </label>
+                      <p className="text-[10px] text-stone-400 mt-1 leading-relaxed font-medium">
+                        Since you are converting this single batch, you can link the original farmer crop QR code to this new processed product. The physical QR code will be preserved for complete traceability.
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -906,8 +820,8 @@ export default function ProductionHubPage() {
 
             {/* BATCH INFORMATION SECTION */}
             {(() => {
-              const selectedParentRaw = (isTransformingExisting && consumedBatches.length === 1)
-                ? inventory.find(i => i.id === consumedBatches[0].batchId)
+              const selectedParentRaw = (isTransformingExisting && parentRawBatchIds.length === 1)
+                ? inventory.find(i => i.id === parentRawBatchIds[0])
                 : null;
               const displayedQrUrl = newBatchInfo
                 ? newBatchInfo.qr
@@ -918,7 +832,7 @@ export default function ProductionHubPage() {
                 ? newBatchInfo.id
                 : selectedParentRaw
                 ? selectedParentRaw.id
-                : consumedBatches.length === 0
+                : parentRawBatchIds.length === 0
                 ? "SELECT-SOURCE-BATCH"
                 : "NEW-BATCH-GEN";
 
@@ -1026,305 +940,112 @@ export default function ProductionHubPage() {
               <h2 className="text-base font-extrabold text-emerald-400 flex items-center gap-2">
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
-              
-              {/* TAB SWITCHER */}
-              <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
-                <button
-                  onClick={() => setInventoryFilter("PROCESSED")}
-                  className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
-                    inventoryFilter === "PROCESSED"
-                      ? "bg-emerald-600 text-white shadow-md font-black border border-emerald-500/50"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Processed Products</span>
-                </button>
-                <button
-                  onClick={() => setInventoryFilter("RAW")}
-                  className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
-                    inventoryFilter === "RAW"
-                      ? "bg-emerald-600 text-white shadow-md font-black border border-emerald-500/50"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Purchased Harvests</span>
-                </button>
-              </div>
             </div>
 
-            {/* MAIN TAB CONTENT */}
-            {inventoryFilter === "RAW" ? (
-              /* =========================================================================
-                 TAB 1: PURCHASED HARVESTS (ACTIVE RAW CROP STOCK)
-                 ========================================================================= */
-              <div className="space-y-3">
-                {inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Processed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).length === 0 ? (
-                  <div className="p-8 text-center text-stone-400 text-xs">
-                    No active purchased farmer crop harvests available. Completed batches move to History.
-                  </div>
-                ) : (
-                  inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Processed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).map((raw) => {
-                    const imgUrl = getProductImage(raw);
-                    const isSent = raw.processingStatus === "Sent for Processing";
-                    const isFullyProcessed = raw.processingStatus === "Fully Processed";
-                    const { num: remainingNum } = parseQuantityAndUnit(raw.remainingStock || raw.quantity);
-                    const hasAvailableStock = remainingNum > 0;
-
-                    return (
-                      <div
-                        key={raw.id}
-                        className={`bg-stone-950/90 border rounded-2xl p-4 space-y-3 shadow-md transition-all duration-300 ${
-                          isSent || isFullyProcessed
-                            ? "border-amber-500/30 opacity-90 bg-stone-950/95"
-                            : "border-stone-800 hover:border-emerald-500/40"
-                        }`}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800/80 pb-3">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={imgUrl}
-                              alt={raw.productName}
-                              className="w-12 h-12 rounded-xl object-cover border border-stone-800 shrink-0"
-                            />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-extrabold text-emerald-400">{raw.id}</span>
-                                {isSent ? (
-                                  <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                    Sent for Processing
-                                  </span>
-                                ) : (
-                                  <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                    Available for Processing
-                                  </span>
-                                )}
-                              </div>
-                              <h3 className="text-sm font-black text-white">{raw.productName}</h3>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedQrModal(raw)}
-                              className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 hover:text-white border border-stone-800 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-                            >
-                              <QrIcon className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>View QR</span>
-                            </button>
-
-                            {hasAvailableStock && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenProcessingModal(raw)}
-                                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
-                              >
-                                <Factory className="w-3.5 h-3.5" />
-                                <span>{isSent ? "Send More" : "Send for Processing"}</span>
-                              </button>
-                            )}
-
-                            {(isSent || parseQuantityAndUnit(raw.processingQuantity).num > 0) && (
-                              <button
-                                type="button"
-                                onClick={() => handleRevokeProcessing(raw.id)}
-                                className="px-2.5 py-1.5 rounded-xl bg-stone-900 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                title="Reset processing status and return stock"
-                              >
-                                <span className="hidden sm:inline">Reset</span>
-                              </button>
-                            )}
-                          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {inventory.filter(i => i.itemType === "PROCESSED" && i.status !== "Dispatched" && i.status !== "Archived").length === 0 ? (
+                <div className="col-span-full p-8 text-center text-stone-400 text-xs">
+                  No active processed product items registered yet.
+                </div>
+              ) : (
+                inventory.filter(i => i.itemType === "PROCESSED" && i.status !== "Dispatched" && i.status !== "Archived").map((item) => {
+                  const imgUrl = getProductImage(item);
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-4 space-y-3.5 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 flex flex-col justify-between"
+                    >
+                      <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-stone-950 border border-stone-800/80 group">
+                        {getProductImage(item) && <img
+                          src={getProductImage(item)}
+                          alt={item.productName}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />}
+                        <div className="absolute top-2.5 left-2.5 bg-stone-950/90 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 shadow-md">
+                          {item.id}
                         </div>
-
-                        {/* Specs Grid with Limit Tracking */}
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] pt-0.5">
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Supplier Farmer</span>
-                            <span className="text-stone-200 font-bold truncate block">{raw.supplierFarmer || "Local Farmer"}</span>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Total Purchased</span>
-                            <strong className="text-white font-extrabold">{raw.quantity}</strong>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">In Processing</span>
-                            <strong className="text-amber-400 font-extrabold">{raw.processingQuantity || "0 kg"}</strong>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Available Stock</span>
-                            <strong className="text-emerald-400 font-extrabold">{raw.remainingStock || raw.quantity}</strong>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Consumed</span>
-                            <strong className="text-blue-400 font-extrabold">{raw.consumedQuantity || "0 kg"}</strong>
-                          </div>
+                        <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-md ${
+                          item.status === 'Listed'
+                            ? 'bg-emerald-500/90 text-black border-emerald-400 font-black'
+                            : 'bg-stone-900/90 text-stone-300 border-stone-700'
+                        }`}>
+                          {item.status}
                         </div>
+                      </div>
 
-                        {/* Processing Information Row */}
-                        <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-stone-800/60">
-                          <div className="p-2 bg-stone-900/40 rounded-xl border border-stone-800/40">
-                            <span className="text-[9px] text-stone-500 font-bold uppercase block">Processing Status</span>
-                            <span className={`font-bold text-[10px] ${isSent ? "text-amber-400" : "text-emerald-400"}`}>
-                              {raw.processingStatus || "Available for Processing"}
-                            </span>
-                          </div>
-
-                          <div className="p-2 bg-stone-900/40 rounded-xl border border-stone-800/40">
-                            <span className="text-[9px] text-stone-500 font-bold uppercase block">Last Processing Date</span>
-                            <span className="text-stone-300 font-mono text-[10px]">
-                              {raw.sentForProcessingDate || "Not Started"}
-                            </span>
-                          </div>
-
-                          <div className="p-2 bg-stone-900/40 rounded-xl border border-stone-800/40">
-                            <span className="text-[9px] text-stone-500 font-bold uppercase block">Purchase Price</span>
-                            <span className="text-stone-200 font-extrabold text-[10px]">
-                              {raw.pricePerUnit}
-                            </span>
-                          </div>
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <div className="space-y-0.5 truncate">
+                          <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-400 block">
+                            {item.category}
+                          </span>
+                          <h3 className="text-sm font-black text-white leading-tight truncate">
+                            {item.productName}
+                          </h3>
                         </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            onClick={() => alert(`Editing ${item.productName}`)}
+                            className="p-1.5 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 transition cursor-pointer"
+                            title="Edit Item"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="p-1.5 rounded-xl bg-stone-950 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 transition cursor-pointer"
+                            title="Delete Item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
 
-                        {/* Processing History */}
-                        {Array.isArray(raw.processingHistory) && raw.processingHistory.length > 0 && (
-                          <div className="pt-2 mt-2 border-t border-stone-800/40">
-                            <h4 className="text-[10px] text-stone-400 font-bold uppercase mb-2 flex items-center gap-1">
-                              <Factory className="w-3 h-3" /> Processing History
-                            </h4>
-                            <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1 custom-scrollbar">
-                              {raw.processingHistory.map((historyItem: any, idx: number) => (
-                                <div key={idx} className="flex justify-between items-center text-[10px] p-2 bg-stone-900/30 rounded-lg border border-stone-800/30">
-                                  <div>
-                                    <span className="text-stone-500 mr-1">Batch:</span>
-                                    <span className="font-mono text-emerald-400 font-bold">{historyItem.processedBatchId}</span>
-                                  </div>
-                                  <div className="flex gap-3">
-                                    <span className="text-white font-bold">{historyItem.quantityUsed} kg</span>
-                                    <span className="text-stone-500">{new Date(historyItem.date).toLocaleDateString("en-GB")}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                      <div className="p-3.5 bg-stone-950/80 border border-stone-800/90 rounded-2xl space-y-2 text-[11px]">
+                        <div className="flex justify-between items-center text-stone-300">
+                          <span className="text-stone-400 font-medium">Batch Volume:</span>
+                          <strong className="text-emerald-400 font-extrabold">{item.quantity}</strong>
+                        </div>
+                        <div className="flex justify-between items-center text-stone-300">
+                          <span className="text-stone-400 font-medium">Price per Unit:</span>
+                          <strong className="text-white font-bold">{item.pricePerUnit}</strong>
+                        </div>
+                        {item.parentRawBatchId && (
+                          <div className="flex justify-between items-center text-stone-300">
+                            <span className="text-stone-400 font-medium">Linked Raw Batch:</span>
+                            <strong className="font-mono text-stone-200 text-[10px]">{item.parentRawBatchId}</strong>
                           </div>
                         )}
+                        <div className="flex justify-between items-center text-stone-300">
+                          <span className="text-stone-400 font-medium">Date:</span>
+                          <span className="text-stone-300 font-mono text-[10px]">{item.date}</span>
+                        </div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            ) : inventoryFilter === "PROCESSED" ? (
-              /* =========================================================================
-                 TAB 2: PROCESSED PRODUCTS (ACTIVE REGISTERED PRODUCTS)
-                 ========================================================================= */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {inventory.filter(i => i.itemType === "PROCESSED" && i.status !== "Dispatched" && i.status !== "Archived").length === 0 ? (
-                  <div className="col-span-full p-8 text-center text-stone-400 text-xs">
-                    No active processed product items registered yet.
-                  </div>
-                ) : (
-                  inventory.filter(i => i.itemType === "PROCESSED" && i.status !== "Dispatched" && i.status !== "Archived").map((item) => {
-                    const imgUrl = getProductImage(item);
-                    return (
-                      <div
-                        key={item.id}
-                        className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-4 space-y-3.5 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 flex flex-col justify-between"
-                      >
-                        <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-stone-950 border border-stone-800/80 group">
-                          {getProductImage(item) && <img
-                            src={getProductImage(item)}
-                            alt={item.productName}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                          />}
-                          <div className="absolute top-2.5 left-2.5 bg-stone-950/90 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 shadow-md">
-                            {item.id}
-                          </div>
-                          <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-md ${
+
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQrModal(item)}
+                          className="py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-200 hover:text-white font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <QrIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span className="truncate">View QR</span>
+                        </button>
+                        <button
+                          onClick={() => handleToggleListStatus(item.id)}
+                          className={`py-2.5 px-3 rounded-xl text-[11px] font-extrabold transition cursor-pointer border flex items-center justify-center gap-1 truncate ${
                             item.status === 'Listed'
-                              ? 'bg-emerald-500/90 text-black border-emerald-400 font-black'
-                              : 'bg-stone-900/90 text-stone-300 border-stone-700'
-                          }`}>
-                            {item.status}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2 pt-0.5">
-                          <div className="space-y-0.5 truncate">
-                            <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-400 block">
-                              {item.category}
-                            </span>
-                            <h3 className="text-sm font-black text-white leading-tight truncate">
-                              {item.productName}
-                            </h3>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              onClick={() => alert(`Editing ${item.productName}`)}
-                              className="p-1.5 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 transition cursor-pointer"
-                              title="Edit Item"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-1.5 rounded-xl bg-stone-950 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 transition cursor-pointer"
-                              title="Delete Item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="p-3.5 bg-stone-950/80 border border-stone-800/90 rounded-2xl space-y-2 text-[11px]">
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Batch Volume:</span>
-                            <strong className="text-emerald-400 font-extrabold">{item.quantity}</strong>
-                          </div>
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Price per Unit:</span>
-                            <strong className="text-white font-bold">{item.pricePerUnit}</strong>
-                          </div>
-                          {item.parentRawBatchId && (
-                            <div className="flex justify-between items-center text-stone-300">
-                              <span className="text-stone-400 font-medium">Linked Raw Batch:</span>
-                              <strong className="font-mono text-stone-200 text-[10px]">{item.parentRawBatchId}</strong>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Date:</span>
-                            <span className="text-stone-300 font-mono text-[10px]">{item.date}</span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedQrModal(item)}
-                            className="py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-200 hover:text-white font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-                          >
-                            <QrIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span className="truncate">View QR</span>
-                          </button>
-                          <button
-                            onClick={() => handleToggleListStatus(item.id)}
-                            className={`py-2.5 px-3 rounded-xl text-[11px] font-extrabold transition cursor-pointer border flex items-center justify-center gap-1 truncate ${
-                              item.status === 'Listed'
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-400 font-black shadow-md shadow-emerald-500/10'
-                            }`}
-                          >
-                            <span>{item.status === 'Listed' ? 'Unlist' : 'List Product'}</span>
-                          </button>
-                        </div>
+                              ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
+                              : 'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-400 font-black shadow-md shadow-emerald-500/10'
+                          }`}
+                        >
+                          <span>{item.status === 'Listed' ? 'Unlist' : 'List Product'}</span>
+                        </button>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            ) : null}
+                    </div>
+                  );
+                })
+              )}
+            </div>
 
 
 
