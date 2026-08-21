@@ -223,7 +223,7 @@ export default function DistributorCartPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  buyerId: (session?.user as any)?.id || (session?.user as any)?.distributorId || "",
+                  buyerId: (session?.user as any)?.id,
                   buyerRole: "DISTRIBUTOR",
                   items: cartItems,
                   paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
@@ -233,6 +233,7 @@ export default function DistributorCartPage() {
               const checkoutData = await checkoutRes.json();
               if (!checkoutData.success) {
                 console.warn("Checkout API warning:", checkoutData.message);
+                throw new Error(checkoutData.message || "Failed to process order on backend");
               }
 
               const confirmedData = verifyRes.data || verifyRes;

@@ -105,7 +105,7 @@ export default function ProcessorOrdersPage() {
 
   const handleAcceptOrder = async (id: string) => {
     try {
-      const targetOrder = orders.find(o => o.id === id);
+      const targetOrder = incomingOrders.find((o: any) => o.id === id) || outgoingOrders.find((o: any) => o.id === id);
       const targetId = targetOrder?.rawId || id;
       const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/accept`, {
         method: "PUT",
@@ -113,7 +113,8 @@ export default function ProcessorOrdersPage() {
         body: JSON.stringify({ userId: processorId })
       });
       if (res.ok) {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "ACCEPTED" } : o));
+        const updateFn = activeTab === "INCOMING" ? setIncomingOrders : setOutgoingOrders;
+        updateFn((prev: any) => prev.map((o: any) => o.id === id ? { ...o, status: "ACCEPTED" } : o));
         setNotification("Order accepted successfully.");
         setTimeout(() => setNotification(null), 3000);
       }
@@ -124,7 +125,7 @@ export default function ProcessorOrdersPage() {
 
   const handleRejectOrder = async (id: string) => {
     try {
-      const targetOrder = orders.find(o => o.id === id);
+      const targetOrder = incomingOrders.find((o: any) => o.id === id) || outgoingOrders.find((o: any) => o.id === id);
       const targetId = targetOrder?.rawId || id;
       const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/reject`, {
         method: "PUT",
@@ -132,7 +133,8 @@ export default function ProcessorOrdersPage() {
         body: JSON.stringify({ reason: "Rejected by Processor" })
       });
       if (res.ok) {
-        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "REJECTED" } : o));
+        const updateFn = activeTab === "INCOMING" ? setIncomingOrders : setOutgoingOrders;
+        updateFn((prev: any) => prev.map((o: any) => o.id === id ? { ...o, status: "REJECTED" } : o));
         setNotification("Order rejected. Batch quantity restocked.");
         setTimeout(() => setNotification(null), 3000);
       }
@@ -143,7 +145,7 @@ export default function ProcessorOrdersPage() {
 
   const handleStartDelivery = async (id: string) => {
     try {
-      const targetOrder = orders.find(o => o.id === id);
+      const targetOrder = incomingOrders.find((o: any) => o.id === id) || outgoingOrders.find((o: any) => o.id === id);
       const targetId = targetOrder?.rawId || id;
       const res = await fetch(`${BACKEND_URL}/api/v1/processor/purchase-orders/${targetId}/dispatch`, {
         method: "PUT",
@@ -151,7 +153,7 @@ export default function ProcessorOrdersPage() {
       });
       if (res.ok) {
         const updateFn = activeTab === "INCOMING" ? setIncomingOrders : setOutgoingOrders;
-        updateFn(prev => prev.map(o => o.id === id ? { ...o, status: "DISPATCHED" } : o));
+        updateFn((prev: any) => prev.map((o: any) => o.id === id ? { ...o, status: "DISPATCHED" } : o));
         setNotification("Delivery initiated.");
         setTimeout(() => setNotification(null), 3000);
       }

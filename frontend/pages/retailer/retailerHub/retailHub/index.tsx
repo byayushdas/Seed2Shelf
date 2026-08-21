@@ -856,7 +856,6 @@ export default function RetailHubPage() {
               </h2>
               
               </div>
-            </div>
 
             {/* MAIN TAB CONTENT */}
             {inventoryFilter === "RAW" ? (
@@ -1102,7 +1101,7 @@ export default function RetailHubPage() {
                   })
                 )}
               </div>
-            )}
+            ) : null}
 
 
 

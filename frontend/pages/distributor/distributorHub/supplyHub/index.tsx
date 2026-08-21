@@ -856,7 +856,6 @@ export default function SupplyHubPage() {
               </h2>
               
               </div>
-            </div>
 
             {/* MAIN TAB CONTENT */}
             {inventoryFilter === "RAW" ? (

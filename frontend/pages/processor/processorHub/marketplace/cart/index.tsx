@@ -252,7 +252,7 @@ export default function ProcessorCartPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  buyerId: (session?.user as any)?.id || (session?.user as any)?.processorId || "",
+                  buyerId: (session?.user as any)?.id || "",
                   buyerRole: "PROCESSOR",
                   items: cartItems,
                   paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
