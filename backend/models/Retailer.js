@@ -22,7 +22,7 @@ const retailerSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['In Stock', 'Listed', 'Sold', 'Archived'],
+    enum: ['In Stock', 'Listed', 'Unlisted', 'Sold', 'Archived'],
     default: 'In Stock'
   },
 

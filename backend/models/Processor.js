@@ -43,7 +43,7 @@ const processorSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['In Stock', 'Listed', 'Dispatched', 'Archived'],
+    enum: ['In Stock', 'Listed', 'Unlisted', 'Dispatched', 'Archived'],
     default: 'In Stock'
   },
 
