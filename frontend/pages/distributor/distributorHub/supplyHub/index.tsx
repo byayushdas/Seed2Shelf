@@ -1102,7 +1102,7 @@ export default function SupplyHubPage() {
                   })
                 )}
               </div>
-            )}
+            ) : null}
 
 
 

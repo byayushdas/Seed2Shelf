@@ -441,8 +441,27 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
       await payoutTx.save();
     }
 
+    // Automatically Mint Inventory for Distributor
+    const DistributorBatch = require('../models/Distributor');
+    const newBatch = new DistributorBatch({
+      _id: `DIST-${Date.now()}`,
+      distributorId: order.buyerId,
+      roleId: order.buyerRoleId,
+      productName: order.cropName,
+      category: 'Processed Goods',
+      quantity: order.quantityKg,
+      originalQuantity: order.quantityKg,
+      pricePerUnit: order.pricePerUnit,
+      parentProcessedBatchId: order.batchId,
+      parentProcessedBatchIds: [order.batchId],
+      status: 'In Stock',
+      date: new Date()
+    });
+    await newBatch.save();
+
     return res.json({ success: true, data: order });
   } catch (err) {
+    console.error('Distributor Receive Error:', err);
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

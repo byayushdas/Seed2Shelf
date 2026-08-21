@@ -11,10 +11,13 @@ const User = require('../models/User');
 
 // Central checkout route: Deduct inventory, create POs, Transactions, and Notifications
 router.post('/checkout', async (req, res) => {
+  console.log('--- /api/v1/orders/checkout CALLED ---');
+  console.log('req.body:', req.body);
   try {
     const { buyerId, buyerRole, items, paymentId, totalAmount } = req.body;
 
     if (!buyerId || !buyerRole || !items || !items.length) {
+      console.log('Missing checkout data');
       return res.status(400).json({ success: false, message: 'Missing checkout data' });
     }
 
