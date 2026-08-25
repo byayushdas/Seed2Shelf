@@ -11,8 +11,10 @@ const userSchema = new mongoose.Schema({
   },
   roleId: { type: String },
 
+  // Shared profile fields
   averageRating: { type: Number, default: 0 },
-  profileImage: { type: String }, // NEW
+  reviewCount: { type: Number, default: 0 },
+  profileImage: { type: String },
   reviews: [{
     reviewerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     rating: { type: Number, required: true },
@@ -24,6 +26,8 @@ const userSchema = new mongoose.Schema({
   // Farmer Fields
   farmName: { type: String },
   farmLocation: { type: String },
+  latitude: { type: Number },
+  longitude: { type: Number },
   totalLandArea: { type: String },
   mainCultivatedCrops: { type: [String] },
   farmingPractice: { type: String },
@@ -52,7 +56,9 @@ const userSchema = new mongoose.Schema({
   // KYC Details
   aadhaarNumber: { type: String },
   aadhaarFront: { type: String },
+  aadhaarFrontPublicId: { type: String },
   aadhaarBack: { type: String },
+  aadhaarBackPublicId: { type: String },
   submitKyc: { type: Boolean, default: false },
   kycStatus: { type: String, default: "Pending Verification" },
   rejectionReason: { type: String },

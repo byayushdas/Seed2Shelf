@@ -1,0 +1,9 @@
+{
+  "name": "seed2shelf-blockchain",
+  "version": "1.0.0",
+  "description": "Simulated blockchain node for Seed2Shelf",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
