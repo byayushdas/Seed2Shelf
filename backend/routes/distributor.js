@@ -408,7 +408,7 @@ router.get('/shipments/incoming', async (req, res) => {
     const shipments = await PurchaseOrder.find({
       ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { buyerId: userId } : { buyerRoleId: userId } ),
       buyerRole: 'DISTRIBUTOR',
-      deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED'] }
+      deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED', 'REJECTED'] }
     }).sort({ updatedAt: -1 });
 
     return res.json({ success: true, data: shipments });
@@ -426,7 +426,7 @@ router.get('/shipments/outgoing', async (req, res) => {
     const shipments = await PurchaseOrder.find({
       ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { sellerId: userId } : { sellerRoleId: userId } ),
       sellerRole: 'DISTRIBUTOR',
-      deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED'] }
+      deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED', 'REJECTED'] }
     }).sort({ updatedAt: -1 });
 
     return res.json({ success: true, data: shipments });
