@@ -11,7 +11,7 @@ const notificationSchema = new mongoose.Schema({
   },
   isRead: { type: Boolean, default: false },
   link: { type: String }, // optional url to direct the user
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now, expires: 18000 } // automatically deletes document after 5 hours (18000 seconds)
 });
 
 module.exports = mongoose.model('Notification', notificationSchema);
