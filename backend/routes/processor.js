@@ -365,8 +365,28 @@ router.put('/inventory/:id/list', async (req, res) => {
 // DELETE /api/v1/processor/inventory/:id
 router.delete('/inventory/:id', async (req, res) => {
   try {
+    const batchToDelete = await ProcessorBatch.findById(req.params.id);
+    if (!batchToDelete) return res.status(404).json({ success: false, message: 'Item not found' });
+
+    // Restore raw material batches
+    const rawBatches = await ProcessorBatch.find({ "processingHistory.processedBatchId": req.params.id });
+    
+    for (const rawBatch of rawBatches) {
+      // Revert the consumption 
+      rawBatch.consumedQuantity -= rawBatch.quantity;
+      if (rawBatch.consumedQuantity < 0) rawBatch.consumedQuantity = 0;
+      
+      rawBatch.remainingStock = rawBatch.quantity;
+      rawBatch.processingStatus = 'Available for Processing';
+      
+      // Remove from history
+      rawBatch.processingHistory = rawBatch.processingHistory.filter(h => h.processedBatchId !== req.params.id);
+      
+      await rawBatch.save();
+    }
+
     await ProcessorBatch.findByIdAndDelete(req.params.id);
-    return res.json({ success: true, message: 'Item deleted' });
+    return res.json({ success: true, message: 'Item deleted and raw materials restored' });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
