@@ -854,8 +854,7 @@ export default function SupplyHubPage() {
               <h2 className="text-base font-extrabold text-[#00d26a] flex items-center gap-2">
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
-              
-              </div>
+            </div>
 
             {/* MAIN TAB CONTENT */}
             {inventoryFilter === "RAW" ? (
