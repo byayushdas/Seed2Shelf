@@ -46,6 +46,7 @@ export default function RetailerShipmentsPage() {
 
   // 1. INCOMING SHIPMENTS (Distributor -> Retailer)
   const [incomingShipments, setIncomingShipments] = useState<ShipmentItem[]>([]);
+  const activeSignal = "INCOMING";
 
   const [notification, setNotification] = useState<string | null>(null);
   const retailerId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";

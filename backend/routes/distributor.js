@@ -308,7 +308,10 @@ router.get('/purchase-orders/incoming', async (req, res) => {
 
     const orders = await PurchaseOrder.find({
       ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { sellerId: userId } : { sellerRoleId: userId } ),
-      sellerRole: 'DISTRIBUTOR'
+      sellerRole: 'DISTRIBUTOR',
+      $nor: [
+        { deliveryStatus: 'REJECTED', dispatchedAt: { $exists: true, $ne: null } }
+      ]
     }).sort({ createdAt: -1 });
 
     return res.json({ success: true, data: orders });
@@ -325,7 +328,10 @@ router.get('/purchase-orders/outgoing', async (req, res) => {
 
     const orders = await PurchaseOrder.find({
       ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { buyerId: userId } : { buyerRoleId: userId } ),
-      buyerRole: 'DISTRIBUTOR'
+      buyerRole: 'DISTRIBUTOR',
+      $nor: [
+        { deliveryStatus: 'REJECTED', dispatchedAt: { $exists: true, $ne: null } }
+      ]
     }).sort({ createdAt: -1 });
 
     return res.json({ success: true, data: orders });

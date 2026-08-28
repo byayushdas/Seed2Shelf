@@ -536,18 +536,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <Sprout className="w-3.5 h-3.5" />
                           <span>Marketplace</span>
                         </Link>
-                        <Link
-                          href="/retailer/retailerHub/retailHub"
-                          onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
-                            isActive("/retailer/retailerHub/retailHub")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Package className="w-3.5 h-3.5" />
-                          <span>Retail Hub</span>
-                        </Link>
+
                         <Link
                           href="/retailer/retailerHub/orders"
                           onClick={onClose}
