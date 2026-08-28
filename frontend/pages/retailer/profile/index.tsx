@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Store, Building2 } from "lucide-react";
+import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Store, Building2, Wallet } from "lucide-react";
 import { KYCVerificationStatus, getKycStatusLabel } from "../../../types/kyc";
+import MetaMaskWalletConnect from "../../../components/shared/MetaMaskWalletConnect";
 
 export default function RetailerProfilePage() {
   const { data: session, status, update: updateSession } = useSession();
@@ -41,6 +42,8 @@ export default function RetailerProfilePage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [branchLocation, setBranchLocation] = useState("");
+
+  const [walletAddress, setWalletAddress] = useState("");
 
   const [kycStatus, setKycStatus] = useState<string>(KYCVerificationStatus.PENDING);
 
@@ -100,6 +103,8 @@ export default function RetailerProfilePage() {
     setAccountNumber(bank.accountNumber || "");
     setIfscCode(bank.ifscCode || "");
     setBranchLocation(bank.branchLocation || "");
+
+    setWalletAddress(data.walletAddress || "");
 
     setStoreName(ret.storeName || "");
     setStoreLocation(ret.location || "");
@@ -212,7 +217,8 @@ export default function RetailerProfilePage() {
             accountNumber,
             ifscCode,
             branchLocation,
-          }
+          },
+          walletAddress
         };
 
         console.log(`🟢 [RetailerProfile:handleSave] Sending PUT request to /api/users/${targetUserId} with payload:`, payload);
@@ -646,6 +652,13 @@ export default function RetailerProfilePage() {
         </div>
 
         
+        {/* 4.6. Connect MetaMask Wallet */}
+        <MetaMaskWalletConnect
+          initialWalletAddress={walletAddress}
+          onWalletConnected={(addr) => setWalletAddress(addr)}
+          onWalletDisconnected={() => setWalletAddress("")}
+        />
+
         {/* 5. Registered Store Record Section */}
         <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
           <h2 className="text-lg font-bold text-green-300 flex items-center gap-2">

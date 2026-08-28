@@ -5,8 +5,9 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Factory, Building2 } from "lucide-react";
+import { User, MapPin, ShieldCheck, Camera, CheckCircle2, Star, ExternalLink, Save, X, UserCog, LocateFixed, Factory, Building2, Wallet } from "lucide-react";
 import { KYCVerificationStatus, getKycStatusLabel } from "../../../types/kyc";
+import MetaMaskWalletConnect from "../../../components/shared/MetaMaskWalletConnect";
 
 export default function ProcessorProfilePage() {
   const { data: session, status, update: updateSession } = useSession();
@@ -46,6 +47,8 @@ export default function ProcessorProfilePage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [branchLocation, setBranchLocation] = useState("");
+
+  const [walletAddress, setWalletAddress] = useState("");
 
   const [kycStatus, setKycStatus] = useState("Pending Verification");
 
@@ -105,6 +108,8 @@ export default function ProcessorProfilePage() {
     setAccountNumber(bank.accountNumber || "");
     setIfscCode(bank.ifscCode || "");
     setBranchLocation(bank.branchLocation || "");
+
+    setWalletAddress(data.walletAddress || "");
 
     setFacilityName(proc.facilityName || "");
     setFacilityLocation(proc.facilityLocation || "");
@@ -216,7 +221,8 @@ export default function ProcessorProfilePage() {
             accountNumber,
             ifscCode,
             branchLocation,
-          }
+          },
+          walletAddress
         };
 
         const res = await fetch(`/api/users/${targetUserId}`, {
@@ -675,6 +681,13 @@ export default function ProcessorProfilePage() {
         </div>
 
         
+        {/* 4.6. Connect MetaMask Wallet */}
+        <MetaMaskWalletConnect
+          initialWalletAddress={walletAddress}
+          onWalletConnected={(addr) => setWalletAddress(addr)}
+          onWalletDisconnected={() => setWalletAddress("")}
+        />
+
         {/* 5. Registered Facility Record Section */}
         <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
           <h2 className="text-lg font-bold text-green-300 flex items-center gap-2">
