@@ -4,6 +4,14 @@ import { authOptions } from "../auth/[...nextauth]";
 
 const EXPRESS_BACKEND_URL = process.env.EXPRESS_BACKEND_URL || "http://localhost:5001";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
   const userId = id as string;
