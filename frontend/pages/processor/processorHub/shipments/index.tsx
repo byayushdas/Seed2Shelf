@@ -47,11 +47,7 @@ export default function ProcessorShipmentsPage() {
   // Signal Tabs: "INCOMING" (Farmer -> Processor) vs "OUTGOING" (Processor -> Distributor)
   const [activeSignal, setActiveSignal] = useState<"INCOMING" | "OUTGOING">("INCOMING");
 
-  // Sub-Tabs: "PENDING" (Pending Dispatches / In-Transit) vs "HISTORY" (Accepted / Rejected)
-  const [subTab, setSubTab] = useState<"PENDING" | "HISTORY">("PENDING");
 
-  // History Filter Sub-Option: "ALL" | "ACCEPTED" | "REJECTED"
-  const [historyFilter, setHistoryFilter] = useState<"ALL" | "ACCEPTED" | "REJECTED">("ALL");
 
   // 1. INCOMING SHIPMENTS (Farmer -> Processor)
   const [incomingShipments, setIncomingShipments] = useState<ShipmentItem[]>([]);
@@ -213,20 +209,7 @@ export default function ProcessorShipmentsPage() {
 
   const currentList = activeSignal === "INCOMING" ? incomingShipments : outgoingShipments;
 
-  // Filter based on PENDING (In-Transit) vs HISTORY (Delivered / Rejected)
-  const filteredList = currentList.filter((shp) => {
-    if (subTab === "PENDING") {
-      return shp.status === "IN_TRANSIT";
-    }
-    // HISTORY view
-    if (shp.status === "IN_TRANSIT") return false;
-    if (historyFilter === "ACCEPTED") return shp.status === "DELIVERED";
-    if (historyFilter === "REJECTED") return shp.status === "REJECTED";
-    return true;
-  });
-
-  const pendingCount = currentList.filter(s => s.status === "IN_TRANSIT").length;
-  const historyCount = currentList.filter(s => s.status !== "IN_TRANSIT").length;
+  const filteredList = currentList;
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -287,72 +270,7 @@ export default function ProcessorShipmentsPage() {
           </div>
         )}
 
-        {/* SUB-TABS: PENDING DISPATCHES vs HISTORY */}
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-stone-900/60 p-3 rounded-2xl border border-stone-800">
-          
-          <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs font-extrabold">
-            <button
-              onClick={() => setSubTab("PENDING")}
-              className={`px-4 py-2 rounded-lg transition cursor-pointer flex items-center ${
-                subTab === "PENDING"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>{activeSignal === "INCOMING" ? "Pending Dispatches" : "Active Dispatches"}</span>
-            </button>
 
-            <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
-
-            <button
-              onClick={() => setSubTab("HISTORY")}
-              className={`px-4 py-2 rounded-lg transition cursor-pointer flex items-center ${
-                subTab === "HISTORY"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>History</span>
-            </button>
-          </div>
-
-          {/* HISTORY SUB-FILTER OPTION (VISIBLE WHEN HISTORY IS SELECTED) */}
-          {subTab === "HISTORY" && (
-            <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-[11px] font-extrabold">
-              <button
-                onClick={() => setHistoryFilter("ALL")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                  historyFilter === "ALL" ? "bg-stone-800 text-white font-black" : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                All
-              </button>
-
-              <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-              <button
-                onClick={() => setHistoryFilter("ACCEPTED")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                  historyFilter === "ACCEPTED" ? "bg-stone-800 text-white font-black" : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                Accepted
-              </button>
-
-              <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-              <button
-                onClick={() => setHistoryFilter("REJECTED")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
-                  historyFilter === "REJECTED" ? "bg-stone-800 text-white font-black" : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                Rejected
-              </button>
-            </div>
-          )}
-
-        </div>
 
         {/* SHIPMENT CARDS LIST */}
         <div className="space-y-6">
@@ -362,7 +280,7 @@ export default function ProcessorShipmentsPage() {
                 <Truck className="w-6 h-6" />
               </div>
               <p className="text-stone-400 text-xs font-medium">
-                No {subTab === "PENDING" ? "pending in-transit dispatches" : "history records"} found in {activeSignal.toLowerCase()} shipments.
+                No shipments found in {activeSignal.toLowerCase()} records.
               </p>
             </div>
           ) : (

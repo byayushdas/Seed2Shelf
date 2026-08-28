@@ -39,11 +39,7 @@ export default function FarmerShipments() {
   const { data: session } = useSession();
   const farmerId = (session?.user as any)?.id || (session?.user as any)?.farmerId || "";
 
-  // Main Navigation Tab ("ACTIVE" or "HISTORY")
-  const [mainTab, setMainTab] = useState<"ACTIVE" | "HISTORY">("ACTIVE");
 
-  // History Filter Sub-Option ("ALL" | "DELIVERED" | "REJECTED")
-  const [historyFilter, setHistoryFilter] = useState<"ALL" | "DELIVERED" | "REJECTED">("ALL");
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -86,17 +82,9 @@ export default function FarmerShipments() {
     };
 
     fetchShipments();
-  }, [farmerId, mainTab]);
+  }, [farmerId]);
 
-  const filteredShipments = shipments.filter((shp) => {
-    if (mainTab === "ACTIVE") {
-      return shp.status === "IN_TRANSIT";
-    }
-    // HISTORY view supports inline sub-filters (ALL | DELIVERED | REJECTED)
-    if (shp.status === "IN_TRANSIT") return false;
-    if (historyFilter === "ALL") return true;
-    return shp.status === historyFilter;
-  });
+  const filteredShipments = shipments;
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -127,75 +115,6 @@ export default function FarmerShipments() {
                 <span>Loading...</span>
               </div>
             )}
-
-            {/* MAIN TABS */}
-            <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
-              <button
-                onClick={() => setMainTab("ACTIVE")}
-                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
-                  mainTab === "ACTIVE"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <span>Active Dispatches</span>
-              </button>
-
-              <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
-
-              <button
-                onClick={() => setMainTab("HISTORY")}
-                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
-                  mainTab === "HISTORY"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
-                }`}
-              >
-                <span>History</span>
-              </button>
-            </div>
-
-            {/* NEUTRAL HISTORY SUB-FILTER PILL SWITCHER */}
-            {mainTab === "HISTORY" && (
-              <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold animate-in fade-in duration-200">
-                <button
-                  onClick={() => setHistoryFilter("ALL")}
-                  className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-                    historyFilter === "ALL"
-                      ? "bg-stone-800 text-white font-black shadow-sm"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>All</span>
-                </button>
-
-                <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-                <button
-                  onClick={() => setHistoryFilter("DELIVERED")}
-                  className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-                    historyFilter === "DELIVERED"
-                      ? "bg-stone-800 text-white font-black shadow-sm"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Accepted</span>
-                </button>
-
-                <div className="w-[1px] h-3.5 bg-stone-800 mx-1 shrink-0"></div>
-
-                <button
-                  onClick={() => setHistoryFilter("REJECTED")}
-                  className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-                    historyFilter === "REJECTED"
-                      ? "bg-stone-800 text-white font-black shadow-sm"
-                      : "text-stone-400 hover:text-stone-200"
-                  }`}
-                >
-                  <span>Rejected</span>
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -206,7 +125,7 @@ export default function FarmerShipments() {
               <div className="w-12 h-12 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center mx-auto text-stone-500">
                 <Truck className="w-6 h-6" />
               </div>
-              <p className="text-stone-400 text-xs font-medium">No farmer shipments found matching this filter.</p>
+              <p className="text-stone-400 text-xs font-medium">No farmer shipments found.</p>
             </div>
           ) : (
             filteredShipments.map((shp) => (
