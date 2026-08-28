@@ -32,7 +32,7 @@ router.get('/marketplace', async (req, res) => {
       const distributor = b.distributorId;
       const distributorName = distributor?.name || 'Registered Distributor';
       const distributorLocation = [distributor?.village, distributor?.district, distributor?.state]
-        .filter(Boolean).join(', ') || 'India';
+        .filter(Boolean).join(', ') || 'not available in ad';
 
       const farmerDetails = b.originDetails?.farmer || {};
 

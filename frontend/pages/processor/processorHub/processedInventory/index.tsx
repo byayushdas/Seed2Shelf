@@ -246,7 +246,7 @@ export default function ProductionHubPage() {
               if (parentRawBatchIds.includes(item.id)) {
                 return {
                   ...item,
-                  processingStatus: "Fully Processed",
+                  processingStatus: "Sent for Processing" as any,
                   remainingStock: `0 kg`,
                   processingQuantity: `0 kg`
                 };

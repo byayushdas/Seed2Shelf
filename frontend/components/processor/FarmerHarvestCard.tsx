@@ -7,9 +7,10 @@ interface Props {
   item: FarmerHarvestItem;
   onViewDetails: (item: FarmerHarvestItem) => void;
   onAddToCart: (item: FarmerHarvestItem) => void;
+  sellerLabel?: string;
 }
 
-export default function FarmerHarvestCard({ item, onViewDetails, onAddToCart }: Props) {
+export default function FarmerHarvestCard({ item, onViewDetails, onAddToCart, sellerLabel = "Farmer" }: Props) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
@@ -45,7 +46,7 @@ export default function FarmerHarvestCard({ item, onViewDetails, onAddToCart }: 
             {item.cropName}
           </h3>
           <p className="text-xs text-stone-400 flex items-center gap-1 pt-0.5">
-            Farmer: <strong className="text-stone-200 font-semibold">{item.farmerName}</strong>
+            {sellerLabel}: <strong className="text-stone-200 font-semibold">{item.farmerName}</strong>
           </p>
         </div>
 

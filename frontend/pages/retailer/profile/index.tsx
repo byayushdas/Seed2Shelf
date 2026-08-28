@@ -84,18 +84,28 @@ export default function RetailerProfilePage() {
   };
 
   const populateForm = (data: any) => {
+    const kyc = data.kycDetails || {};
+    const bank = data.bankDetails || {};
+    const ret = data.retailerDetails || {};
+
     setName(data.name || "");
 
-    setAadhaarNumber(data.aadhaarNumber || "");
-    setAadhaarFront(data.aadhaarFront || "");
-    setAadhaarBack(data.aadhaarBack || "");
-    setKycStatus(data.kycStatus || KYCVerificationStatus.PENDING);
+    setAadhaarNumber(kyc.aadhaarNumber || "");
+    setAadhaarFront(kyc.aadhaarFront || "");
+    setAadhaarBack(kyc.aadhaarBack || "");
+    setKycStatus(kyc.kycStatus || KYCVerificationStatus.PENDING);
 
-    setBankName(data.bankName || "");
-    setAccountHolderName(data.accountHolderName || "");
-    setAccountNumber(data.accountNumber || "");
-    setIfscCode(data.ifscCode || "");
-    setBranchLocation(data.branchLocation || "");
+    setBankName(bank.bankName || "");
+    setAccountHolderName(bank.accountHolderName || "");
+    setAccountNumber(bank.accountNumber || "");
+    setIfscCode(bank.ifscCode || "");
+    setBranchLocation(bank.branchLocation || "");
+
+    setStoreName(ret.storeName || "");
+    setStoreLocation(ret.location || "");
+    setShelfCapacity(ret.shelfCapacity || "");
+    setStoreTypeFocus(ret.storeTypeFocus || "");
+    setEmployeeCount(ret.employeeCount || "");
   };
 
   const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
@@ -179,26 +189,30 @@ export default function RetailerProfilePage() {
       if (targetUserId) {
         const payload = {
           name,
-          aadhaarNumber,
-          aadhaarFront,
-          aadhaarFrontPublicId,
-          aadhaarBack,
-          aadhaarBackPublicId,
-          submitKyc: true,
-
-          storeName,
-          storeLocation,
-          latitude,
-          longitude,
-          shelfCapacity,
-          storeTypeFocus,
-          employeeCount,
-
-          bankName,
-          accountHolderName,
-          accountNumber,
-          ifscCode,
-          branchLocation,
+          kycDetails: {
+            aadhaarNumber,
+            aadhaarFront,
+            aadhaarFrontPublicId,
+            aadhaarBack,
+            aadhaarBackPublicId,
+            submitKyc: true,
+          },
+          retailerDetails: {
+            storeName,
+            location: storeLocation,
+            latitude,
+            longitude,
+            shelfCapacity,
+            storeTypeFocus,
+            employeeCount,
+          },
+          bankDetails: {
+            bankName,
+            accountHolderName,
+            accountNumber,
+            ifscCode,
+            branchLocation,
+          }
         };
 
         console.log(`🟢 [RetailerProfile:handleSave] Sending PUT request to /api/users/${targetUserId} with payload:`, payload);

@@ -29,7 +29,7 @@ export const marketplaceService = {
 
           const farmLocation = typeof item.farmId === 'object' && item.farmId
             ? [item.farmId.village, item.farmId.district, item.farmId.state].filter(Boolean).join(", ")
-            : (item.farmLocation || "West Bengal, India");
+            : (item.farmLocation || "not available in ad");
 
           const volume = item.quantity ?? item.availableVolume ?? item.harvestVolume ?? 0;
           const price = item.pricePerUnit ?? item.pricePerKg ?? item.sellingPrice ?? 0;
@@ -39,7 +39,7 @@ export const marketplaceService = {
             batchId: item.batchId || "BATCH-001",
             cropName: item.cropName || "Organic Produce",
             farmerName,
-            farmerLocation: farmLocation || "India",
+            farmerLocation: farmLocation || "not available in ad",
             quantity: volume,
             unit: "kg",
             pricePerUnit: price,
@@ -71,7 +71,7 @@ export const marketplaceService = {
           batchId: item.batchId || "PROC-001",
           cropName: item.productName || item.cropName || "Processed Good",
           farmerName: item.processorName || item.farmerName || "Registered Processor",
-          farmerLocation: item.processorLocation || item.farmerLocation || "India",
+          farmerLocation: item.processorLocation || item.farmerLocation || "not available in ad",
           quantity: item.quantity ?? 0,
           unit: "kg",
           pricePerUnit: item.pricePerUnit ?? 0,
@@ -102,7 +102,7 @@ export const marketplaceService = {
           batchId: item.batchId || "DIST-001",
           cropName: item.productName || item.cropName || "Distributed Good",
           farmerName: item.distributorName || item.farmerName || "Registered Distributor",
-          farmerLocation: item.distributorLocation || item.farmerLocation || "India",
+          farmerLocation: item.distributorLocation || item.farmerLocation || "not available in ad",
           quantity: item.quantity ?? 0,
           unit: "kg",
           pricePerUnit: item.pricePerUnit ?? 0,

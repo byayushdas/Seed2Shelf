@@ -84,18 +84,28 @@ export default function DistributorProfilePage() {
   };
 
   const populateForm = (data: any) => {
+    const kyc = data.kycDetails || {};
+    const bank = data.bankDetails || {};
+    const dist = data.distributorDetails || {};
+
     setName(data.name || "");
 
-    setAadhaarNumber(data.aadhaarNumber || "");
-    setAadhaarFront(data.aadhaarFront || "");
-    setAadhaarBack(data.aadhaarBack || "");
-    setKycStatus(data.kycStatus || KYCVerificationStatus.PENDING);
+    setAadhaarNumber(kyc.aadhaarNumber || "");
+    setAadhaarFront(kyc.aadhaarFront || "");
+    setAadhaarBack(kyc.aadhaarBack || "");
+    setKycStatus(kyc.kycStatus || KYCVerificationStatus.PENDING);
 
-    setBankName(data.bankName || "");
-    setAccountHolderName(data.accountHolderName || "");
-    setAccountNumber(data.accountNumber || "");
-    setIfscCode(data.ifscCode || "");
-    setBranchLocation(data.branchLocation || "");
+    setBankName(bank.bankName || "");
+    setAccountHolderName(bank.accountHolderName || "");
+    setAccountNumber(bank.accountNumber || "");
+    setIfscCode(bank.ifscCode || "");
+    setBranchLocation(bank.branchLocation || "");
+
+    setCompanyName(dist.companyName || "");
+    setLocation(dist.location || "");
+    setStorageCapacity(dist.storageCapacity || "");
+    setOperatingFacilities(dist.operatingFacilities || "");
+    setTransportFleet(dist.transportFleet || "");
   };
 
   const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
@@ -179,26 +189,30 @@ export default function DistributorProfilePage() {
       if (targetUserId) {
         const payload = {
           name,
-          aadhaarNumber,
-          aadhaarFront,
-          aadhaarFrontPublicId,
-          aadhaarBack,
-          aadhaarBackPublicId,
-          submitKyc: true,
-
-          companyName,
-          location,
-          latitude,
-          longitude,
-          storageCapacity,
-          operatingFacilities,
-          transportFleet,
-
-          bankName,
-          accountHolderName,
-          accountNumber,
-          ifscCode,
-          branchLocation,
+          kycDetails: {
+            aadhaarNumber,
+            aadhaarFront,
+            aadhaarFrontPublicId,
+            aadhaarBack,
+            aadhaarBackPublicId,
+            submitKyc: true,
+          },
+          distributorDetails: {
+            companyName,
+            location,
+            latitude,
+            longitude,
+            storageCapacity,
+            operatingFacilities,
+            transportFleet,
+          },
+          bankDetails: {
+            bankName,
+            accountHolderName,
+            accountNumber,
+            ifscCode,
+            branchLocation,
+          }
         };
 
         console.log(`🟢 [DistributorProfile:handleSave] Sending PUT request to /api/users/${targetUserId} with payload:`, payload);

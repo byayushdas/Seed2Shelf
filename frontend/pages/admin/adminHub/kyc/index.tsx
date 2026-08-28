@@ -248,18 +248,18 @@ export default function UniversalKYCVerification() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-stone-300 font-mono">
-                          {k.aadhaarNumber || k.idNumber || "XXXX-XXXX-XXXX"}
+                          {k.kycDetails?.aadhaarNumber || k.aadhaarNumber || k.idNumber || "XXXX-XXXX-XXXX"}
                         </td>
                         <td className="py-3.5 px-4 text-stone-400">
                           {new Date(k.createdAt || Date.now()).toLocaleDateString("en-IN")}
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${
-                            k.verificationStatus === "APPROVED" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                            k.verificationStatus === "REJECTED" ? "bg-red-500/10 text-red-400 border-red-500/30" :
+                            (k.kycDetails?.kycStatus || k.verificationStatus) === "APPROVED" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                            (k.kycDetails?.kycStatus || k.verificationStatus) === "REJECTED" ? "bg-red-500/10 text-red-400 border-red-500/30" :
                             "bg-amber-500/10 text-amber-400 border-amber-500/30"
                           }`}>
-                            {k.verificationStatus || "PENDING"}
+                            {k.kycDetails?.kycStatus || k.verificationStatus || "PENDING"}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
@@ -336,7 +336,7 @@ export default function UniversalKYCVerification() {
                     </div>
                     <div className="col-span-2">
                       <span className="text-[10px] font-bold text-stone-500 uppercase block">Aadhaar / ID Number</span>
-                      <span className="text-emerald-400 font-mono font-bold block mt-0.5 text-xs">{selectedKyc.aadhaarNumber || selectedKyc.idNumber || "N/A"}</span>
+                      <span className="text-emerald-400 font-mono font-bold block mt-0.5 text-xs">{selectedKyc.kycDetails?.aadhaarNumber || selectedKyc.aadhaarNumber || selectedKyc.idNumber || "N/A"}</span>
                     </div>
                   </div>
 
@@ -392,7 +392,7 @@ export default function UniversalKYCVerification() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
-                  {selectedKyc.aadhaarFrontUrl || selectedKyc.aadhaarFront ? (
+                  {selectedKyc.kycDetails?.aadhaarFront || selectedKyc.aadhaarFrontUrl || selectedKyc.aadhaarFront ? (
                     <div className="p-3.5 bg-stone-950/70 border border-stone-800 rounded-2xl space-y-3 shadow-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-extrabold text-stone-300">Front ID Document</span>
@@ -400,13 +400,13 @@ export default function UniversalKYCVerification() {
                       </div>
                       <div className="overflow-hidden rounded-xl border border-stone-800">
                         <img 
-                          src={selectedKyc.aadhaarFrontUrl || selectedKyc.aadhaarFront} 
+                          src={selectedKyc.kycDetails?.aadhaarFront || selectedKyc.aadhaarFrontUrl || selectedKyc.aadhaarFront} 
                           alt="ID Front" 
                           className="w-full h-48 object-cover hover:scale-105 transition duration-300"
                         />
                       </div>
                       <a 
-                        href={selectedKyc.aadhaarFrontUrl || selectedKyc.aadhaarFront} 
+                        href={selectedKyc.kycDetails?.aadhaarFront || selectedKyc.aadhaarFrontUrl || selectedKyc.aadhaarFront} 
                         target="_blank" 
                         rel="noreferrer" 
                         className="w-full py-2 bg-stone-900 hover:bg-stone-800 border border-stone-800 rounded-xl text-[#00d26a] font-extrabold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
@@ -418,7 +418,7 @@ export default function UniversalKYCVerification() {
                     <div className="p-5 bg-stone-950/70 border border-stone-800 rounded-2xl text-stone-500 text-xs text-center">No Front ID document uploaded.</div>
                   )}
 
-                  {selectedKyc.aadhaarBackUrl || selectedKyc.aadhaarBack ? (
+                  {selectedKyc.kycDetails?.aadhaarBack || selectedKyc.aadhaarBackUrl || selectedKyc.aadhaarBack ? (
                     <div className="p-3.5 bg-stone-950/70 border border-stone-800 rounded-2xl space-y-3 shadow-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-extrabold text-stone-300">Back ID Document</span>
@@ -426,13 +426,13 @@ export default function UniversalKYCVerification() {
                       </div>
                       <div className="overflow-hidden rounded-xl border border-stone-800">
                         <img 
-                          src={selectedKyc.aadhaarBackUrl || selectedKyc.aadhaarBack} 
+                          src={selectedKyc.kycDetails?.aadhaarBack || selectedKyc.aadhaarBackUrl || selectedKyc.aadhaarBack} 
                           alt="ID Back" 
                           className="w-full h-48 object-cover hover:scale-105 transition duration-300"
                         />
                       </div>
                       <a 
-                        href={selectedKyc.aadhaarBackUrl || selectedKyc.aadhaarBack} 
+                        href={selectedKyc.kycDetails?.aadhaarBack || selectedKyc.aadhaarBackUrl || selectedKyc.aadhaarBack} 
                         target="_blank" 
                         rel="noreferrer" 
                         className="w-full py-2 bg-stone-900 hover:bg-stone-800 border border-stone-800 rounded-xl text-[#00d26a] font-extrabold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"

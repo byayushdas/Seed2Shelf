@@ -32,7 +32,7 @@ router.get('/marketplace', async (req, res) => {
       const processor = b.processorId;
       const processorName = processor?.name || 'Registered Processor';
       const processorLocation = [processor?.village, processor?.district, processor?.state]
-        .filter(Boolean).join(', ') || 'India';
+        .filter(Boolean).join(', ') || 'not available in ad';
 
       const farmerDetails = b.originDetails?.farmer || {};
 

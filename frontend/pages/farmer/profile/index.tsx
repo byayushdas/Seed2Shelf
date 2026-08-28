@@ -86,18 +86,30 @@ export default function FarmerProfilePage() {
   };
 
   const populateForm = (data: any) => {
+    const kyc = data.kycDetails || {};
+    const bank = data.bankDetails || {};
+    const farm = data.farmDetails || {};
+
     setName(data.name || "");
     setProfileImage(data.profileImage || "");
-    setAadhaarNumber(data.aadhaarNumber || "");
-    setAadhaarFront(data.aadhaarFront || "");
-    setAadhaarBack(data.aadhaarBack || "");
-    setKycStatus(data.kycStatus || KYCVerificationStatus.PENDING);
+    setAadhaarNumber(kyc.aadhaarNumber || "");
+    setAadhaarFront(kyc.aadhaarFront || "");
+    setAadhaarBack(kyc.aadhaarBack || "");
+    setKycStatus(kyc.kycStatus || KYCVerificationStatus.PENDING);
 
-    setBankName(data.bankName || "");
-    setAccountHolderName(data.accountHolderName || "");
-    setAccountNumber(data.accountNumber || "");
-    setIfscCode(data.ifscCode || "");
-    setBranchLocation(data.branchLocation || "");
+    setBankName(bank.bankName || "");
+    setAccountHolderName(bank.accountHolderName || "");
+    setAccountNumber(bank.accountNumber || "");
+    setIfscCode(bank.ifscCode || "");
+    setBranchLocation(bank.branchLocation || "");
+
+    setFarmName(farm.farmName || "");
+    setFarmLocation(farm.farmLocation || "");
+    setLatitude(farm.latitude || undefined);
+    setLongitude(farm.longitude || undefined);
+    setTotalLandArea(farm.totalLandArea || "");
+    setMainCultivatedCrops(farm.mainCultivatedCrops ? farm.mainCultivatedCrops.join(", ") : "");
+    setFarmingPractice(farm.farmingPractice || "");
   };
 
   const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
@@ -186,26 +198,30 @@ export default function FarmerProfilePage() {
         const payload = {
           name,
           profileImage,
-          aadhaarNumber,
-          aadhaarFront,
-          aadhaarFrontPublicId,
-          aadhaarBack,
-          aadhaarBackPublicId,
-          submitKyc: true,
-
-          farmName,
-          farmLocation,
-          latitude,
-          longitude,
-          totalLandArea,
-          mainCultivatedCrops: mainCultivatedCrops.split(",").map(c => c.trim()).filter(Boolean),
-          farmingPractice,
-
-          bankName,
-          accountHolderName,
-          accountNumber,
-          ifscCode,
-          branchLocation,
+          kycDetails: {
+            aadhaarNumber,
+            aadhaarFront,
+            aadhaarFrontPublicId,
+            aadhaarBack,
+            aadhaarBackPublicId,
+            submitKyc: true,
+          },
+          farmDetails: {
+            farmName,
+            farmLocation,
+            latitude,
+            longitude,
+            totalLandArea,
+            mainCultivatedCrops: typeof mainCultivatedCrops === "string" ? mainCultivatedCrops.split(",").map(c => c.trim()).filter(Boolean) : mainCultivatedCrops,
+            farmingPractice,
+          },
+          bankDetails: {
+            bankName,
+            accountHolderName,
+            accountNumber,
+            ifscCode,
+            branchLocation,
+          }
         };
 
         console.log(`🟢 [FarmerProfile:handleSave] Sending PUT request to /api/users/${targetUserId} with payload:`, payload);

@@ -44,7 +44,11 @@ router.put('/:id', async (req, res) => {
 
     for (const key in updateData) {
       if (key !== '_id' && key !== 'role' && key !== 'email' && key !== 'uniqueId') {
-        user.set(key, updateData[key]);
+        if (typeof updateData[key] === 'object' && updateData[key] !== null && !Array.isArray(updateData[key])) {
+          user.set(key, { ...user.get(key), ...updateData[key] });
+        } else {
+          user.set(key, updateData[key]);
+        }
       }
     }
 

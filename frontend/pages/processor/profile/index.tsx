@@ -88,19 +88,29 @@ export default function ProcessorProfilePage() {
   };
 
   const populateForm = (data: any) => {
+    const kyc = data.kycDetails || {};
+    const bank = data.bankDetails || {};
+    const proc = data.processorDetails || {};
+
     setName(data.name || "");
     setProfileImage(data.profileImage || "");
 
-    setAadhaarNumber(data.aadhaarNumber || "");
-    setAadhaarFront(data.aadhaarFront || "");
-    setAadhaarBack(data.aadhaarBack || "");
-    setKycStatus(data.kycStatus || "Pending Verification");
+    setAadhaarNumber(kyc.aadhaarNumber || "");
+    setAadhaarFront(kyc.aadhaarFront || "");
+    setAadhaarBack(kyc.aadhaarBack || "");
+    setKycStatus(kyc.kycStatus || "Pending Verification");
 
-    setBankName(data.bankName || "");
-    setAccountHolderName(data.accountHolderName || "");
-    setAccountNumber(data.accountNumber || "");
-    setIfscCode(data.ifscCode || "");
-    setBranchLocation(data.branchLocation || "");
+    setBankName(bank.bankName || "");
+    setAccountHolderName(bank.accountHolderName || "");
+    setAccountNumber(bank.accountNumber || "");
+    setIfscCode(bank.ifscCode || "");
+    setBranchLocation(bank.branchLocation || "");
+
+    setFacilityName(proc.facilityName || "");
+    setFacilityLocation(proc.facilityLocation || "");
+    setProcessingCapacity(proc.processingCapacity || "");
+    setMainProcessedProducts(proc.mainProcessedProducts || "");
+    setComplianceStandards(proc.complianceStandards || "");
   };
 
   const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
@@ -183,26 +193,30 @@ export default function ProcessorProfilePage() {
         const payload = {
           name,
           profileImage,
-          aadhaarNumber,
-          aadhaarFront,
-          aadhaarFrontPublicId,
-          aadhaarBack,
-          aadhaarBackPublicId,
-          submitKyc: true,
-
-          facilityName,
-          facilityLocation,
-          latitude,
-          longitude,
-          processingCapacity,
-          mainProcessedProducts,
-          complianceStandards,
-
-          bankName,
-          accountHolderName,
-          accountNumber,
-          ifscCode,
-          branchLocation,
+          kycDetails: {
+            aadhaarNumber,
+            aadhaarFront,
+            aadhaarFrontPublicId,
+            aadhaarBack,
+            aadhaarBackPublicId,
+            submitKyc: true,
+          },
+          processorDetails: {
+            facilityName,
+            facilityLocation,
+            latitude,
+            longitude,
+            processingCapacity,
+            mainProcessedProducts,
+            complianceStandards,
+          },
+          bankDetails: {
+            bankName,
+            accountHolderName,
+            accountNumber,
+            ifscCode,
+            branchLocation,
+          }
         };
 
         const res = await fetch(`/api/users/${targetUserId}`, {

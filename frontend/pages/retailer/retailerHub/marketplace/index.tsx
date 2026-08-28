@@ -137,6 +137,7 @@ export default function RetailerMarketplace() {
               item={item}
               onViewDetails={(item) => setSelectedItem(item)}
               onAddToCart={handleAddToCart}
+              sellerLabel="Distributor"
             />
           ))}
         </div>
@@ -176,7 +177,7 @@ export default function RetailerMarketplace() {
 
               <div className="grid grid-cols-2 gap-3 p-4 bg-stone-950 rounded-2xl border border-stone-800">
                 <div>
-                  <span className="text-[11px] text-stone-400 block">Distributor (Current Listing):</span>
+                  <span className="text-[11px] text-stone-400 block">Distributor:</span>
                   <strong className="text-white text-sm">{selectedItem.farmerName}</strong>
                 </div>
                 <div>
