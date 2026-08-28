@@ -62,7 +62,7 @@ export default function SupplyHubPage() {
           if (json.success && Array.isArray(json.data)) {
             const mapped = json.data.map((item: any) => ({
               id: item._id || item.batchId,
-              itemType: "DISTRIBUTED",
+              itemType: item.itemType || "DISTRIBUTED",
               productName: item.productName,
               category: item.category,
               quantity: `${item.quantity} kg`,
@@ -71,7 +71,10 @@ export default function SupplyHubPage() {
               status: item.status,
               parentRawBatchId: item.parentProcessedBatchId,
               productImage: item.productImage || undefined,
-              qrCodeUrl: item.qrCodeUrl || ""
+              qrCodeUrl: item.qrCodeUrl || "",
+              processingStatus: item.processingStatus,
+              remainingStock: item.remainingStock ? `${item.remainingStock} kg` : undefined,
+              processingQuantity: item.processingQuantity ? `${item.processingQuantity} kg` : undefined,
             }));
             setInventory(mapped);
           }
@@ -91,6 +94,7 @@ export default function SupplyHubPage() {
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [productImage, setProductImage] = useState<string | null>(null);
+  const [isTransformingExisting, setIsTransformingExisting] = useState(false);
 
   // Calendar Date Picker State
   const today = new Date();
@@ -101,9 +105,6 @@ export default function SupplyHubPage() {
 
   const calendarRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-
-  // Filter state for My Inventory (Primary Tabs: Distributed Products, Purchased Harvests)
-  const [inventoryFilter, setInventoryFilter] = useState<"DISTRIBUTED" | "RAW">("DISTRIBUTED");
 
   // Submitted & Batch Info UI states
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -179,7 +180,16 @@ export default function SupplyHubPage() {
 
     const finalCategory = category === "Others" ? (customCategory.trim() || "Others") : category;
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const newBatchId = `DIST-2026-${randomDigits}`;
+    let newBatchId = `DIST-2026-${randomDigits}`;
+    
+    if (isTransformingExisting && parentRawBatchIds.length === 1) {
+      newBatchId = parentRawBatchIds[0];
+      const rawBatch = inventory.find(i => i.id === newBatchId);
+      if (rawBatch && rawBatch.parentRawBatchId) {
+        newBatchId = rawBatch.parentRawBatchId;
+      }
+    }
+
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${newBatchId}`;
     const traceUrl = `https://seed2shelf.app/trace/${newBatchId}`;
 
@@ -198,6 +208,7 @@ export default function SupplyHubPage() {
             quantity: quantity,
             pricePerUnit: price,
             parentProcessedBatchId: parentRawBatchIds.join(", "),
+            isTransformingExisting,
             productImage: productImage || getProductImage({ category: finalCategory } as any),
             qrCodeUrl: qrUrl,
             traceUrl: traceUrl,
@@ -386,12 +397,7 @@ export default function SupplyHubPage() {
     }
   };
 
-  // Filtered inventory list
-  const filteredInventory = inventory.filter((item) => {
-    if (inventoryFilter === "DISTRIBUTED") return item.itemType === "DISTRIBUTED";
-    if (inventoryFilter === "RAW") return item.itemType === "RAW";
-    return true;
-  });
+  // Open modal to set custom quantity/limit for processing
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -500,10 +506,10 @@ export default function SupplyHubPage() {
                   Source Batches (Select multiple to combine) *
                 </label>
                 <div className="bg-stone-950 border border-stone-800 rounded-2xl p-4 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-                  {inventory.filter(i => i.itemType === "RAW").length === 0 ? (
+                  {inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Distributed").length === 0 ? (
                     <div className="text-stone-500 text-xs italic">No purchased batches available</div>
                   ) : (
-                    inventory.filter(i => i.itemType === "RAW").map((raw) => (
+                    inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Distributed").map((raw) => (
                       <label key={raw.id} className="flex items-center gap-3 cursor-pointer group">
                         <input
                           type="checkbox"
@@ -525,6 +531,26 @@ export default function SupplyHubPage() {
                     ))
                   )}
                 </div>
+
+                {/* Full Consumption QR Transform Option */}
+                {parentRawBatchIds.length === 1 && (
+                  <div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isTransformingExisting}
+                      onChange={(e) => setIsTransformingExisting(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded-md border-emerald-700 bg-emerald-950 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-stone-950 cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-emerald-400 block cursor-pointer" onClick={() => setIsTransformingExisting(!isTransformingExisting)}>
+                        Link Existing QR Code
+                      </label>
+                      <p className="text-[10px] text-stone-400 mt-1 leading-relaxed font-medium">
+                        Since you are converting this single batch, you can link the original farmer crop QR code to this new processed product. The physical QR code will be preserved for complete traceability.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Quantity & Price */}
@@ -857,146 +883,7 @@ export default function SupplyHubPage() {
             </div>
 
             {/* MAIN TAB CONTENT */}
-            {inventoryFilter === "RAW" ? (
-              /* =========================================================================
-                 TAB 1: PURCHASED HARVESTS (ACTIVE RAW CROP STOCK)
-                 ========================================================================= */
-              <div className="space-y-3">
-                {inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Distributed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).length === 0 ? (
-                  <div className="p-8 text-center text-stone-400 text-xs">
-                    No active purchased farmer crop harvests available. Completed batches move to History.
-                  </div>
-                ) : (
-                  inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Distributed" && parseQuantityAndUnit(i.remainingStock || i.quantity).num > 0).map((raw) => {
-                    const imgUrl = getProductImage(raw);
-                    const isSent = raw.processingStatus === "Sent for Distribution";
-                    const isFullyProcessed = raw.processingStatus === "Fully Distributed";
-                    const { num: remainingNum } = parseQuantityAndUnit(raw.remainingStock || raw.quantity);
-                    const hasAvailableStock = remainingNum > 0;
-
-                    return (
-                      <div
-                        key={raw.id}
-                        className={`bg-stone-950/90 border rounded-2xl p-4 space-y-3 shadow-md transition-all duration-300 ${
-                          isSent || isFullyProcessed
-                            ? "border-amber-500/30 opacity-90 bg-stone-950/95"
-                            : "border-stone-800 hover:border-emerald-500/40"
-                        }`}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800/80 pb-3">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={imgUrl}
-                              alt={raw.productName}
-                              className="w-12 h-12 rounded-xl object-cover border border-stone-800 shrink-0"
-                            />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-extrabold text-emerald-400">{raw.id}</span>
-                                {isSent ? (
-                                  <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                    Sent for Distribution
-                                  </span>
-                                ) : (
-                                  <span className="text-[9px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                    Available for Distribution
-                                  </span>
-                                )}
-                              </div>
-                              <h3 className="text-sm font-black text-white">{raw.productName}</h3>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => setSelectedQrModal(raw)}
-                              className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-200 hover:text-white border border-stone-800 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-sm"
-                            >
-                              <QrIcon className="w-3.5 h-3.5 text-emerald-400" />
-                              <span>View QR</span>
-                            </button>
-
-                            {hasAvailableStock && (
-                              <button
-                                type="button"
-                                onClick={() => handleOpenProcessingModal(raw)}
-                                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md"
-                              >
-                                <Boxes className="w-3.5 h-3.5" />
-                                <span>{isSent ? "Send More" : "Send for Processing"}</span>
-                              </button>
-                            )}
-
-                            {(isSent || parseQuantityAndUnit(raw.processingQuantity).num > 0) && (
-                              <button
-                                type="button"
-                                onClick={() => handleRevokeProcessing(raw.id)}
-                                className="px-2.5 py-1.5 rounded-xl bg-stone-900 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 text-xs font-bold transition cursor-pointer flex items-center gap-1"
-                                title="Reset processing status and return stock"
-                              >
-                                <span className="hidden sm:inline">Reset</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Specs Grid with Limit Tracking */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-0.5">
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Supplier Farmer</span>
-                            <span className="text-stone-200 font-bold truncate block">{raw.supplierFarmer || "Local Farmer"}</span>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Total Purchased</span>
-                            <strong className="text-white font-extrabold">{raw.quantity}</strong>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">In Distribution</span>
-                            <strong className="text-amber-400 font-extrabold">{raw.processingQuantity || "0 kg"}</strong>
-                          </div>
-
-                          <div className="p-2.5 bg-stone-900/60 rounded-xl border border-stone-800/60">
-                            <span className="text-[10px] text-stone-500 font-bold uppercase block mb-0.5">Available Stock</span>
-                            <strong className="text-emerald-400 font-extrabold">{raw.remainingStock || raw.quantity}</strong>
-                          </div>
-                        </div>
-
-                        {/* Processing Information Row */}
-                        <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-stone-800/60">
-                          <div className="p-2 bg-stone-900/40 rounded-xl border border-stone-800/40">
-                            <span className="text-[9px] text-stone-500 font-bold uppercase block">Distribution Status</span>
-                            <span className={`font-bold text-[10px] ${isSent ? "text-amber-400" : "text-emerald-400"}`}>
-                              {raw.processingStatus || "Available for Distribution"}
-                            </span>
-                          </div>
-
-                          <div className="p-2 bg-stone-900/40 rounded-xl border border-stone-800/40">
-                            <span className="text-[9px] text-stone-500 font-bold uppercase block">Last Distribution Date</span>
-                            <span className="text-stone-300 font-mono text-[10px]">
-                              {raw.sentForProcessingDate || "Not Started"}
-                            </span>
-                          </div>
-
-                          <div className="p-2 bg-stone-900/40 rounded-xl border border-stone-800/40">
-                            <span className="text-[9px] text-stone-500 font-bold uppercase block">Purchase Price</span>
-                            <span className="text-stone-200 font-extrabold text-[10px]">
-                              {raw.pricePerUnit}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            ) : inventoryFilter === "DISTRIBUTED" ? (
-              /* =========================================================================
-                 TAB 2: DISTRIBUTED PRODUCTS (ACTIVE REGISTERED PRODUCTS)
-                 ========================================================================= */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {inventory.filter(i => i.itemType === "DISTRIBUTED" && i.status !== "Dispatched" && i.status !== "Archived").length === 0 ? (
                   <div className="col-span-full p-8 text-center text-stone-400 text-xs">
                     No active processed product items registered yet.
@@ -1100,7 +987,6 @@ export default function SupplyHubPage() {
                   })
                 )}
               </div>
-            ) : null}
 
 
 

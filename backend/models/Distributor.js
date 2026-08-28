@@ -11,6 +11,24 @@ const distributorSchema = new mongoose.Schema({
   quantity: { type: Number, required: true },  // remaining stock
   originalQuantity: { type: Number },
   pricePerUnit: { type: Number, required: true },
+  
+  itemType: { type: String, enum: ['RAW', 'DISTRIBUTED'], default: 'DISTRIBUTED' },
+  remainingStock: { type: Number }, // remaining available stock for raw items
+
+  // Raw Harvest Lifecycle
+  supplierProcessorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  supplierProcessor: { type: String },
+  processingStatus: { type: String, enum: ['Available for Distribution', 'Sent for Distribution', 'Fully Distributed'] },
+  processingQuantity: { type: Number, default: 0 },
+  sentForProcessingDate: { type: Date },
+  consumedQuantity: { type: Number, default: 0 }, // tracks how much is fully converted to product
+
+  // History for raw items
+  processingHistory: [{
+    processedBatchId: { type: String },
+    quantityUsed: { type: Number },
+    date: { type: Date, default: Date.now }
+  }],
 
   // Links up the supply chain
   parentProcessedBatchId: { type: String },    // from Processor collection

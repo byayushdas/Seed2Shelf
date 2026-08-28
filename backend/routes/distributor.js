@@ -146,6 +146,7 @@ router.post('/inventory', async (req, res) => {
       productName, category,
       quantity, pricePerUnit,
       parentProcessedBatchId, parentProcessedBatchIds,
+      isTransformingExisting,
       productImage, qrCodeUrl, traceUrl, date, batchId
     } = req.body;
 
@@ -154,9 +155,10 @@ router.post('/inventory', async (req, res) => {
     }
 
     const id = batchId || `DIST-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-
+    const parsedRawBatchIds = Array.isArray(parentProcessedBatchIds) ? parentProcessedBatchIds : (parentProcessedBatchId ? [parentProcessedBatchId] : []);
+    
     let originDetails = {};
-    const primaryBatchId = parentProcessedBatchId || (parentProcessedBatchIds && parentProcessedBatchIds.length > 0 ? parentProcessedBatchIds[0] : null);
+    const primaryBatchId = parsedRawBatchIds.length > 0 ? parsedRawBatchIds[0] : null;
     
     if (primaryBatchId) {
       const pBatch = await ProcessorBatch.findById(primaryBatchId).populate('processorId', 'name district state village');
@@ -185,6 +187,18 @@ router.post('/inventory', async (req, res) => {
       }
     }
 
+    let finalQrCodeUrl = qrCodeUrl;
+    let finalTraceUrl = traceUrl;
+
+    if (isTransformingExisting && parsedRawBatchIds.length === 1) {
+      const transformId = parsedRawBatchIds[0];
+      const existingBatch = await DistributorBatch.findById(transformId);
+      if (existingBatch) {
+        finalQrCodeUrl = existingBatch.qrCodeUrl;
+        finalTraceUrl = existingBatch.traceUrl;
+      }
+    }
+
     const item = await DistributorBatch.create({
       _id: id,
       distributorId: userId,
@@ -195,14 +209,55 @@ router.post('/inventory', async (req, res) => {
       originalQuantity: parseFloat(quantity),
       pricePerUnit: parseFloat(pricePerUnit),
       parentProcessedBatchId: parentProcessedBatchId || null,
-      parentProcessedBatchIds: parentProcessedBatchIds || [],
+      parentProcessedBatchIds: parsedRawBatchIds,
       productImage: productImage || null,
-      qrCodeUrl: qrCodeUrl || null,
-      traceUrl: traceUrl || null,
+      qrCodeUrl: finalQrCodeUrl || null,
+      traceUrl: finalTraceUrl || null,
       date: date ? new Date(date) : new Date(),
       status: 'In Stock',
+      itemType: 'DISTRIBUTED',
       originDetails
     });
+
+    // Deduct stock from the parent raw batches that were used
+    if (parentProcessedBatchIds && parentProcessedBatchIds.length > 0) {
+      // Split if it's a comma-separated string (from frontend)
+      let rawIds = [];
+      if (typeof parentProcessedBatchIds[0] === 'string' && parentProcessedBatchIds[0].includes(',')) {
+        rawIds = parentProcessedBatchIds[0].split(',').map(id => id.trim());
+      } else {
+        rawIds = parentProcessedBatchIds;
+      }
+      
+      let amountToDeduct = parseFloat(quantity);
+      for (const rId of rawIds) {
+        if (amountToDeduct <= 0) break;
+        const rawBatch = await DistributorBatch.findById(rId);
+        if (rawBatch && rawBatch.itemType === 'RAW') {
+          const avail = rawBatch.remainingStock || 0;
+          const deduct = Math.min(avail, amountToDeduct);
+          
+          rawBatch.remainingStock = avail - deduct;
+          rawBatch.consumedQuantity = (rawBatch.consumedQuantity || 0) + deduct;
+          
+          if (rawBatch.remainingStock === 0) {
+            rawBatch.processingStatus = 'Fully Distributed';
+          } else if (rawBatch.processingStatus === 'Available for Distribution') {
+            rawBatch.processingStatus = 'Sent for Distribution';
+          }
+          
+          rawBatch.processingHistory = rawBatch.processingHistory || [];
+          rawBatch.processingHistory.push({
+            processedBatchId: id,
+            quantityUsed: deduct,
+            date: new Date()
+          });
+          
+          await rawBatch.save();
+          amountToDeduct -= deduct;
+        }
+      }
+    }
 
     return res.status(201).json({ success: true, data: item });
   } catch (err) {
@@ -441,6 +496,11 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
     const order = await PurchaseOrder.findById(req.params.orderId);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
 
+    // Guard: only accept if dispatched (not already delivered or pending)
+    if (order.deliveryStatus !== 'DISPATCHED') {
+      return res.status(400).json({ success: false, message: `Cannot accept delivery — order is in status: ${order.deliveryStatus}` });
+    }
+
     order.deliveryStatus = 'DELIVERED';
     order.escrowStatus = 'RELEASED';
     order.deliveredAt = new Date();
@@ -469,23 +529,34 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
       }
     }
 
-    // Automatically Mint Inventory for Distributor
+    // Mint Distributor inventory only upon explicit acceptance
     const DistributorBatch = require('../models/Distributor');
-    const newBatch = new DistributorBatch({
-      _id: `DIST-${Date.now()}`,
-      distributorId: order.buyerId,
-      roleId: order.buyerRoleId,
-      productName: order.cropName,
-      category: 'Processed Goods',
-      quantity: order.quantityKg,
-      originalQuantity: order.quantityKg,
-      pricePerUnit: order.pricePerUnit,
-      parentProcessedBatchId: order.batchId,
-      parentProcessedBatchIds: [order.batchId],
-      status: 'In Stock',
-      date: new Date()
-    });
-    await newBatch.save();
+
+    // Guard against duplicate minting (idempotency check)
+    const existing = await DistributorBatch.findOne({ parentProcessedBatchId: order.batchId, distributorId: order.buyerId });
+    if (!existing) {
+      const newBatch = new DistributorBatch({
+        _id: `RAW-DIST-${Date.now()}`,
+        distributorId: order.buyerId,
+        roleId: order.buyerRoleId,
+        itemType: 'RAW',
+        productName: order.cropName,
+        category: 'Processed Goods',
+        quantity: order.quantityKg,
+        originalQuantity: order.quantityKg,
+        pricePerUnit: order.pricePerUnit,
+        parentProcessedBatchId: order.batchId,
+        parentProcessedBatchIds: [order.batchId],
+        status: 'In Stock',
+        supplierProcessorId: order.sellerId,
+        supplierProcessor: order.sellerName,
+        remainingStock: order.quantityKg,
+        processingStatus: 'Available for Distribution',
+        processingQuantity: 0,
+        date: new Date()
+      });
+      await newBatch.save();
+    }
 
     return res.json({ success: true, data: order });
   } catch (err) {

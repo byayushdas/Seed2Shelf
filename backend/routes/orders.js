@@ -208,21 +208,10 @@ router.put('/:id/status', async (req, res) => {
           processingQuantity: 0
         });
         await newBatch.save();
-      } else if (order.buyerRole === 'DISTRIBUTOR') {
-        const newBatch = new DistributorBatch({
-          _id: `DIST-${Date.now()}`,
-          distributorId: order.buyerId,
-          roleId: order.buyerRoleId,
-          productName: order.cropName,
-          category: 'Processed Goods',
-          quantity: order.quantityKg,
-          originalQuantity: order.quantityKg,
-          pricePerUnit: order.pricePerUnit,
-          parentBatchId: order.batchId,
-          status: 'In Stock'
-        });
-        await newBatch.save();
       }
+      // NOTE: DISTRIBUTOR inventory is NOT minted here.
+      // It is minted only when the Distributor explicitly accepts delivery
+      // via PUT /api/v1/distributor/shipments/:orderId/receive
     }
 
     await order.save();
