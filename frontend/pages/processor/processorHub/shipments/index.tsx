@@ -156,7 +156,7 @@ export default function ProcessorShipmentsPage() {
               : shp
           )
         );
-        setNotification("Delivery accepted! Escrow payment released & moved to History.");
+        setNotification("Delivery accepted! Escrow payment released.");
         setTimeout(() => setNotification(null), 5000);
       }
     } catch (err) {
@@ -197,7 +197,7 @@ export default function ProcessorShipmentsPage() {
               : shp
           )
         );
-        setNotification(`Delivery rejected! Cargo returned to seller & moved to History.`);
+        setNotification(`Delivery rejected! Cargo returned to seller.`);
         setTimeout(() => setNotification(null), 5000);
         setRejectModalItem(null);
         setCustomReason("");
