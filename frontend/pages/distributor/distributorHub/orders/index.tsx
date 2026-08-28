@@ -203,7 +203,7 @@ export default function DistributorOrders() {
                     : "text-stone-400 hover:text-stone-200"
                 }`}
               >
-                <span>Order Requests</span>
+                <span>Procurement Requests</span>
               </button>
               <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
               <button
@@ -214,7 +214,7 @@ export default function DistributorOrders() {
                     : "text-stone-400 hover:text-stone-200"
                 }`}
               >
-                <span>Procurement Requests</span>
+                <span>Order Requests</span>
               </button>
             </div>
           </div>

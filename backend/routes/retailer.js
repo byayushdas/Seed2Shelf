@@ -450,6 +450,32 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
       }
     }
 
+    // Mint Retailer inventory only upon explicit acceptance
+    const RetailerBatch = require('../models/Retailer');
+
+    // Guard against duplicate minting (idempotency check)
+    const existing = await RetailerBatch.findOne({ parentDistBatchId: order.batchId, retailerId: order.buyerId });
+    if (!existing) {
+      const newBatch = new RetailerBatch({
+        _id: `RAW-RET-${Date.now()}`,
+        retailerId: order.buyerId,
+        roleId: order.buyerRoleId,
+        itemType: 'RAW',
+        productName: order.cropName,
+        category: 'Retail Goods',
+        quantity: order.quantityKg,
+        originalQuantity: order.quantityKg,
+        pricePerUnit: order.pricePerUnit,
+        parentDistBatchId: order.batchId,
+        parentDistBatchIds: [order.batchId],
+        status: 'In Stock',
+        supplierDistributorId: order.sellerId,
+        supplierDistributor: order.sellerName,
+        date: new Date()
+      });
+      await newBatch.save();
+    }
+
     return res.json({ success: true, data: order });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Internal server error' });

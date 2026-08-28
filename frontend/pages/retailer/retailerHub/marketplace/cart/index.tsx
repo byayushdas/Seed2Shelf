@@ -218,7 +218,27 @@ export default function RetailerCartPage() {
               });
 
               const confirmedData = verifyRes.data || verifyRes;
-              const orderId = confirmedData.orderNumber || confirmedData.orderReferenceId || `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+
+              // 5. Call Checkout API to deduct inventory, create POs & Transactions
+              const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+              const checkoutRes = await fetch(`${BACKEND_URL}/api/v1/orders/checkout`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  buyerId: (session?.user as any)?.id,
+                  buyerRole: "RETAILER",
+                  items: cartItems,
+                  paymentId: response.razorpay_payment_id || `pay_${Date.now()}`,
+                  totalAmount: totals.total
+                })
+              });
+              const checkoutData = await checkoutRes.json();
+              if (!checkoutData.success) {
+                console.warn("Checkout API warning:", checkoutData.message);
+                throw new Error(checkoutData.message || "Failed to process order on backend");
+              }
+
+              const orderId = (checkoutData.orderNumbers && checkoutData.orderNumbers[0]) || confirmedData.orderNumber || confirmedData.orderReferenceId || `ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
 
               setConfirmedOrder({
                 orderId,
