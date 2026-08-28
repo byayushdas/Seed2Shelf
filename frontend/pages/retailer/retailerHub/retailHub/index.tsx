@@ -728,7 +728,7 @@ export default function RetailHubPage() {
                   <PlusCircle className="w-4.5 h-4.5" />
                   <span>
                     {parentRawBatchIds.length > 0
-                      ? "Update the Batch(es)"
+                      ? "Update the Batch"
                       : "Save & Register Retailed Item"}
                   </span>
                 </button>
@@ -774,7 +774,7 @@ export default function RetailHubPage() {
                         <span className="text-[10px] text-stone-400">Previous Data Loaded</span>
                       </div>
                       <p className="text-stone-300 text-[11px] leading-relaxed">
-                        Combining <strong className="text-white font-mono">{parentRawBatchIds.length}</strong> source batches. Clicking <strong className="text-emerald-400">Update the Batch(es)</strong> will save the new retailed run under a new combined batch ID.
+                        Combining <strong className="text-white font-mono">{parentRawBatchIds.length}</strong> source batches. Clicking <strong className="text-emerald-400">Update the Batch</strong> will save the new retailed run under a new combined batch ID.
                       </p>
                     </div>
                   )}

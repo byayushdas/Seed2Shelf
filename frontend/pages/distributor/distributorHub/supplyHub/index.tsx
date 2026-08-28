@@ -525,7 +525,7 @@ export default function SupplyHubPage() {
                           className="w-4 h-4 rounded border-stone-700 text-emerald-500 focus:ring-emerald-500/30 bg-stone-900 cursor-pointer"
                         />
                         <span className="text-white text-xs font-semibold group-hover:text-emerald-400 transition">
-                          {raw.id} - {raw.productName} ({raw.quantity})
+                          {raw.parentRawBatchId || raw.id} - {raw.productName} ({raw.quantity})
                         </span>
                       </label>
                     ))
@@ -754,7 +754,7 @@ export default function SupplyHubPage() {
                   <PlusCircle className="w-4.5 h-4.5" />
                   <span>
                     {parentRawBatchIds.length > 0
-                      ? "Update the Batch(es)"
+                      ? "Update the Batch"
                       : "Save & Register Distributed Item"}
                   </span>
                 </button>
@@ -764,7 +764,9 @@ export default function SupplyHubPage() {
 
             {/* BATCH INFORMATION SECTION */}
             {(() => {
-              const selectedParentRaw = parentRawBatchIds.length > 0 ? inventory.find(i => i.id === parentRawBatchIds[0]) : null;
+              const selectedParentRaw = (isTransformingExisting && parentRawBatchIds.length === 1)
+                ? inventory.find(i => i.id === parentRawBatchIds[0])
+                : null;
               const displayedQrUrl = newBatchInfo
                 ? newBatchInfo.qr
                 : selectedParentRaw
@@ -773,8 +775,10 @@ export default function SupplyHubPage() {
               const displayedBatchId = newBatchInfo
                 ? newBatchInfo.id
                 : selectedParentRaw
-                ? (parentRawBatchIds.length > 1 ? `${parentRawBatchIds.length} Batches Combined` : selectedParentRaw.id)
-                : "SELECT-SOURCE-BATCH";
+                ? (selectedParentRaw.parentRawBatchId || selectedParentRaw.id)
+                : parentRawBatchIds.length === 0
+                ? "SELECT-SOURCE-BATCH"
+                : "NEW-BATCH-GEN";
 
               return (
                 <div className="mt-6 p-5 bg-stone-950 border border-stone-800 rounded-2xl space-y-4 shadow-xl transition-all duration-300">
@@ -796,11 +800,11 @@ export default function SupplyHubPage() {
                   {selectedParentRaw && (
                     <div className="p-3.5 bg-stone-900 border border-emerald-500/30 rounded-xl text-xs space-y-1.5 animate-in fade-in duration-150">
                       <div className="flex items-center justify-between text-emerald-400 font-bold">
-                        <span>Source Batch Lineage: {parentRawBatchIds.join(", ")}</span>
+                        <span>Source Batch Lineage: {selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</span>
                         <span className="text-[10px] text-stone-400">Previous Data Loaded</span>
                       </div>
                       <p className="text-stone-300 text-[11px] leading-relaxed">
-                        Combining <strong className="text-white font-mono">{parentRawBatchIds.length}</strong> source batches. Clicking <strong className="text-emerald-400">Update the Batch(es)</strong> will save the new distributed run under a new combined batch ID.
+                        Previous data stored under <strong className="text-white font-mono">{selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</strong> ({selectedParentRaw.productName}) has been loaded. Clicking <strong className="text-emerald-400">Update the Batch</strong> will save the new distributed run under this batch ID.
                       </p>
                     </div>
                   )}

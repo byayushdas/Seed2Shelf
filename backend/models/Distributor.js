@@ -7,11 +7,10 @@ const distributorSchema = new mongoose.Schema({
 
   productName: { type: String, required: true },
   category: { type: String, required: true },
-
   quantity: { type: Number, required: true },  // remaining stock
   originalQuantity: { type: Number },
   pricePerUnit: { type: Number, required: true },
-  
+
   itemType: { type: String, enum: ['RAW', 'DISTRIBUTED'], default: 'DISTRIBUTED' },
   remainingStock: { type: Number }, // remaining available stock for raw items
 
