@@ -34,7 +34,7 @@ interface ShipmentItem {
   senderName: string;
   dispatchedDate: string;
   estimatedDelivery: string;
-  status: "IN_TRANSIT" | "DELIVERED" | "REJECTED";
+  status: "IN_TRANSIT" | "DELIVERED" | "REJECTED" | "ACCEPTED";
   currentStep: number;
   rejectionReason?: string;
   rejectedDate?: string;
@@ -318,6 +318,8 @@ export default function DistributorShipmentsPage() {
                         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                         : shp.status === 'REJECTED'
                         ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                        : shp.status === 'ACCEPTED'
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                         : 'bg-blue-500/10 text-blue-400 border-blue-500/20 animate-pulse'
                     }`}>
                       {shp.status === 'DELIVERED' ? (
@@ -329,6 +331,11 @@ export default function DistributorShipmentsPage() {
                         <>
                           <XCircle className="w-3.5 h-3.5 text-red-400" />
                           <span>REJECTED & RETURNED</span>
+                        </>
+                      ) : shp.status === 'ACCEPTED' ? (
+                        <>
+                          <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                          <span>AWAITING DISPATCH</span>
                         </>
                       ) : (
                         <>
@@ -421,16 +428,18 @@ export default function DistributorShipmentsPage() {
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
                         shp.status === 'REJECTED'
                           ? 'bg-amber-950/40 border-amber-800/60 text-amber-400'
+                          : shp.status === 'ACCEPTED'
+                          ? 'bg-stone-900 border-stone-800 text-stone-500'
                           : 'bg-emerald-950/40 border-emerald-800/60 text-emerald-400'
                       }`}>
                         {shp.status === 'REJECTED' ? <RotateCcw className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-white">
-                          {shp.status === 'REJECTED' ? "Return Transit" : "In Transit"}
+                        <p className={`text-xs font-bold ${shp.status === 'ACCEPTED' ? 'text-stone-500' : 'text-white'}`}>
+                          {shp.status === 'REJECTED' ? "Return Transit" : shp.status === 'ACCEPTED' ? "Pending Dispatch" : "In Transit"}
                         </p>
                         <p className="text-[10px] text-stone-400 font-medium">
-                          {shp.status === 'REJECTED' ? "En-route to Seller" : "GPS En-route"}
+                          {shp.status === 'REJECTED' ? "En-route to Seller" : shp.status === 'ACCEPTED' ? "Waiting for Origin Hub" : "GPS En-route"}
                         </p>
                       </div>
                     </div>
