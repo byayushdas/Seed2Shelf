@@ -115,11 +115,16 @@ export default function DistributorOrders() {
       });
       if (res.ok) {
         setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
+        setNotification("Order accepted! Payment is now locked in Blockchain Escrow.");
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to accept order:", errorData.message);
+        alert(`Failed to accept order: ${errorData.message}`);
       }
     } catch (err) {
-      setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "ACCEPTED", escrowLocked: true } : ord));
+      console.error("Network error accepting order:", err);
+      alert("Network error accepting order");
     }
-    setNotification("Order accepted! Payment is now locked in Blockchain Escrow.");
     setTimeout(() => setNotification(null), 4000);
   };
 
@@ -134,11 +139,16 @@ export default function DistributorOrders() {
       });
       if (res.ok) {
         setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
+        setNotification("Delivery initiated! Order is now in transit.");
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to dispatch order:", errorData.message);
+        alert(`Failed to dispatch order: ${errorData.message}`);
       }
     } catch (err) {
-      setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" } : ord));
+      console.error("Network error dispatching order:", err);
+      alert("Network error dispatching order");
     }
-    setNotification("Delivery initiated! Order is now in transit.");
     setTimeout(() => setNotification(null), 4000);
   };
 
@@ -154,9 +164,14 @@ export default function DistributorOrders() {
       if (res.ok) {
         setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "REJECTED" } : ord));
         setNotification("Order rejected. Batch quantity has been restocked.");
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to reject order:", errorData.message);
+        alert(`Failed to reject order: ${errorData.message}`);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Network error rejecting order:", err);
+      alert("Network error rejecting order");
     }
     setTimeout(() => setNotification(null), 4000);
   };

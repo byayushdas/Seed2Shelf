@@ -69,7 +69,7 @@ router.get('/marketplace', async (req, res) => {
     return res.json({ success: true, data: mapped });
   } catch (err) {
     console.error('GET /distributor/marketplace error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -117,7 +117,7 @@ router.post('/marketplace/order', async (req, res) => {
     return res.status(201).json({ success: true, data: order });
   } catch (err) {
     console.error('POST /distributor/marketplace/order error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -134,7 +134,7 @@ router.get('/inventory', async (req, res) => {
     const items = await DistributorBatch.find({ distributorId: userId }).sort({ createdAt: -1 });
     return res.json({ success: true, data: items });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -262,7 +262,7 @@ router.post('/inventory', async (req, res) => {
     return res.status(201).json({ success: true, data: item });
   } catch (err) {
     console.error('POST /distributor/inventory error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -282,7 +282,7 @@ router.put('/inventory/:id/list', async (req, res) => {
 
     return res.json({ success: true, data: item });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -292,7 +292,7 @@ router.delete('/inventory/:id', async (req, res) => {
     await DistributorBatch.findByIdAndDelete(req.params.id);
     return res.json({ success: true, message: 'Item deleted' });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -313,7 +313,7 @@ router.get('/purchase-orders/incoming', async (req, res) => {
 
     return res.json({ success: true, data: orders });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -330,7 +330,7 @@ router.get('/purchase-orders/outgoing', async (req, res) => {
 
     return res.json({ success: true, data: orders });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -347,18 +347,18 @@ router.put('/purchase-orders/:id/accept', async (req, res) => {
     order.updatedAt = new Date();
     await order.save();
 
-    // If batch is fully exhausted, mark it as Sold so it drops off active inventory
+    // If batch is fully exhausted, mark it as Archived so it drops off active inventory
     if (order.batchId) {
       const batch = await DistributorBatch.findById(order.batchId);
       if (batch && batch.quantity <= 0) {
-        batch.status = 'Sold';
+        batch.status = 'Archived';
         await batch.save();
       }
     }
 
     return res.json({ success: true, data: order });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -424,7 +424,7 @@ router.put('/purchase-orders/:id/reject', async (req, res) => {
 
     return res.json({ success: true, data: order });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -446,7 +446,7 @@ router.put('/purchase-orders/:id/dispatch', async (req, res) => {
 
     return res.json({ success: true, data: order });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -471,7 +471,7 @@ router.get('/shipments/incoming', async (req, res) => {
 
     return res.json({ success: true, data: shipments });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -492,7 +492,7 @@ router.get('/shipments/outgoing', async (req, res) => {
 
     return res.json({ success: true, data: shipments });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -567,7 +567,7 @@ router.put('/shipments/:orderId/receive', async (req, res) => {
     return res.json({ success: true, data: order });
   } catch (err) {
     console.error('Distributor Receive Error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -620,7 +620,7 @@ router.put('/shipments/:orderId/reject', async (req, res) => {
 
     return res.json({ success: true, data: order });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -640,7 +640,7 @@ router.get('/reports', async (req, res) => {
     return res.json({ success: true, data });
   } catch (err) {
     console.error('GET /distributor/reports error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error(err); return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

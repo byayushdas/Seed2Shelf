@@ -401,26 +401,6 @@ router.get('/shipments/incoming', async (req, res) => {
   }
 });
 
-// GET /api/v1/retailer/shipments/outgoing?userId= — To Customers
-router.get('/shipments/outgoing', async (req, res) => {
-  try {
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
-
-    const shipments = await PurchaseOrder.find({
-      ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { sellerId: userId } : { sellerRoleId: userId } ),
-      sellerRole: 'RETAILER',
-      $or: [
-        { deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED'] } },
-        { deliveryStatus: 'REJECTED', dispatchedAt: { $exists: true, $ne: null } }
-      ]
-    }).sort({ updatedAt: -1 });
-
-    return res.json({ success: true, data: shipments });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
 
 // PUT /api/v1/retailer/shipments/:orderId/receive
 router.put('/shipments/:orderId/receive', async (req, res) => {

@@ -44,16 +44,8 @@ interface ShipmentItem {
 export default function RetailerShipmentsPage() {
   const { data: session } = useSession();
 
-  // Signal Tabs: "INCOMING" (Distributor -> Retailer) vs "OUTGOING" (Retailer -> Consumer)
-  const [activeSignal, setActiveSignal] = useState<"INCOMING" | "OUTGOING">("INCOMING");
-
-
-
   // 1. INCOMING SHIPMENTS (Distributor -> Retailer)
   const [incomingShipments, setIncomingShipments] = useState<ShipmentItem[]>([]);
-
-  // 2. OUTGOING SHIPMENTS (Retailer -> Consumer)
-  const [outgoingShipments, setOutgoingShipments] = useState<ShipmentItem[]>([]);
 
   const [notification, setNotification] = useState<string | null>(null);
   const retailerId = (session?.user as any)?.id || (session?.user as any)?.retailerId || "";
@@ -89,41 +81,10 @@ export default function RetailerShipmentsPage() {
       }
     };
 
-    const fetchOutgoing = async () => {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/v1/retailer/shipments/outgoing?userId=${retailerId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data)) {
-            setOutgoingShipments(json.data.map((s: any) => ({
-              id: s.orderNumber || s._id,
-              rawId: s._id,
-              batchId: s.batchId,
-              productName: s.cropName,
-              quantity: `${s.quantityKg} kg`,
-              value: `₹ ${s.totalAmount?.toLocaleString() || 0}`,
-              sourceOrDestination: s.buyerName || "Consumer",
-              senderName: "Retailer",
-              dispatchedDate: s.dispatchedAt ? new Date(s.dispatchedAt).toLocaleDateString() : "",
-              estimatedDelivery: "Today, 4:30 PM",
-              status: s.deliveryStatus === "DISPATCHED" ? "IN_TRANSIT" : s.deliveryStatus,
-              currentStep: s.deliveryStatus === "DELIVERED" || s.deliveryStatus === "REJECTED" ? 3 : 2,
-              rejectionReason: s.rejectionReason,
-              rejectedDate: s.deliveryStatus === "REJECTED" ? new Date(s.updatedAt).toLocaleDateString() : undefined,
-              acceptedDate: s.deliveredAt ? new Date(s.deliveredAt).toLocaleDateString() : undefined
-            })));
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
     if (retailerId) {
-      if (activeSignal === "INCOMING") fetchIncoming();
-      else fetchOutgoing();
+      fetchIncoming();
     }
-  }, [retailerId, activeSignal]);
+  }, [retailerId]);
 
   // Rejection Modal State
   const [rejectModalItem, setRejectModalItem] = useState<ShipmentItem | null>(null);
@@ -132,10 +93,7 @@ export default function RetailerShipmentsPage() {
 
   // Action: Accept Delivery & Release Escrow Payment
   const handleAcceptDelivery = async (shpId: string) => {
-    const isIncoming = activeSignal === "INCOMING";
-    const updateFn = isIncoming ? setIncomingShipments : setOutgoingShipments;
-    const list = isIncoming ? incomingShipments : outgoingShipments;
-    const targetItem = list.find(s => s.id === shpId);
+    const targetItem = incomingShipments.find(s => s.id === shpId);
     const targetId = targetItem?.rawId || shpId;
 
     try {
@@ -144,7 +102,7 @@ export default function RetailerShipmentsPage() {
         headers: { "Content-Type": "application/json" }
       });
       if (res.ok) {
-        updateFn((prev) =>
+        setIncomingShipments((prev) =>
           prev.map((shp) =>
             shp.id === shpId
               ? {
@@ -172,8 +130,6 @@ export default function RetailerShipmentsPage() {
       ? `${rejectCategory}: ${details}`
       : `${rejectCategory}: Quality inspection failed intake standard. Cargo returned to seller.`;
 
-    const isIncoming = activeSignal === "INCOMING";
-    const updateFn = isIncoming ? setIncomingShipments : setOutgoingShipments;
 
     const targetId = rejectModalItem.rawId || rejectModalItem.id;
 
@@ -184,7 +140,7 @@ export default function RetailerShipmentsPage() {
         body: JSON.stringify({ reason: finalReason })
       });
       if (res.ok) {
-        updateFn((prev) =>
+        setIncomingShipments((prev) =>
           prev.map((shp) =>
             shp.id === rejectModalItem.id
               ? {
@@ -207,9 +163,7 @@ export default function RetailerShipmentsPage() {
     }
   };
 
-  const currentList = activeSignal === "INCOMING" ? incomingShipments : outgoingShipments;
-
-  const filteredList = currentList;
+  const filteredList = incomingShipments;
 
   return (
     <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
@@ -235,32 +189,6 @@ export default function RetailerShipmentsPage() {
             </div>
           </div>
 
-          {/* MAIN TAB SWITCHER IN TOP RIGHT HEADER (INCOMING vs OUTGOING) */}
-          <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
-            <button
-              onClick={() => setActiveSignal("INCOMING")}
-              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
-                activeSignal === "INCOMING"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>Incoming Shipments</span>
-            </button>
-
-            <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
-
-            <button
-              onClick={() => setActiveSignal("OUTGOING")}
-              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
-                activeSignal === "OUTGOING"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <span>Outgoing Shipments</span>
-            </button>
-          </div>
         </div>
 
         {notification && (

@@ -246,25 +246,6 @@ export default function RetailHubPage() {
 
   };
 
-  // Toggle List / Unlist Status
-  const handleToggleListStatus = async (id: string) => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/v1/retailer/inventory/${id}/list`, { method: "PUT" });
-      if (res.ok) {
-        setInventory(
-          inventory.map((item) => {
-            if (item.id === id) {
-              const newStatus = item.status === "Listed" ? "In Stock" : "Listed";
-              return { ...item, status: newStatus };
-            }
-            return item;
-          })
-        );
-      }
-    } catch (err) {
-      console.error("Error toggling list status:", err);
-    }
-  };
 
   // Delete Item
   const handleDeleteItem = async (id: string) => {
@@ -1019,11 +1000,7 @@ export default function RetailHubPage() {
                           <div className="absolute top-2.5 left-2.5 bg-stone-950/90 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 shadow-md">
                             {item.id}
                           </div>
-                          <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-md ${
-                            item.status === 'Listed'
-                              ? 'bg-emerald-500/90 text-black border-emerald-400 font-black'
-                              : 'bg-stone-900/90 text-stone-300 border-stone-700'
-                          }`}>
+                          <div className="absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-md bg-stone-900/90 text-stone-300 border-stone-700">
                             {item.status}
                           </div>
                         </div>
@@ -1076,24 +1053,14 @@ export default function RetailHubPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-1">
+                        <div className="pt-1">
                           <button
                             type="button"
                             onClick={() => setSelectedQrModal(item)}
-                            className="py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-200 hover:text-white font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                            className="w-full py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-200 hover:text-white font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                           >
                             <QrIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span className="truncate">View QR</span>
-                          </button>
-                          <button
-                            onClick={() => handleToggleListStatus(item.id)}
-                            className={`py-2.5 px-3 rounded-xl text-[11px] font-extrabold transition cursor-pointer border flex items-center justify-center gap-1 truncate ${
-                              item.status === 'Listed'
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-400 font-black shadow-md shadow-emerald-500/10'
-                            }`}
-                          >
-                            <span>{item.status === 'Listed' ? 'Unlist' : 'List Product'}</span>
+                            <span className="truncate">View QR Code</span>
                           </button>
                         </div>
                       </div>
