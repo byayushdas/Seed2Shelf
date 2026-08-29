@@ -107,7 +107,7 @@ export default function RetailerProfilePage() {
     setWalletAddress(data.walletAddress || "");
 
     setStoreName(ret.storeName || "");
-    setStoreLocation(ret.location || "");
+    setStoreLocation(ret.storeLocation || "");
     setShelfCapacity(ret.shelfCapacity || "");
     setStoreTypeFocus(ret.storeTypeFocus || "");
     setEmployeeCount(ret.employeeCount || "");
@@ -182,13 +182,6 @@ export default function RetailerProfilePage() {
 
   const handleSave = async () => {
     setMessage({ type: "", text: "" });
-
-    const updatedData = {
-      name,
-      aadhaarNumber,
-      aadhaarFront,
-      aadhaarBack,
-    };
     setSaving(true);
     try {
       if (targetUserId) {
@@ -204,7 +197,7 @@ export default function RetailerProfilePage() {
           },
           retailerDetails: {
             storeName,
-            location: storeLocation,
+            storeLocation,
             latitude,
             longitude,
             shelfCapacity,
@@ -239,6 +232,7 @@ export default function RetailerProfilePage() {
         } else {
           const errorData = await res.json().catch(() => ({}));
           console.error("❌ [RetailerProfile:handleSave] Error Response Received:", errorData);
+          throw new Error(errorData.message || `Save failed with status ${res.status}`);
         }
       }
       setEditMode(false);
@@ -246,8 +240,7 @@ export default function RetailerProfilePage() {
       setMessage({ type: "success", text: "Profile information & KYC documents saved successfully!" });
     } catch (err) {
       console.error("❌ [RetailerProfile:handleSave] Network or runtime error:", err);
-      setEditMode(false);
-      setMessage({ type: "success", text: "Profile changes saved locally." });
+      setMessage({ type: "error", text: `Failed to save profile: ${(err as Error).message || "Unknown error"}` });
     } finally {
       setSaving(false);
     }
@@ -297,7 +290,7 @@ export default function RetailerProfilePage() {
         {message.text && (
           <div className={`p-4 rounded-2xl border text-sm font-bold flex items-center gap-2 ${
             message.type === "success" 
-              ? "bg-red-500/10 border-red-500/20 text-red-500" 
+              ? "bg-[#00d26a]/10 border-[#00d26a]/20 text-[#00d26a]" 
               : "bg-red-500/10 border-red-500/20 text-red-400"
           }`}>
             <CheckCircle2 className="w-5 h-5" />

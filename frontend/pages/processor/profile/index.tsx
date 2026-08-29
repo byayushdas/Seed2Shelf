@@ -191,7 +191,6 @@ export default function ProcessorProfilePage() {
 
   const handleSave = async () => {
     setMessage({ type: "", text: "" });
-
     setSaving(true);
     try {
       if (targetUserId) {
@@ -235,14 +234,16 @@ export default function ProcessorProfilePage() {
           const updated = await res.json();
           setUser(updated);
           populateForm(updated);
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.message || `Save failed with status ${res.status}`);
         }
       }
       setEditMode(false);
       window.dispatchEvent(new CustomEvent("profileUpdated", { detail: { profilePhoto: profileImage } }));
       setMessage({ type: "success", text: "Profile information & KYC documents saved successfully!" });
     } catch (err) {
-      setEditMode(false);
-      setMessage({ type: "success", text: "Profile changes saved locally." });
+      setMessage({ type: "error", text: `Failed to save profile: ${(err as Error).message || "Unknown error"}` });
     } finally {
       setSaving(false);
     }
@@ -307,7 +308,7 @@ export default function ProcessorProfilePage() {
         {message.text && (
           <div className={`p-4 rounded-2xl border text-sm font-bold flex items-center gap-2 ${
             message.type === "success" 
-              ? "bg-red-500/10 border-red-500/20 text-red-500" 
+              ? "bg-[#00d26a]/10 border-[#00d26a]/20 text-[#00d26a]" 
               : "bg-red-500/10 border-red-500/20 text-red-400"
           }`}>
             <CheckCircle2 className="w-5 h-5" />

@@ -190,13 +190,6 @@ export default function FarmerProfilePage() {
 
   const handleSave = async () => {
     setMessage({ type: "", text: "" });
-
-    const updatedData = {
-      name,
-      aadhaarNumber,
-      aadhaarFront,
-      aadhaarBack,
-    };
     setSaving(true);
     try {
       if (targetUserId) {
@@ -248,6 +241,7 @@ export default function FarmerProfilePage() {
         } else {
           const errorData = await res.json().catch(() => ({}));
           console.error("❌ [FarmerProfile:handleSave] Error Response Received:", errorData);
+          throw new Error(errorData.message || `Save failed with status ${res.status}`);
         }
       }
       setEditMode(false);
@@ -255,8 +249,7 @@ export default function FarmerProfilePage() {
       setMessage({ type: "success", text: "Profile information & KYC documents saved successfully!" });
     } catch (err) {
       console.error("❌ [FarmerProfile:handleSave] Network or runtime error:", err);
-      setEditMode(false);
-      setMessage({ type: "success", text: "Profile changes saved locally." });
+      setMessage({ type: "error", text: `Failed to save profile: ${(err as Error).message || "Unknown error"}` });
     } finally {
       setSaving(false);
     }
@@ -306,7 +299,7 @@ export default function FarmerProfilePage() {
         {message.text && (
           <div className={`p-4 rounded-2xl border text-sm font-bold flex items-center gap-2 ${
             message.type === "success" 
-              ? "bg-red-500/10 border-red-500/20 text-red-500" 
+              ? "bg-[#00d26a]/10 border-[#00d26a]/20 text-[#00d26a]" 
               : "bg-red-500/10 border-red-500/20 text-red-400"
           }`}>
             <CheckCircle2 className="w-5 h-5" />

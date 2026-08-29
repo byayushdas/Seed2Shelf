@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(expressRes.status).json(errData);
     } catch (error) {
       console.error("PUT Profile proxy error:", error);
-      return res.status(500).json({ message: "Error updating profile via Express backend" });
+      return res.status(500).json({ message: `Error updating profile: ${(error as Error).message}` });
     }
   }
 
