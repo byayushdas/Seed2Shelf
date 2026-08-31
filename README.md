@@ -93,6 +93,3 @@ This phase scales onboarding to additional Farmer Producer Organizations and two
 The platform expands nationally, prioritizing regions by Farmer Producer Organization density and export value. Integration with AgriStack and e NAM 2.0 positions Seed2Shelf as complementary to existing government infrastructure, in alignment with NITI Aayog's broader digital agriculture goals. The data and analytics revenue line is activated at scale, and state government co funded onboarding is pursued, following a funding model similar to that used by PM Kisan SAMPADA for processing infrastructure.
 
 The long term goal guiding all three phases is building a transparent, inclusive, and traceable agricultural value chain, from the individual farmer to the global market.
-
-
-### Links
