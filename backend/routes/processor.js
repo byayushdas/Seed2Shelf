@@ -25,14 +25,13 @@ router.get('/marketplace', async (req, res) => {
     }
 
     const batches = await FarmerBatch.find(query)
-      .populate('farmerId', 'name district state village')
+      .populate('farmerId', 'name farmDetails location')
       .sort({ createdAt: -1 });
 
     const mapped = await Promise.all(batches.map(async (b) => {
       const farmer = b.farmerId;
       const farmerName = farmer?.name || 'Registered Farmer';
-      const farmerLocation = [farmer?.village, farmer?.district, farmer?.state]
-        .filter(Boolean).join(', ') || 'not available in ad';
+      const farmerLocation = farmer?.farmDetails?.farmLocation || farmer?.location || 'not available in ad';
 
       return {
         id: b._id,
@@ -271,11 +270,11 @@ router.post('/inventory', async (req, res) => {
     let originDetails = {};
     if (actualFarmerBatchIds.length > 0) {
       const primaryBatchId = actualFarmerBatchIds[0];
-      const fBatch = await FarmerBatch.findById(primaryBatchId).populate('farmerId', 'name district state village');
+      const fBatch = await FarmerBatch.findById(primaryBatchId).populate('farmerId', 'name farmDetails location');
       if (fBatch) {
         const fUser = fBatch.farmerId;
         const farmerName = fUser?.name || 'Unknown Farmer';
-        const farmerLocation = [fUser?.village, fUser?.district, fUser?.state].filter(Boolean).join(', ') || 'Unknown Location';
+        const farmerLocation = fUser?.farmDetails?.farmLocation || fUser?.location || 'Unknown Location';
         
         originDetails = {
           farmer: {

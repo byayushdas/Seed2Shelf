@@ -69,7 +69,8 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
     try {
       if (isSignUp) {
         // Signup
-        const res = await fetch("http://localhost:5001/api/auth/signup", {
+        const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
+        const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

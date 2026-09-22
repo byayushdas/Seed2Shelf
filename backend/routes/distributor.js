@@ -25,14 +25,13 @@ router.get('/marketplace', async (req, res) => {
     }
 
     const batches = await ProcessorBatch.find(query)
-      .populate('processorId', 'name district state village')
+      .populate('processorId', 'name processorDetails location')
       .sort({ createdAt: -1 });
 
     const mapped = batches.map((b) => {
       const processor = b.processorId;
       const processorName = processor?.name || 'Registered Processor';
-      const processorLocation = [processor?.village, processor?.district, processor?.state]
-        .filter(Boolean).join(', ') || 'not available in ad';
+      const processorLocation = processor?.processorDetails?.facilityLocation || processor?.location || 'not available in ad';
 
       const farmerDetails = b.originDetails?.farmer || {};
 
@@ -161,11 +160,11 @@ router.post('/inventory', async (req, res) => {
     const primaryBatchId = parsedRawBatchIds.length > 0 ? parsedRawBatchIds[0] : null;
     
     if (primaryBatchId) {
-      const pBatch = await ProcessorBatch.findById(primaryBatchId).populate('processorId', 'name district state village');
+      const pBatch = await ProcessorBatch.findById(primaryBatchId).populate('processorId', 'name processorDetails location');
       if (pBatch) {
         const pUser = pBatch.processorId;
         const processorName = pUser?.name || 'Unknown Processor';
-        const processorLocation = [pUser?.village, pUser?.district, pUser?.state].filter(Boolean).join(', ') || 'Unknown Location';
+        const processorLocation = pUser?.processorDetails?.facilityLocation || pUser?.location || 'Unknown Location';
         
         originDetails = {
           ...(pBatch.originDetails || {}),

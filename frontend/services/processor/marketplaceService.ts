@@ -27,9 +27,9 @@ export const marketplaceService = {
             ? item.farmerId.fullName
             : (item.farmerName || "Registered Farmer");
 
-          const farmLocation = typeof item.farmId === 'object' && item.farmId
-            ? [item.farmId.village, item.farmId.district, item.farmId.state].filter(Boolean).join(", ")
-            : (item.farmLocation || "not available in ad");
+          const farmLocation = typeof item.farmerId === 'object' && item.farmerId?.farmDetails?.farmLocation
+            ? item.farmerId.farmDetails.farmLocation
+            : (item.farmerLocation || item.farmLocation || "not available in ad");
 
           const volume = item.quantity ?? item.availableVolume ?? item.harvestVolume ?? 0;
           const price = item.pricePerUnit ?? item.pricePerKg ?? item.sellingPrice ?? 0;

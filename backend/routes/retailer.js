@@ -25,14 +25,13 @@ router.get('/marketplace', async (req, res) => {
     }
 
     const batches = await DistributorBatch.find(query)
-      .populate('distributorId', 'name district state village')
+      .populate('distributorId', 'name distributorDetails location')
       .sort({ createdAt: -1 });
 
     const mapped = batches.map((b) => {
       const distributor = b.distributorId;
       const distributorName = distributor?.name || 'Registered Distributor';
-      const distributorLocation = [distributor?.village, distributor?.district, distributor?.state]
-        .filter(Boolean).join(', ') || 'not available in ad';
+      const distributorLocation = distributor?.distributorDetails?.location || distributor?.location || 'not available in ad';
 
       const farmerDetails = b.originDetails?.farmer || {};
 
