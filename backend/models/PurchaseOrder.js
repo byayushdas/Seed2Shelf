@@ -72,4 +72,14 @@ purchaseOrderSchema.pre('save', async function () {
   }
 });
 
+// Compound indexes to perfectly optimize the order and shipment fetching
+purchaseOrderSchema.index({ sellerId: 1, createdAt: -1 });
+purchaseOrderSchema.index({ buyerId: 1, createdAt: -1 });
+purchaseOrderSchema.index({ sellerRoleId: 1, createdAt: -1 });
+purchaseOrderSchema.index({ buyerRoleId: 1, createdAt: -1 });
+purchaseOrderSchema.index({ sellerId: 1, updatedAt: -1 });
+purchaseOrderSchema.index({ buyerId: 1, updatedAt: -1 });
+purchaseOrderSchema.index({ sellerRoleId: 1, updatedAt: -1 });
+purchaseOrderSchema.index({ buyerRoleId: 1, updatedAt: -1 });
+
 module.exports = mongoose.model('PurchaseOrder', purchaseOrderSchema);
