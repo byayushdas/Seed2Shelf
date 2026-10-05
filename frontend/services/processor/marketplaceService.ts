@@ -1,6 +1,8 @@
 import { FarmerHarvestItem } from "@/types/processor";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+  ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1`
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1");
 
 const mockHarvests: FarmerHarvestItem[] = [];
 
