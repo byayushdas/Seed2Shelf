@@ -58,8 +58,8 @@ const purchaseOrderSchema = new mongoose.Schema({
   dispatchedAt: { type: Date },
   deliveredAt: { type: Date },
 
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now, index: true },
+  updatedAt: { type: Date, default: Date.now, index: true }
 });
 
 // Auto-generate orderNumber before save

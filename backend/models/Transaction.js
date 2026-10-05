@@ -17,7 +17,7 @@ const transactionSchema = new mongoose.Schema({
     default: 'COMPLETED'
   },
   description: { type: String },
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now, index: true }
 });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

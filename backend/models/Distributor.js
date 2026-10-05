@@ -51,8 +51,8 @@ const distributorSchema = new mongoose.Schema({
   soldDate: { type: Date },
   totalSaleValue: { type: Number },
 
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now, index: true },
+  updatedAt: { type: Date, default: Date.now, index: true }
 });
 
 module.exports = mongoose.model('Distributor', distributorSchema);
