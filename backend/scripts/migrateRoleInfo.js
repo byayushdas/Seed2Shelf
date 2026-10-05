@@ -20,7 +20,6 @@ async function migrate() {
       
       if (user.role === 'FARMER' && pd.farmerId) roleId = pd.farmerId;
       else if (user.role === 'PROCESSOR' && pd.processorId) roleId = pd.processorId;
-      else if (user.role === 'ADMIN' && pd.adminId) roleId = pd.adminId;
       else if (user.role === 'DISTRIBUTOR' && pd.distributorId) roleId = pd.distributorId;
       else if (user.role === 'RETAILER' && pd.retailerId) roleId = pd.retailerId;
 

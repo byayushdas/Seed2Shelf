@@ -19,11 +19,7 @@ const nextConfig: NextConfig = {
         destination: '/processor/processorHub/dashboard',
         permanent: false,
       },
-      {
-        source: '/admin',
-        destination: '/admin/adminHub/dashboard',
-        permanent: false,
-      },
+
       {
         source: '/distributor',
         destination: '/distributor/distributorHub/dashboard',

@@ -47,7 +47,6 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
     switch (r) {
       case 'FARMER': router.push('/farmer/farmerHub/dashboard'); break;
       case 'PROCESSOR': router.push('/processor/processorHub/dashboard'); break;
-      case 'ADMIN': router.push('/admin/adminHub/dashboard'); break;
       case 'DISTRIBUTOR': router.push('/distributor/distributorHub/dashboard'); break;
       case 'RETAILER': router.push('/retailer/retailerHub/dashboard'); break;
 

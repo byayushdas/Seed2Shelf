@@ -57,23 +57,6 @@ const getHubConfig = (role: string) => {
           { name: "Trace Produce", url: "/trace-lineage", icon: GitBranch }
         ]
       };
-    case "ADMIN":
-      return {
-        title: "Admin Engine",
-        basePath: "/admin/adminHub/dashboard",
-        items: [
-          { name: "Admin Dashboard", url: "/admin/adminHub/dashboard", icon: LayoutDashboard },
-          { name: "User Management", url: "/admin/adminHub/users", icon: User },
-          { name: "KYC Verification", url: "/admin/adminHub/kyc", icon: ShieldCheck },
-          { name: "Orders & Shipments", url: "/admin/adminHub/orders", icon: ClipboardList },
-          { name: "Payments & Escrow", url: "/admin/adminHub/payments", icon: ArrowLeftRight },
-          { name: "Wallets Monitor", url: "/admin/adminHub/wallets", icon: WalletIcon },
-          { name: "Support Center", url: "/admin/adminHub/support", icon: HelpCircle },
-          { name: "Reports & Complaints", url: "/admin/adminHub/reports", icon: FileText },
-          { name: "Analytics & Charts", url: "/admin/adminHub/analytics", icon: BarChart3 },
-          { name: "System Audit Logs", url: "/admin/adminHub/audit-logs", icon: Receipt }
-        ]
-      };
     case "DISTRIBUTOR":
       return {
         title: "Distributor Hub",
@@ -115,12 +98,11 @@ export default function Navbar() {
   const userRole = session?.user?.role;
   const isFarmer = userRole === "FARMER" || router.pathname.startsWith("/farmer");
   const isProcessor = userRole === "PROCESSOR" || router.pathname.startsWith("/processor");
-  const isAdmin = userRole === "ADMIN" || router.pathname.startsWith("/admin");
   const isDistributor = userRole === "DISTRIBUTOR" || router.pathname.startsWith("/distributor");
   const isRetailer = userRole === "RETAILER" || router.pathname.startsWith("/retailer");
-  const isPortalUser = isFarmer || isProcessor || isAdmin || isDistributor || isRetailer;
+  const isPortalUser = isFarmer || isProcessor || isDistributor || isRetailer;
   const hubConfig = userRole ? getHubConfig(userRole) : null;
-  const profileId = (session?.user as any)?.farmerId || (session?.user as any)?.processorId || (session?.user as any)?.adminId || session?.user?.id;
+  const profileId = (session?.user as any)?.farmerId || (session?.user as any)?.processorId || session?.user?.id;
   const isAuthenticated = status === "authenticated";
   const isHomePage = router.pathname === "/" || router.pathname === "/home";
 
@@ -349,31 +331,29 @@ export default function Navbar() {
                   onClose={() => setIsNotificationOpen(false)}
                 />
 
-                {/* Profile Avatar (For Farmer & Processor ONLY, NOT Admin) */}
-                {!isAdmin && (
-                  <div className="relative">
-                    <Link
-                      href={isAdmin ? "/admin" : isProcessor ? "/processor/profile" : isDistributor ? "/distributor/profile" : isRetailer ? "/retailer/profile" : "/farmer/profile"}
-                      className="flex items-center gap-2 p-1 rounded-full border-2 border-[#00d26a]/40 hover:border-[#00d26a] transition cursor-pointer"
-                      title="Profile"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#162a1e] to-[#254d33] flex items-center justify-center font-black text-sm text-[#00d26a] overflow-hidden">
-                        {profilePhotoUrl ? (
-                          <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
-                        ) : session?.user?.image ? (
-                          <img src={session.user.image} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          session?.user?.name ? session.user.name[0].toUpperCase() : "U"
-                        )}
-                      </div>
-                    </Link>
-                    {showProfileWarning && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold border border-[#111]">
-                        !
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Profile Avatar */}
+                <div className="relative">
+                  <Link
+                    href={isProcessor ? "/processor/profile" : isDistributor ? "/distributor/profile" : isRetailer ? "/retailer/profile" : "/farmer/profile"}
+                    className="flex items-center gap-2 p-1 rounded-full border-2 border-[#00d26a]/40 hover:border-[#00d26a] transition cursor-pointer"
+                    title="Profile"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#162a1e] to-[#254d33] flex items-center justify-center font-black text-sm text-[#00d26a] overflow-hidden">
+                      {profilePhotoUrl ? (
+                        <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
+                      ) : session?.user?.image ? (
+                        <img src={session.user.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        session?.user?.name ? session.user.name[0].toUpperCase() : "U"
+                      )}
+                    </div>
+                  </Link>
+                  {showProfileWarning && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold border border-[#111]">
+                      !
+                    </div>
+                  )}
+                </div>
 
               </div>
               )

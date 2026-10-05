@@ -43,14 +43,6 @@ router.post('/signup', async (req, res) => {
         if (match) nextNum = parseInt(match[1]) + 1;
       }
       roleId = `S2S-PRC-${String(nextNum).padStart(4, '0')}`;
-    } else if (role === "ADMIN") {
-      const lastUser = await User.findOne({ role: "ADMIN", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
-      let nextNum = 1;
-      if (lastUser && lastUser.roleId) {
-        const match = lastUser.roleId.match(/S2S-ADM-(\d+)/);
-        if (match) nextNum = parseInt(match[1]) + 1;
-      }
-      roleId = `S2S-ADM-${String(nextNum).padStart(4, '0')}`;
     } else if (role === "DISTRIBUTOR") {
       const lastUser = await User.findOne({ role: "DISTRIBUTOR", roleId: { $exists: true, $ne: "PENDING" } }).sort({ roleId: -1 });
       let nextNum = 1;

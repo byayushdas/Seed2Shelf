@@ -37,7 +37,6 @@ export const authOptions: NextAuthOptions = {
 
         let farmerId = user.role === 'FARMER' ? user.uniqueId : undefined;
         let processorId = user.role === 'PROCESSOR' ? user.uniqueId : undefined;
-        let adminId = user.role === 'ADMIN' ? user.uniqueId : undefined;
         let distributorId = user.role === 'DISTRIBUTOR' ? user.uniqueId : undefined;
         let retailerId = user.role === 'RETAILER' ? user.uniqueId : undefined;
 
@@ -48,7 +47,6 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           farmerId,
           processorId,
-          adminId,
           distributorId,
           retailerId,
           walletAddress: user.walletAddress || null,
@@ -70,7 +68,6 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.farmerId = (user as any).farmerId;
         token.processorId = (user as any).processorId;
-        token.adminId = (user as any).adminId;
         token.distributorId = (user as any).distributorId;
         token.retailerId = (user as any).retailerId;
         token.walletAddress = user.walletAddress;
@@ -93,7 +90,6 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         (session.user as any).farmerId = token.farmerId as string | undefined;
         (session.user as any).processorId = token.processorId as string | undefined;
-        (session.user as any).adminId = token.adminId as string | undefined;
         (session.user as any).distributorId = token.distributorId as string | undefined;
         (session.user as any).retailerId = token.retailerId as string | undefined;
         session.user.walletAddress = token.walletAddress as string | null;

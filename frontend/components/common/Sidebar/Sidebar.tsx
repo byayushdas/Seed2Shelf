@@ -76,7 +76,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   }, [session]);
 
   const userRole = session?.user?.role;
-  const isAdmin = userRole === "ADMIN" || router.pathname.startsWith("/admin");
   const isProcessor = userRole === "PROCESSOR" || router.pathname.startsWith("/processor");
   const isDistributor = userRole === "DISTRIBUTOR" || router.pathname.startsWith("/distributor");
   const isRetailer = userRole === "RETAILER" || router.pathname.startsWith("/retailer");
@@ -119,7 +118,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Drawer Header */}
           <div className="flex items-center justify-between pb-3 border-b border-white/5 px-2">
             <span className="text-xs font-black uppercase tracking-wider text-[#00d26a]">
-              {isAdmin ? "Admin Engine Portal" : isProcessor ? "Processor Navigation" : isDistributor ? "Distributor Navigation" : isRetailer ? "Retailer Navigation" : "Farmer Navigation"}
+              {isProcessor ? "Processor Navigation" : isDistributor ? "Distributor Navigation" : isRetailer ? "Retailer Navigation" : "Farmer Navigation"}
             </span>
             <button
               onClick={onClose}
@@ -131,29 +130,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           <nav className="space-y-1 text-xs font-semibold">
 
-            {isAdmin ? (
-              /* ==========================================================
-                  ADMIN PLATFORM ENGINE NAVIGATION
-                 ========================================================== */
-              <>
-                <Link href="/admin/adminHub/dashboard" onClick={onClose} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${isActive("/admin/adminHub/dashboard") || isActive("/admin") ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold" : "text-stone-300 hover:text-white hover:bg-white/5"}`}>
-                  <LayoutDashboard className="w-4 h-4 text-[#00d26a]" />
-                  <span>Admin Dashboard</span>
-                </Link>
-                <Link href="/admin/adminHub/users" onClick={onClose} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${isActive("/admin/adminHub/users") ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold" : "text-stone-300 hover:text-white hover:bg-white/5"}`}>
-                  <User className="w-4 h-4 text-[#00d26a]" />
-                  <span>User Management</span>
-                </Link>
-                <Link href="/admin/adminHub/kyc" onClick={onClose} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${isActive("/admin/adminHub/kyc") ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold" : "text-stone-300 hover:text-white hover:bg-white/5"}`}>
-                  <ShieldCheck className="w-4 h-4 text-[#00d26a]" />
-                  <span>KYC Management</span>
-                </Link>
-                <Link href="/admin/adminHub/support" onClick={onClose} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${isActive("/admin/adminHub/support") ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold" : "text-stone-300 hover:text-white hover:bg-white/5"}`}>
-                  <HelpCircle className="w-4 h-4 text-[#00d26a]" />
-                  <span>Support Center</span>
-                </Link>
-              </>
-            ) : isProcessor ? (
+            {isProcessor ? (
               /* ==========================================================
                   PROCESSOR NAVIGATION
                  ========================================================== */
