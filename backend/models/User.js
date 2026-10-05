@@ -1,15 +1,16 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true, index: true },
   name: { type: String },
   password: { type: String, required: true },
   role: { 
     type: String, 
     required: true,
-    enum: ['FARMER', 'PROCESSOR', 'DISTRIBUTOR', 'RETAILER', 'ADMIN']
+    enum: ['FARMER', 'PROCESSOR', 'DISTRIBUTOR', 'RETAILER', 'ADMIN'],
+    index: true
   },
-  roleId: { type: String },
+  roleId: { type: String, index: true },
 
   // Shared profile fields
   averageRating: { type: Number, default: 0 },
