@@ -9,9 +9,9 @@ const purchaseOrderSchema = new mongoose.Schema({
     required: true,
     enum: ['PROCESSOR', 'DISTRIBUTOR', 'RETAILER']
   },
-  buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   buyerName: { type: String },
-  buyerRoleId: { type: String },
+  buyerRoleId: { type: String, index: true },
 
   // Seller info
   sellerRole: {
@@ -19,9 +19,9 @@ const purchaseOrderSchema = new mongoose.Schema({
     required: true,
     enum: ['FARMER', 'PROCESSOR', 'DISTRIBUTOR', 'RETAILER']
   },
-  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   sellerName: { type: String },
-  sellerRoleId: { type: String },
+  sellerRoleId: { type: String, index: true },
 
   // What's being bought
   batchId: { type: String, required: true },     // ID from Farmer/Processor/Distributor/Retailer collection

@@ -20,7 +20,8 @@ const farmerSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['Unlisted', 'Listed', 'Sold'],
-    default: 'Unlisted'
+    default: 'Unlisted',
+    index: true
   },
 
   soldTo: { type: String },
