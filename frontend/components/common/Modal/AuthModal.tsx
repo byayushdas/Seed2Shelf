@@ -328,8 +328,6 @@ export default function AuthModal({ isOpen, onClose, initialModeIsSignUp = false
                           <option value="PROCESSOR">Processor</option>
                           <option value="DISTRIBUTOR">Distributor</option>
                           <option value="RETAILER">Retailer</option>
-
-                          <option value="ADMIN">Platform Administrator (Admin)</option>
                         </select>
                       </div>
                     </div>
