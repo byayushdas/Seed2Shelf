@@ -108,7 +108,7 @@ export default function FarmerOrders() {
         body: JSON.stringify({ userId: farmerId }),
       });
       if (res.ok) {
-        setOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" as any } : ord));
+        setOrders(prev => prev.filter(ord => ord.id !== orderId));
       }
     } catch (err) {}
     setNotification("Order marked as dispatched!");

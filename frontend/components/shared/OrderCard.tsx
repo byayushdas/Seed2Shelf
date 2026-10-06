@@ -146,7 +146,7 @@ export default function OrderCard({ order, activeTab = "NONE", onAccept, onRejec
               <span>Accept Order</span>
             </button>
           )}
-          {order.status === "ACCEPTED" && activeTab === "OUTGOING" && onDispatch && (
+          {order.status === "ACCEPTED" && activeTab === "INCOMING" && onDispatch && (
              <button
                onClick={() => onDispatch(order.id)}
                className="w-full sm:w-auto px-5 py-2.5 rounded-[8px] bg-[#FFFCF5] border border-[#6F7D61]/30 hover:bg-[#EDF0E6] text-[#58664C] font-bold text-[13px] flex items-center justify-center gap-2 transition-all shadow-sm"

@@ -145,9 +145,9 @@ export default function DistributorOrders() {
       });
       if (res.ok) {
         if (activeTab === "INCOMING") {
-          setIncomingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" as any } : ord));
+          setIncomingOrders(prev => prev.filter(ord => ord.id !== orderId));
         } else {
-          setOutgoingOrders(prev => prev.map(ord => ord.id === orderId ? { ...ord, status: "DISPATCHED" as any } : ord));
+          setOutgoingOrders(prev => prev.filter(ord => ord.id !== orderId));
         }
       }
     } catch (err) {}
