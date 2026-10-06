@@ -184,16 +184,23 @@ router.put('/purchase-orders/:id/reject', async (req, res) => {
     await order.save();
 
     if (order.buyerId) {
-      const refundTx = new Transaction({
-        userId: order.buyerId,
-        transactionId: refundId || `ref_${Date.now()}`,
-        orderId: order.orderNumber,
-        amount: order.totalAmount,
-        type: 'CREDIT',
-        status: 'COMPLETED',
-        description: `Refund (Order Rejected)`
-      });
-      await refundTx.save();
+      const buyerTx = await Transaction.findOne({ orderId: order.orderNumber, userId: order.buyerId, type: 'DEBIT_HOLD' });
+      if (buyerTx) {
+        buyerTx.type = 'REFUND';
+        buyerTx.status = 'COMPLETED';
+        buyerTx.transactionId = refundId || `ref_${Date.now()}`;
+        buyerTx.description = 'Refund (Order Rejected)';
+        await buyerTx.save();
+      }
+    }
+
+    if (order.sellerId) {
+      const sellerTx = await Transaction.findOne({ orderId: order.orderNumber, userId: order.sellerId, type: 'ESCROW_HOLD' });
+      if (sellerTx) {
+        sellerTx.status = 'CANCELLED';
+        sellerTx.description = 'Escrow Cancelled (Order Rejected)';
+        await sellerTx.save();
+      }
     }
 
     // RESTOCK LOGIC
