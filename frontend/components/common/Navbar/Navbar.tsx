@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthModal from "../Modal/AuthModal";
 import Sidebar from "../Sidebar/Sidebar";
+import { useLanguage, INDIAN_LANGUAGES } from "@/context/LanguageContext";
 import { 
   X, 
   Menu, 
@@ -27,7 +28,8 @@ import {
   Bell,
   ArrowLeftRight,
   HelpCircle,
-  Receipt
+  Receipt,
+  Globe
 } from "lucide-react";
 
 const getHubConfig = (role: string) => {
@@ -108,6 +110,8 @@ export default function Navbar() {
 
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
   const [showProfileWarning, setShowProfileWarning] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const { selectedLanguage, setSelectedLanguage } = useLanguage();
 
   useEffect(() => {
     const userId = session?.user?.id || session?.user?.email;
@@ -180,26 +184,40 @@ export default function Navbar() {
 
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [currentScrollY, setCurrentScrollY] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+    const handleScroll = (e: Event) => {
+      // Get scroll position from the actual scrolling element or fallback to window
+      let top = window.scrollY || 0;
+      if (e.target && e.target !== document && (e.target as Element).scrollTop !== undefined) {
+        top = (e.target as Element).scrollTop;
+      } else if (document.documentElement && document.documentElement.scrollTop !== undefined) {
+        top = document.documentElement.scrollTop;
+      }
+      
+      setCurrentScrollY(top);
 
-      if (currentScrollY < 10) {
+      if (top < 10) {
         setIsVisible(true);
       } else {
-        if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        if (top > lastScrollY && top > 50) {
           setIsVisible(false);
-        } else if (currentScrollY < lastScrollY) {
+        } else if (top < lastScrollY) {
           setIsVisible(true);
         }
       }
 
-      setLastScrollY(currentScrollY);
+      setLastScrollY(top);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    // Use capture phase to catch scroll events from any nested containers
+    window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
+    
+    // Initial state trigger
+    handleScroll({ target: document } as unknown as Event);
+    
+    return () => window.removeEventListener("scroll", handleScroll, { capture: true } as any);
   }, [lastScrollY]);
 
   const openModal = (signUp: boolean) => {
@@ -219,9 +237,67 @@ export default function Navbar() {
     }
   };
 
+  const isCreamThemePage = router.pathname.includes("trace-lineage") || 
+                           router.pathname.includes("transactions") || 
+                           router.pathname.includes("wallet") || 
+                           router.pathname.includes("shipments") || 
+                           router.pathname.includes("orders") ||
+                           router.pathname.includes("harvestHub") ||
+                           router.pathname.includes("processedInventory") ||
+                           router.pathname.includes("supplyHub") ||
+                           router.pathname.includes("dashboard") || router.pathname.includes("marketplace") || router.pathname.includes("profile");
+  const isScrolled = currentScrollY > 20;
+
+  const renderLanguageSelector = () => (
+    <div className="relative z-50 flex items-center">
+      <button
+        onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition cursor-pointer text-xs font-bold ${
+          isCreamThemePage && !isScrolled
+            ? "bg-[#FEFAE0]/10 border-[#FEFAE0]/20 text-[#FEFAE0] hover:bg-[#FEFAE0]/20"
+            : (isCreamThemePage && isScrolled) || isPortalUser
+              ? "bg-[#283025]/5 border-[#283025]/10 text-[#283025] hover:bg-[#283025]/10"
+              : "bg-white/5 border-white/10 text-stone-200 hover:bg-white/10 hover:text-white"
+        }`}
+      >
+        <Globe className="w-3.5 h-3.5" />
+        <span className="uppercase">{selectedLanguage}</span>
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isLanguageDropdownOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {isLanguageDropdownOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute top-full right-0 mt-2 w-48 max-h-64 overflow-y-auto bg-stone-900 border border-stone-800 rounded-2xl shadow-xl py-1 z-50 custom-scrollbar"
+          >
+            {INDIAN_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                onClick={() => {
+                  setSelectedLanguage(lang.code);
+                  setIsLanguageDropdownOpen(false);
+                }}
+                className={`w-full text-left px-4 py-2 text-xs font-bold transition hover:bg-stone-800 ${
+                  selectedLanguage === lang.code ? "text-[#00d26a]" : "text-stone-300"
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 glass-navbar transition-transform duration-300 ease-in-out ${isVisible ? "translate-y-0" : "-translate-y-full"}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isVisible ? "translate-y-0" : "-translate-y-full"} ${
+        isCreamThemePage && !isScrolled ? "bg-[#6F7D61] border-b border-[#58664C]" : "glass-navbar"
+      }`}>
         <div className="w-full px-6 lg:px-8">
           <div className={`flex items-center justify-between ${isHomePage ? 'h-12' : 'h-16'}`}>
             
@@ -231,7 +307,7 @@ export default function Navbar() {
                 <Image 
                   src={logoIcon} 
                   alt="Seed2Shelf Logo" 
-                  className={`w-auto object-contain drop-shadow-[0_0_8px_rgba(0,210,106,0.3)] transition-transform duration-300 group-hover:scale-[1.03] ${isHomePage ? 'h-7 sm:h-8' : 'h-9 sm:h-10'}`}
+                  className={`w-auto object-contain transition-all duration-300 group-hover:scale-[1.03] ${isHomePage ? 'h-7 sm:h-8' : 'h-9 sm:h-10'} ${isCreamThemePage ? (!isScrolled ? 'brightness-0 invert opacity-100' : 'brightness-0 opacity-80') : 'drop-shadow-[0_0_8px_rgba(0,210,106,0.3)]'}`}
                   priority
                 />
               </div>
@@ -313,14 +389,15 @@ export default function Navbar() {
               isHomePage ? null : (
               /* Portal Top Navbar Controls: ONLY Hamburger + Bell + Profile Avatar */
               <div className="flex items-center gap-3">
+                {renderLanguageSelector()}
                 
                 {/* Hamburger Menu (Opens Right Drawer) */}
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-stone-300 hover:text-white transition cursor-pointer"
+                  className={`w-11 h-11 flex items-center justify-center rounded-xl transition cursor-pointer ${isCreamThemePage && !isScrolled ? "bg-[#FEFAE0]/10 hover:bg-[#FEFAE0]/20 border border-[#FEFAE0]/20 text-[#FEFAE0]" : "bg-[#283025]/5 hover:bg-[#283025]/10 border border-[#283025]/10 text-[#283025]"}`}
                   title="Open Navigation Menu"
                 >
-                  <Menu className="w-5 h-5 text-[#00d26a]" />
+                  <Menu className="w-[22px] h-[22px]" />
                 </button>
 
                 {/* Notification Bell */}
@@ -329,16 +406,18 @@ export default function Navbar() {
                   isOpen={isNotificationOpen}
                   onToggle={() => setIsNotificationOpen(!isNotificationOpen)}
                   onClose={() => setIsNotificationOpen(false)}
+                  isCreamTheme={isCreamThemePage}
+                  isScrolled={isScrolled}
                 />
 
                 {/* Profile Avatar */}
                 <div className="relative">
                   <Link
                     href={isProcessor ? "/processor/profile" : isDistributor ? "/distributor/profile" : isRetailer ? "/retailer/profile" : "/farmer/profile"}
-                    className="flex items-center gap-2 p-1 rounded-full border-2 border-[#00d26a]/40 hover:border-[#00d26a] transition cursor-pointer"
+                    className={`flex items-center justify-center p-0.5 rounded-full border-2 transition cursor-pointer ${isCreamThemePage && !isScrolled ? "border-[#FEFAE0]/40 hover:border-[#FEFAE0]" : "border-[#283025]/40 hover:border-[#283025]"}`}
                     title="Profile"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#162a1e] to-[#254d33] flex items-center justify-center font-black text-sm text-[#00d26a] overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-[#283025] flex items-center justify-center font-black text-lg text-[#FEFAE0] overflow-hidden">
                       {profilePhotoUrl ? (
                         <img src={profilePhotoUrl} alt="" className="w-full h-full object-cover" />
                       ) : session?.user?.image ? (
@@ -360,6 +439,7 @@ export default function Navbar() {
             ) : (
               /* Non-Farmer Top Navbar Controls */
               <div className="flex items-center gap-4">
+                {renderLanguageSelector()}
                 {status === "authenticated" && session?.user ? (
                   <div className="flex items-center gap-3">
                     <Link 
@@ -434,9 +514,9 @@ export default function Navbar() {
               <div className="md:hidden flex items-center">
                 <button 
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="text-stone-300 hover:text-white p-2"
-                >
-                  {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  className={`w-11 h-11 flex items-center justify-center rounded-xl transition cursor-pointer ${isCreamThemePage && !isScrolled ? "bg-[#FEFAE0]/10 hover:bg-[#FEFAE0]/20 border border-[#FEFAE0]/20 text-[#FEFAE0]" : "bg-[#283025]/5 hover:bg-[#283025]/10 border border-[#283025]/10 text-[#283025]"}`}
+                  >
+                    {isMobileMenuOpen ? <X className="w-[22px] h-[22px]" /> : <Menu className="w-[22px] h-[22px]" />}
                 </button>
               </div>
             )}
@@ -515,7 +595,7 @@ export default function Navbar() {
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
-function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: string; isOpen: boolean; onToggle: () => void; onClose: () => void }) {
+function NotificationBell({ userId, isOpen, onToggle, onClose, isCreamTheme, isScrolled }: { userId: string; isOpen: boolean; onToggle: () => void; onClose: () => void; isCreamTheme?: boolean; isScrolled?: boolean }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -622,12 +702,12 @@ function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: strin
     <div className="relative">
       <button
         onClick={onToggle}
-        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-stone-300 hover:text-white transition cursor-pointer relative"
+        className={`w-11 h-11 flex items-center justify-center rounded-xl transition cursor-pointer relative ${isCreamTheme ? (!isScrolled ? "bg-[#FEFAE0]/10 hover:bg-[#FEFAE0]/20 border border-[#FEFAE0]/20 text-[#FEFAE0]" : "bg-[#283025]/5 hover:bg-[#283025]/10 border border-[#283025]/10 text-[#283025]") : "bg-white/5 hover:bg-white/10 border border-white/10 text-stone-300 hover:text-white"}`}
         title="Notifications"
       >
-        <Bell className="w-5 h-5 text-stone-300" />
+        <Bell className="w-[22px] h-[22px]" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse flex items-center justify-center text-[8px] text-black font-black">
+          <span className="absolute top-[6px] right-[6px] w-[14px] h-[14px] bg-red-500 rounded-full flex items-center justify-center text-[9px] text-white font-bold border-2 border-transparent shadow-sm">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -639,17 +719,17 @@ function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: strin
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute right-0 mt-3 w-80 bg-[#141415] border border-white/10 rounded-2xl shadow-2xl p-4 z-50 text-xs"
+            className="absolute right-0 mt-3 w-80 bg-[#FEFAE0] border border-[#CCD5AE] rounded-2xl shadow-2xl p-4 z-50 text-xs"
           >
-            <div className="flex justify-between items-center pb-2 border-b border-white/10 mb-3">
-              <span className="font-bold text-white">Notifications{unreadCount > 0 ? ` (${unreadCount} Unread)` : ""}</span>
+            <div className="flex justify-between items-center pb-2 border-b border-[#CCD5AE]/60 mb-3">
+              <span className="font-bold text-[#283025]">Notifications{unreadCount > 0 ? ` (${unreadCount} Unread)` : ""}</span>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
-                  <button onClick={handleMarkAllRead} className="text-[10px] text-emerald-400 font-bold hover:underline cursor-pointer">
+                  <button onClick={handleMarkAllRead} className="text-[10px] text-[#7BA05B] font-bold hover:underline cursor-pointer">
                     Mark All Read
                   </button>
                 )}
-                <button onClick={onClose} className="text-stone-400 hover:text-white cursor-pointer">
+                <button onClick={onClose} className="text-[#69705E] hover:text-[#283025] cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -657,7 +737,7 @@ function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: strin
 
             <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
               {notifications.length === 0 ? (
-                <div className="py-6 text-center text-stone-400 text-xs italic">
+                <div className="py-6 text-center text-[#69705E] text-xs italic">
                   No notifications available.
                 </div>
               ) : (
@@ -666,14 +746,14 @@ function NotificationBell({ userId, isOpen, onToggle, onClose }: { userId: strin
                     key={n.id}
                     onClick={() => handleMarkSingleRead(n.id)}
                     className={`p-3 rounded-xl border transition cursor-pointer ${
-                      n.isRead ? "bg-stone-950 border-stone-800/80 text-stone-400" : "bg-stone-900 border-emerald-500/30 text-white font-medium hover:border-emerald-500/60"
+                      n.isRead ? "bg-[#F5F1E6] border-[#CCD5AE]/50 text-[#69705E]" : "bg-[#FAEDCD] border-[#7BA05B]/40 shadow-sm text-[#283025] font-medium hover:border-[#7BA05B]/70"
                     }`}
                   >
                     <div className="flex items-center justify-between font-bold text-xs mb-1">
-                      <span>{n.title}</span>
-                      <span className="text-[9px] text-stone-500">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className={n.isRead ? "text-[#58664C]" : "text-[#283025]"}>{n.title}</span>
+                      <span className="text-[9px] text-[#69705E]">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <p className="text-[11px] text-stone-300 leading-snug">{n.message}</p>
+                    <p className={`text-[11px] leading-snug ${n.isRead ? "text-[#69705E]" : "text-[#58664C]"}`}>{n.message}</p>
                   </div>
                 ))
               )}

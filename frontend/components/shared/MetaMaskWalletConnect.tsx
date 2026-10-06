@@ -110,14 +110,14 @@ export default function MetaMaskWalletConnect({
   };
 
   return (
-    <div className="bg-stone-900/50 border border-stone-800 rounded-3xl p-6 sm:p-8 space-y-6">
-      <div className="flex items-center gap-3 border-b border-stone-800/60 pb-4">
-        <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 shadow-inner">
+    <div className="bg-[#FEFAE0] border border-[#CCD5AE] shadow-xl rounded-3xl p-6 sm:p-8 space-y-6">
+      <div className="flex items-center gap-3 border-b border-[#CCD5AE]/60 pb-4">
+        <div className="w-10 h-10 rounded-xl bg-[#7BA05B]/10 border border-[#7BA05B]/20 flex items-center justify-center text-[#7BA05B] shadow-inner">
           <Wallet className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-stone-100 tracking-tight">Crypto Wallet</h3>
-          <p className="text-sm text-stone-400 font-medium">Connect MetaMask for Blockchain tracking</p>
+          <h3 className="text-lg font-bold text-[#283025] tracking-tight">Crypto Wallet</h3>
+          <p className="text-sm text-[#69705E] font-medium">Connect MetaMask for Blockchain tracking</p>
         </div>
       </div>
 
@@ -125,27 +125,27 @@ export default function MetaMaskWalletConnect({
         {error && <p className="text-xs text-red-400 font-medium">{error}</p>}
 
         {!walletAddress ? (
-          <div className="flex items-center justify-between bg-stone-950 border border-stone-800 rounded-2xl p-5">
+          <div className="flex items-center justify-between bg-[#FAEDCD] border border-[#CCD5AE] rounded-2xl p-5 shadow-inner">
             <div>
-              <p className="text-sm font-bold text-stone-200">Not Connected</p>
-              <p className="text-xs text-stone-500 font-medium mt-1">Please connect your MetaMask wallet.</p>
+              <p className="text-sm font-bold text-[#283025]">Not Connected</p>
+              <p className="text-xs text-[#69705E] font-medium mt-1">Please connect your MetaMask wallet.</p>
             </div>
             <button
               onClick={connectWallet}
               disabled={isConnecting}
-              className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-extrabold text-xs transition cursor-pointer shadow-md"
+              className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-white font-extrabold text-xs transition cursor-pointer shadow-md"
             >
               {isConnecting ? "Connecting..." : "Connect MetaMask"}
             </button>
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-stone-950 border border-stone-800 rounded-2xl p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#FAEDCD] border border-[#CCD5AE] rounded-2xl p-5 shadow-inner">
               <div>
-                <p className="text-xs text-stone-500 font-bold uppercase tracking-wider mb-1">Connected Address</p>
+                <p className="text-xs text-[#69705E] font-bold uppercase tracking-wider mb-1">Connected Address</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <p className="text-sm font-bold text-emerald-400 font-mono tracking-tight" title={walletAddress}>
+                  <div className="w-2 h-2 rounded-full bg-[#7BA05B] animate-pulse"></div>
+                  <p className="text-sm font-bold text-[#58664C] font-mono tracking-tight" title={walletAddress}>
                     {formatAddress(walletAddress)}
                   </p>
                 </div>
@@ -155,13 +155,13 @@ export default function MetaMaskWalletConnect({
                 <button
                   onClick={switchAccount}
                   disabled={isConnecting}
-                  className="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#FEFAE0] hover:bg-[#E9EDC9] text-[#283025] border border-[#CCD5AE] font-bold text-xs transition cursor-pointer shadow-sm"
                 >
                   Switch Account
                 </button>
                 <button
                   onClick={disconnectWallet}
-                  className="px-4 py-2 rounded-xl bg-red-900/20 hover:bg-red-900/40 text-red-400 border border-red-900/30 font-bold text-xs transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#7BA05B]/10 hover:bg-[#7BA05B]/20 text-[#7BA05B] border border-[#7BA05B]/30 font-bold text-xs transition cursor-pointer shadow-sm"
                 >
                   Disconnect
                 </button>

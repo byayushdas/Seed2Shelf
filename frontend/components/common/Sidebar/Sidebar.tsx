@@ -109,26 +109,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Right-Side Drawer */}
       <aside
-        className={`fixed top-16 right-0 z-40 h-[calc(100vh-4rem)] w-72 bg-[#0c0d0e]/95 backdrop-blur-2xl border-l border-white/10 text-stone-200 transition-transform duration-300 ease-in-out overflow-y-auto custom-scrollbar flex flex-col justify-between p-4 ${
+        className={`fixed top-16 right-0 z-40 h-[calc(100vh-4rem)] w-72 bg-[#101110] backdrop-blur-2xl border-l border-[#20261D] text-[#E5E5DE] transition-transform duration-300 ease-in-out overflow-y-auto custom-scrollbar flex flex-col justify-between p-4 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="space-y-4">
           
           {/* Drawer Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-white/5 px-2">
-            <span className="text-xs font-black uppercase tracking-wider text-[#00d26a]">
-              {isProcessor ? "Processor Navigation" : isDistributor ? "Distributor Navigation" : isRetailer ? "Retailer Navigation" : "Farmer Navigation"}
+          <div className="flex items-center justify-between pb-4 border-b border-[#20261D] px-2 mb-2">
+            <span className="text-[15px] font-medium text-[#7BA05B]">
+              {isProcessor ? "Processor navigation" : isDistributor ? "Distributor navigation" : isRetailer ? "Retailer navigation" : "Farmer navigation"}
             </span>
             <button
               onClick={onClose}
-              className="text-stone-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition"
+              className="text-[#A6AAA0] hover:text-[#E5E5DE] p-1 rounded-lg hover:bg-[#20261D] transition"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <nav className="space-y-1 text-xs font-semibold">
+          <nav className="space-y-1 text-[15px] font-medium text-[#E5E5DE]">
 
             {isProcessor ? (
               /* ==========================================================
@@ -139,13 +139,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/processor/profile"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/processor/profile")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <User className="w-4 h-4 text-[#00d26a]" />
+                  <User className="w-4 h-4 text-[#7BA05B]" />
                   <span>Profile</span>
                   {showProfileWarning && (
                     <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
@@ -156,16 +156,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div>
                   <button
                     onClick={() => setHubExpanded(!hubExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                    className="w-full flex items-center justify-between gap-4 px-4 py-3 rounded-r-lg border-l-[3px] border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D] focus:outline-none focus:bg-[#20261D] transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      <BarChart3 className="w-4 h-4 text-[#00d26a]" />
+                      <BarChart3 className="w-4 h-4 text-[#7BA05B]" />
                       <span>Processor Hub</span>
                     </div>
                     {hubExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronDown className="w-4 h-4 text-[#A6AAA0]" />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronRight className="w-4 h-4 text-[#A6AAA0]" />
                     )}
                   </button>
 
@@ -175,15 +175,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                        className="ml-[1.35rem] pl-4 border-l border-[#20261D] space-y-1 mt-2 mb-2"
                       >
                         <Link
                           href="/processor/processorHub/dashboard"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/processor/processorHub/dashboard") || isActive("/processor/dashboard")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <LayoutDashboard className="w-3.5 h-3.5" />
@@ -192,10 +192,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/processor/processorHub/marketplace"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/processor/processorHub/marketplace") || isActive("/processor/marketplace")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Store className="w-3.5 h-3.5" />
@@ -204,10 +204,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/processor/processorHub/processedInventory"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/processor/processorHub/processedInventory") || isActive("/processor/processedInventory")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Factory className="w-3.5 h-3.5" />
@@ -216,10 +216,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/processor/processorHub/orders"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/processor/processorHub/orders") || isActive("/processor/orders")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ClipboardList className="w-3.5 h-3.5" />
@@ -228,10 +228,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/processor/processorHub/shipments"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/processor/processorHub/shipments") || isActive("/processor/shipments")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Truck className="w-3.5 h-3.5" />
@@ -240,10 +240,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/processor/processorHub/transactions"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/processor/processorHub/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -262,13 +262,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/trace-lineage"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/trace-lineage")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <GitBranch className="w-4 h-4 text-[#7BA05B]" />
                   <span>Trace Lineage</span>
                 </Link>
 
@@ -276,13 +276,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/support"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/support")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <HelpCircle className="w-4 h-4 text-[#00d26a]" />
+                  <HelpCircle className="w-4 h-4 text-[#7BA05B]" />
                   <span>Support</span>
                 </Link>
               </>
@@ -295,13 +295,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/distributor/profile"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/distributor/profile")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <User className="w-4 h-4 text-[#00d26a]" />
+                  <User className="w-4 h-4 text-[#7BA05B]" />
                   <span>Profile</span>
                   {showProfileWarning && (
                     <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
@@ -312,16 +312,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div>
                   <button
                     onClick={() => setHubExpanded(!hubExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                    className="w-full flex items-center justify-between gap-4 px-4 py-3 rounded-r-lg border-l-[3px] border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D] focus:outline-none focus:bg-[#20261D] transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      <BarChart3 className="w-4 h-4 text-[#00d26a]" />
+                      <BarChart3 className="w-4 h-4 text-[#7BA05B]" />
                       <span>Distributor Hub</span>
                     </div>
                     {hubExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronDown className="w-4 h-4 text-[#A6AAA0]" />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronRight className="w-4 h-4 text-[#A6AAA0]" />
                     )}
                   </button>
 
@@ -331,15 +331,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                        className="ml-[1.35rem] pl-4 border-l border-[#20261D] space-y-1 mt-2 mb-2"
                       >
                         <Link
                           href="/distributor/distributorHub/dashboard"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/distributor/distributorHub/dashboard")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <LayoutDashboard className="w-3.5 h-3.5" />
@@ -348,10 +348,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/distributor/distributorHub/marketplace"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/distributor/distributorHub/marketplace")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Sprout className="w-3.5 h-3.5" />
@@ -360,10 +360,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/distributor/distributorHub/supplyHub"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/distributor/distributorHub/supplyHub")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Boxes className="w-3.5 h-3.5" />
@@ -372,10 +372,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/distributor/distributorHub/orders"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/distributor/distributorHub/orders")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ClipboardList className="w-3.5 h-3.5" />
@@ -384,10 +384,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/distributor/distributorHub/shipments"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/distributor/distributorHub/shipments")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Truck className="w-3.5 h-3.5" />
@@ -396,10 +396,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/distributor/distributorHub/transactions"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/distributor/distributorHub/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -418,13 +418,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/trace-lineage"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/trace-lineage")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <GitBranch className="w-4 h-4 text-[#7BA05B]" />
                   <span>Trace Lineage</span>
                 </Link>
 
@@ -432,13 +432,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/support"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/support")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <HelpCircle className="w-4 h-4 text-[#00d26a]" />
+                  <HelpCircle className="w-4 h-4 text-[#7BA05B]" />
                   <span>Support</span>
                 </Link>
               </>
@@ -451,13 +451,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/retailer/profile"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/retailer/profile")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <User className="w-4 h-4 text-[#00d26a]" />
+                  <User className="w-4 h-4 text-[#7BA05B]" />
                   <span>Profile</span>
                   {showProfileWarning && (
                     <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
@@ -468,16 +468,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div>
                   <button
                     onClick={() => setHubExpanded(!hubExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                    className="w-full flex items-center justify-between gap-4 px-4 py-3 rounded-r-lg border-l-[3px] border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D] focus:outline-none focus:bg-[#20261D] transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      <BarChart3 className="w-4 h-4 text-[#00d26a]" />
+                      <BarChart3 className="w-4 h-4 text-[#7BA05B]" />
                       <span>Retailer Hub</span>
                     </div>
                     {hubExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronDown className="w-4 h-4 text-[#A6AAA0]" />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronRight className="w-4 h-4 text-[#A6AAA0]" />
                     )}
                   </button>
 
@@ -487,15 +487,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                        className="ml-[1.35rem] pl-4 border-l border-[#20261D] space-y-1 mt-2 mb-2"
                       >
                         <Link
                           href="/retailer/retailerHub/dashboard"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/retailer/retailerHub/dashboard")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <LayoutDashboard className="w-3.5 h-3.5" />
@@ -504,10 +504,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/retailer/retailerHub/marketplace"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/retailer/retailerHub/marketplace")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Sprout className="w-3.5 h-3.5" />
@@ -517,10 +517,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/retailer/retailerHub/orders"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/retailer/retailerHub/orders")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ClipboardList className="w-3.5 h-3.5" />
@@ -529,10 +529,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/retailer/retailerHub/shipments"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/retailer/retailerHub/shipments")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Truck className="w-3.5 h-3.5" />
@@ -541,10 +541,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/retailer/retailerHub/transactions"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/retailer/retailerHub/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -563,13 +563,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/trace-lineage"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/trace-lineage")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <GitBranch className="w-4 h-4 text-[#7BA05B]" />
                   <span>Trace Lineage</span>
                 </Link>
 
@@ -577,13 +577,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/support"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/support")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <HelpCircle className="w-4 h-4 text-[#00d26a]" />
+                  <HelpCircle className="w-4 h-4 text-[#7BA05B]" />
                   <span>Support</span>
                 </Link>
               </>
@@ -596,13 +596,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/farmer/profile"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/farmer/profile")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <User className="w-4 h-4 text-[#00d26a]" />
+                  <User className="w-4 h-4 text-[#7BA05B]" />
                   <span>Profile</span>
                   {showProfileWarning && (
                     <span className="ml-auto w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">!</span>
@@ -613,16 +613,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div>
                   <button
                     onClick={() => setHubExpanded(!hubExpanded)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-stone-300 hover:text-white hover:bg-white/5 transition"
+                    className="w-full flex items-center justify-between gap-4 px-4 py-3 rounded-r-lg border-l-[3px] border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D] focus:outline-none focus:bg-[#20261D] transition-all duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      <BarChart3 className="w-4 h-4 text-[#00d26a]" />
+                      <BarChart3 className="w-4 h-4 text-[#7BA05B]" />
                       <span>Farmer Hub</span>
                     </div>
                     {hubExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronDown className="w-4 h-4 text-[#A6AAA0]" />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-stone-500" />
+                      <ChevronRight className="w-4 h-4 text-[#A6AAA0]" />
                     )}
                   </button>
 
@@ -632,15 +632,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="ml-6 pl-2 border-l border-white/10 space-y-1 mt-1"
+                        className="ml-[1.35rem] pl-4 border-l border-[#20261D] space-y-1 mt-2 mb-2"
                       >
                         <Link
                           href="/farmer/farmerHub/dashboard"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/farmer/farmerHub/dashboard")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <LayoutDashboard className="w-3.5 h-3.5" />
@@ -649,10 +649,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/farmer/farmerHub/harvestHub"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/farmer/farmerHub/harvestHub")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Sprout className="w-3.5 h-3.5" />
@@ -661,10 +661,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/farmer/farmerHub/orders"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/farmer/farmerHub/orders")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ClipboardList className="w-3.5 h-3.5" />
@@ -673,10 +673,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/farmer/farmerHub/shipments"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/farmer/farmerHub/shipments")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <Truck className="w-3.5 h-3.5" />
@@ -685,10 +685,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <Link
                           href="/farmer/farmerHub/transactions"
                           onClick={onClose}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition ${
+                          className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                             isActive("/farmer/farmerHub/transactions")
-                              ? "bg-[#00d26a]/15 text-[#00d26a] font-bold"
-                              : "text-stone-400 hover:text-white hover:bg-white/5"
+                              ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                              : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                           }`}
                         >
                           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -704,13 +704,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/trace-lineage"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/trace-lineage")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <GitBranch className="w-4 h-4 text-[#00d26a]" />
+                  <GitBranch className="w-4 h-4 text-[#7BA05B]" />
                   <span>Trace Lineage</span>
                 </Link>
 
@@ -718,13 +718,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   href="/support"
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-r-lg border-l-[3px] transition-all duration-200 focus:outline-none focus:bg-[#20261D] ${
                     isActive("/support")
-                      ? "bg-[#00d26a]/15 text-[#00d26a] border border-[#00d26a]/20 font-bold"
-                      : "text-stone-300 hover:text-white hover:bg-white/5"
+                      ? "bg-[#20261D] text-[#FEFAE0] border-[#7BA05B] font-medium"
+                      : "border-transparent text-[#A6AAA0] hover:text-[#E5E5DE] hover:bg-[#20261D]"
                   }`}
                 >
-                  <HelpCircle className="w-4 h-4 text-[#00d26a]" />
+                  <HelpCircle className="w-4 h-4 text-[#7BA05B]" />
                   <span>Support</span>
                 </Link>
               </>
@@ -734,10 +734,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Bottom Logout */}
-        <div className="pt-4 border-t border-white/5">
+        <div className="pt-4 border-t border-[#20261D]">
           <button
             onClick={() => setShowLogoutModal(true)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-xs font-bold transition cursor-pointer"
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-[#E57373] bg-[#1A1515] hover:bg-[#2A1A1A] border border-[#2A1A1A] text-[15px] font-medium transition cursor-pointer focus:outline-none focus:border-[#E57373]"
           >
             <LogOut className="w-4 h-4" />
             <span>Logout</span>

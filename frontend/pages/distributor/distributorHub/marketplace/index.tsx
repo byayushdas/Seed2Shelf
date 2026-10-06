@@ -23,6 +23,7 @@ import { marketplaceService } from "@/services/processor/marketplaceService";
 import { cartService } from "@/services/processor/cartService";
 import { FarmerHarvestItem } from "@/types/processor";
 import { useToast } from "@/context/ToastContext";
+import { VoiceInput } from "@/components/shared/VoiceInput";
 
 export default function DistributorMarketplace() {
   const { data: session } = useSession();
@@ -79,7 +80,7 @@ export default function DistributorMarketplace() {
   });
 
   return (
-    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-[#283025] font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Market Place | Distributor Portal</title>
         <meta name="description" content="Browse and procure verified processed goods directly from processors" />
@@ -92,13 +93,13 @@ export default function DistributorMarketplace() {
         {/* =========================================================================
             HEADER & CART BUTTON
            ========================================================================= */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-y border-[#CCD5AE] py-3.5">
           <div className="flex items-center gap-3.5">
-            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
+            <div className="p-2.5 bg-[#7BA05B]/10 border border-[#7BA05B]/20 rounded-[20px] text-[#58664C] shrink-0">
               <Store className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#283025] tracking-tight">
                 Market Place
               </h1>
             </div>
@@ -106,7 +107,7 @@ export default function DistributorMarketplace() {
 
           <Link
             href="/distributor/distributorHub/marketplace/cart"
-            className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg cursor-pointer shrink-0"
+            className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-[20px] bg-[#7BA05B] hover:bg-[#688A4D] text-[#1F2A1A] font-bold text-xs transition shadow-lg cursor-pointer shrink-0"
           >
             <ShoppingCart className="h-4 w-4" />
             <span>Shopping Cart ({cartCount})</span>
@@ -117,14 +118,17 @@ export default function DistributorMarketplace() {
             SEARCH CONTROLS
            ========================================================================= */}
         <div className="relative max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#69705E]" />
           <input
             type="text"
             placeholder="Search crop, processor name, batch ID, or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-stone-900 border border-stone-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-emerald-500/50 transition"
+            className="w-full bg-[#FEFAE0] border border-[#CCD5AE] rounded-[20px] pl-10 pr-12 py-2.5 text-xs text-[#283025] placeholder-[#69705E] focus:outline-none focus:border-[#7BA05B]/50 transition"
           />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <VoiceInput onResult={setSearchQuery} translateToEnglish={true} />
+          </div>
         </div>
 
         {/* =========================================================================
@@ -148,92 +152,92 @@ export default function DistributorMarketplace() {
           PRODUCT DETAIL MODAL
          ========================================================================= */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-stone-900 border border-stone-800 w-full max-w-xl rounded-3xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-[#FEFAE0] border border-[#CCD5AE] w-full max-w-xl rounded-[24px] p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl relative">
             
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+            <div className="flex items-center justify-between border-b border-[#CCD5AE] pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400">
+                <div className="p-2.5 bg-[#7BA05B]/10 border border-[#7BA05B]/20 rounded-[20px] text-[#58664C]">
                   <Store className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-white">{selectedItem.cropName}</h3>
-                  <span className="font-mono text-xs text-emerald-400">{selectedItem.batchId}</span>
+                  <h3 className="text-lg font-extrabold text-[#283025]">{selectedItem.cropName}</h3>
+                  <span className="font-mono text-xs text-[#58664C]">{selectedItem.batchId}</span>
                 </div>
               </div>
 
               <button
                 onClick={() => setSelectedItem(null)}
-                className="p-2 text-stone-400 hover:text-white rounded-xl bg-stone-800 hover:bg-stone-700 transition cursor-pointer"
+                className="p-2 text-[#69705E] hover:text-[#283025] rounded-[12px] bg-[#FEFAE0] border border-[#CCD5AE] hover:bg-[#FAEDCD] transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="h-48 w-full rounded-2xl overflow-hidden bg-stone-800">
+              <div className="h-48 w-full rounded-[20px] overflow-hidden bg-[#FAEDCD]">
                 <img src={selectedItem.imageUrl} alt={selectedItem.cropName} className="w-full h-full object-cover" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-4 bg-stone-950 rounded-2xl border border-stone-800">
+              <div className="grid grid-cols-2 gap-3 p-4 bg-[#FAEDCD] rounded-[20px] border border-[#CCD5AE]">
                 <div>
-                  <span className="text-[11px] text-stone-400 block">Processor:</span>
-                  <strong className="text-white text-sm">{selectedItem.farmerName}</strong>
+                  <span className="text-[11px] text-[#69705E] block">Processor:</span>
+                  <strong className="text-[#283025] text-sm">{selectedItem.farmerName}</strong>
                 </div>
                 <div>
-                  <span className="text-[11px] text-stone-400 block">Location:</span>
-                  <strong className="text-stone-300 text-sm">{selectedItem.farmerLocation}</strong>
+                  <span className="text-[11px] text-[#69705E] block">Location:</span>
+                  <strong className="text-[#69705E] text-sm">{selectedItem.farmerLocation}</strong>
                 </div>
                 <div className="pt-2">
-                  <span className="text-[11px] text-stone-400 block">Listed Date:</span>
-                  <strong className="text-stone-300">{selectedItem.harvestDate}</strong>
+                  <span className="text-[11px] text-[#69705E] block">Listed Date:</span>
+                  <strong className="text-[#69705E]">{selectedItem.harvestDate}</strong>
                 </div>
                 <div className="pt-2">
-                  <span className="text-[11px] text-stone-400 block">Price per Unit:</span>
-                  <strong className="text-emerald-400 text-sm">₹ {selectedItem.pricePerUnit} / {selectedItem.unit}</strong>
+                  <span className="text-[11px] text-[#69705E] block">Price per Unit:</span>
+                  <strong className="text-[#58664C] text-sm">₹ {selectedItem.pricePerUnit} / {selectedItem.unit}</strong>
                 </div>
               </div>
 
               {selectedItem.originDetails && selectedItem.originDetails.processor && (
-                <div className="p-4 bg-stone-900 rounded-2xl border border-stone-700 space-y-2">
-                  <h4 className="text-emerald-400 font-bold mb-2 border-b border-stone-700 pb-1">Processor Details</h4>
+                <div className="p-4 bg-[#FEFAE0] rounded-[20px] border border-[#CCD5AE] space-y-2">
+                  <h4 className="text-[#58664C] font-bold mb-2 border-b border-[#CCD5AE] pb-1">Processor Details</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Processor Name:</span>
-                      <strong className="text-white text-sm">{selectedItem.originDetails.processor.name}</strong>
+                      <span className="text-[11px] text-[#69705E] block">Processor Name:</span>
+                      <strong className="text-[#283025] text-sm">{selectedItem.originDetails.processor.name}</strong>
                     </div>
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Location:</span>
-                      <strong className="text-stone-300 text-sm">{selectedItem.originDetails.processor.location}</strong>
+                      <span className="text-[11px] text-[#69705E] block">Location:</span>
+                      <strong className="text-[#69705E] text-sm">{selectedItem.originDetails.processor.location}</strong>
                     </div>
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Batch ID:</span>
-                      <strong className="text-stone-300 text-xs font-mono">{selectedItem.originDetails.processor.batchId}</strong>
+                      <span className="text-[11px] text-[#69705E] block">Batch ID:</span>
+                      <strong className="text-[#69705E] text-xs font-mono">{selectedItem.originDetails.processor.batchId}</strong>
                     </div>
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Processing Date:</span>
-                      <strong className="text-stone-300 text-xs">{new Date(selectedItem.originDetails.processor.processingDate).toLocaleDateString()}</strong>
+                      <span className="text-[11px] text-[#69705E] block">Processing Date:</span>
+                      <strong className="text-[#69705E] text-xs">{new Date(selectedItem.originDetails.processor.processingDate).toLocaleDateString()}</strong>
                     </div>
                   </div>
                 </div>
               )}
 
               {selectedItem.parentRawBatchIds && selectedItem.parentRawBatchIds.length > 0 && (
-                <div className="p-4 bg-stone-900 rounded-2xl border border-stone-700 space-y-2">
-                  <h4 className="text-emerald-400 font-bold mb-2 border-b border-stone-700 pb-1">Raw Material Origin (Farmer)</h4>
+                <div className="p-4 bg-[#FEFAE0] rounded-[20px] border border-[#CCD5AE] space-y-2">
+                  <h4 className="text-[#58664C] font-bold mb-2 border-b border-[#CCD5AE] pb-1">Raw Material Origin (Farmer)</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Farmer Name:</span>
-                      <strong className="text-white text-sm">{selectedItem.farmerName}</strong>
+                      <span className="text-[11px] text-[#69705E] block">Farmer Name:</span>
+                      <strong className="text-[#283025] text-sm">{selectedItem.farmerName}</strong>
                     </div>
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Farmer Location:</span>
-                      <strong className="text-stone-300 text-sm">{selectedItem.farmerLocation}</strong>
+                      <span className="text-[11px] text-[#69705E] block">Farmer Location:</span>
+                      <strong className="text-[#69705E] text-sm">{selectedItem.farmerLocation}</strong>
                     </div>
 
                     <div>
-                      <span className="text-[11px] text-stone-400 block">Raw Batch IDs:</span>
-                      <strong className="text-stone-300 text-[10px] font-mono break-words block">
+                      <span className="text-[11px] text-[#69705E] block">Raw Batch IDs:</span>
+                      <strong className="text-[#69705E] text-[10px] font-mono break-words block">
                         {selectedItem.parentRawBatchIds.join(', ')}
                       </strong>
                     </div>
@@ -243,18 +247,18 @@ export default function DistributorMarketplace() {
 
               {/* Quantity Selection Control Removed */}
 
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between text-xs">
-                <span className="font-bold text-emerald-300 flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Origin Verification & QR Code Available
+              <div className="p-4 bg-[#7BA05B]/10 border border-[#7BA05B]/20 rounded-[20px] flex items-center justify-between text-xs">
+                <span className="font-bold text-[#58664C] flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-[#58664C]" /> Origin Verification & QR Code Available
                 </span>
-                <span className="font-mono text-stone-300 font-bold">QR Verified</span>
+                <span className="font-mono text-[#69705E] font-bold">QR Verified</span>
               </div>
             </div>
 
             <div className="pt-2 flex justify-end gap-3">
               <button
                 onClick={() => setSelectedItem(null)}
-                className="px-5 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-semibold transition cursor-pointer"
+                className="px-5 py-2.5 rounded-[12px] bg-[#FEFAE0] border border-[#CCD5AE] hover:bg-[#FAEDCD] text-[#69705E] font-semibold transition cursor-pointer"
               >
                 Close
               </button>
@@ -263,7 +267,7 @@ export default function DistributorMarketplace() {
                   handleAddToCart(selectedItem);
                   setSelectedItem(null);
                 }}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition shadow-md cursor-pointer flex items-center gap-2"
+                className="px-6 py-2.5 rounded-[12px] bg-[#7BA05B] hover:bg-[#688A4D] text-[#1F2A1A] font-bold transition shadow-md cursor-pointer flex items-center gap-2"
               >
                 <ShoppingCart className="h-4 w-4" />
                 <span>Add to Cart</span>

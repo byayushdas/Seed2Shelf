@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
 import { ToastProvider } from "@/context/ToastContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import Layout from "@/layouts/DashboardLayout";
 import { ReactElement, ReactNode } from "react";
 import { NextPage } from "next";
@@ -34,9 +35,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
         <link rel="icon" type="image/png" sizes="512x512" href={android512.src} />
         <link rel="icon" href={faviconRoot.src} />
       </Head>
-      <ToastProvider>
-        {getLayout(<Component {...pageProps} />)}
-      </ToastProvider>
+      <LanguageProvider>
+        <ToastProvider>
+          {getLayout(<Component {...pageProps} />)}
+        </ToastProvider>
+      </LanguageProvider>
     </SessionProvider>
   );
 }

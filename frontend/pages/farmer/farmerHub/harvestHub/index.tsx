@@ -26,6 +26,7 @@ import {
   Check
 } from "lucide-react";
 import QRCode from "qrcode";
+import { VoiceInput } from "@/components/shared/VoiceInput";
 
 interface InventoryItem {
   id: string;
@@ -58,6 +59,8 @@ export default function HarvestHub() {
   // Form State
   const [cropCategory, setCropCategory] = useState("Grains");
   const [cropName, setCropName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -228,6 +231,8 @@ export default function HarvestHub() {
   };
 
   const activeInventory = inventory.filter((i) => !i.isSold);
+  const paginatedInventory = activeInventory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPagesToRender = Math.max(1, Math.ceil(activeInventory.length / itemsPerPage));
 
   const handleDeleteItem = async (id: string) => {
     try {
@@ -310,27 +315,28 @@ export default function HarvestHub() {
   };
 
   return (
-    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen bg-[#F5F1E6] text-[#283025] font-sans pb-24 pt-24 -mt-16 relative z-20">
       <Head>
         <title>Harvest Hub | Seed2Shelf Farmer</title>
         <meta name="description" content="Log fresh crop harvests onto the blockchain escrow protocol." />
       </Head>
 
-      {/* Solid Dark Background Overlay */}
 
-      <div className="max-w-6xl mx-auto space-y-7">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7">
         
         {/* =========================================================================
             HEADER (BORDER TOP & BOTTOM - MATCHING PURCHASE ORDERS STYLE)
            ========================================================================= */}
-        <div className="flex items-center gap-3.5 border-y border-stone-800/80 py-3.5">
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
-            <Sprout className="h-7 w-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Harvest Hub
-            </h1>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-[#DADFCF] py-3.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#EDF0E6] border border-[#6F7D61]/20 rounded-[20px] text-[#58664C] shrink-0">
+              <Sprout className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#283025] tracking-tight">
+                Harvest Hub
+              </h1>
+            </div>
           </div>
         </div>
 
@@ -341,15 +347,15 @@ export default function HarvestHub() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
           
           {/* =========================================================================
               LOG NEW HARVEST FORM (LEFT CARD - 6 COLS)
              ========================================================================= */}
-          <div className="lg:col-span-6 bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
-            <div className="pb-3 border-b border-stone-800">
-              <h2 className="text-base font-extrabold text-emerald-400 flex items-center gap-2">
-                <PlusCircle className="w-5 h-5" /> Log New Harvest Batch
+          <div className="lg:col-span-6 bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-6 sm:p-7 shadow-sm space-y-5">
+            <div className="pb-3 border-b border-[#DADFCF]">
+              <h2 className="text-base font-extrabold text-[#607D5B] flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-[#607D5B]" /> Log New Harvest Batch
               </h2>
             </div>
 
@@ -357,14 +363,14 @@ export default function HarvestHub() {
               
               {/* FIELD 1: Crop Category Dropdown */}
               <div>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Crop Category *
                 </label>
                 <div className="relative">
                   <select
                     value={cropCategory}
                     onChange={(e) => setCropCategory(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl pl-4 pr-10 py-3 text-white focus:outline-none focus:border-emerald-500 transition cursor-pointer appearance-none text-xs font-semibold"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-10 py-3 text-stone-800 focus:outline-none focus:border-[#607D5B] transition cursor-pointer appearance-none text-xs font-semibold"
                   >
                     <option value="Fruits">Fruits</option>
                     <option value="Vegetables">Vegetables</option>
@@ -372,31 +378,36 @@ export default function HarvestHub() {
                     <option value="Cash Crops">Cash Crops (Cotton, Sugarcane)</option>
                     <option value="Spices">Spices & Herbs</option>
                   </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                    <ChevronDown className="w-4 h-4 text-stone-400" />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-500">
+                    <ChevronDown className="w-4 h-4 text-stone-500" />
                   </div>
                 </div>
               </div>
 
               {/* FIELD 2: Crop Name */}
               <div>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Crop Name *
                 </label>
-                <input
-                  type="text"
-                  value={cropName}
-                  onChange={(e) => setCropName(e.target.value)}
-                  placeholder="e.g. Mangoes, Rice, Wheat"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={cropName}
+                    onChange={(e) => setCropName(e.target.value)}
+                    placeholder="e.g. Mangoes, Rice, Wheat"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
+                    required
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <VoiceInput onResult={setCropName} />
+                  </div>
+                </div>
               </div>
 
               {/* Quantity & Price */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                  <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                     Harvest Volume (kg) *
                   </label>
                   <input
@@ -404,13 +415,13 @@ export default function HarvestHub() {
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     placeholder="e.g. 31"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl px-4 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                  <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                     Selling Price (₹/kg) *
                   </label>
                   <input
@@ -418,7 +429,7 @@ export default function HarvestHub() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="e.g. 12"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl px-4 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
@@ -426,23 +437,23 @@ export default function HarvestHub() {
 
               {/* CUSTOM DATE PICKER */}
               <div className="relative" ref={calendarRef}>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Harvest Date *
                 </label>
                 
                 <div
                   onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition text-xs"
+                  className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-[#607D5B]/50 transition text-xs"
                 >
-                  <span className="font-semibold text-stone-200">{formattedDateDisplay}</span>
-                  <CalendarIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-semibold text-stone-800">{formattedDateDisplay}</span>
+                  <CalendarIcon className="w-4 h-4 text-stone-500 shrink-0" />
                 </div>
 
                 {isCalendarOpen && (
-                  <div className="absolute left-0 top-full mt-2 z-50 w-72 bg-stone-900 border border-stone-800 rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-0 top-full mt-2 z-50 w-72 bg-white border border-[#E3DFD5] rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
                     
-                    <div className="flex items-center justify-between pb-2 border-b border-stone-800">
-                      <span className="font-extrabold text-white text-xs sm:text-sm">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#E3DFD5]">
+                      <span className="font-extrabold text-stone-800 text-xs sm:text-sm">
                         {monthNames[selectedMonth]}, {selectedYear}
                       </span>
 
@@ -450,7 +461,7 @@ export default function HarvestHub() {
                         <button
                           type="button"
                           onClick={handlePrevMonth}
-                          className="p-1 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition cursor-pointer"
+                          className="p-1 text-stone-500 hover:text-stone-800 rounded-lg hover:bg-stone-100 transition cursor-pointer"
                         >
                           <ChevronLeft className="w-4 h-4" />
                         </button>
@@ -458,14 +469,14 @@ export default function HarvestHub() {
                         <button
                           type="button"
                           onClick={handleNextMonth}
-                          className="p-1 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition cursor-pointer"
+                          className="p-1 text-stone-500 hover:text-stone-800 rounded-lg hover:bg-stone-100 transition cursor-pointer"
                         >
                           <ChevronRight className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-stone-400">
+                    <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-stone-500">
                       <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                     </div>
 
@@ -489,10 +500,10 @@ export default function HarvestHub() {
                             }}
                             className={`py-1.5 rounded-xl font-semibold transition cursor-pointer ${
                               isSelected
-                                ? "bg-emerald-600 text-white font-extrabold shadow-sm"
+                                ? "bg-[#7CA971] text-white font-extrabold shadow-sm"
                                 : isToday
-                                ? "border border-emerald-500/50 text-emerald-400"
-                                : "text-stone-300 hover:bg-stone-800 hover:text-white"
+                                ? "border border-[#607D5B]/50 text-[#607D5B]"
+                                : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
                             }`}
                           >
                             {dayNum}
@@ -506,7 +517,7 @@ export default function HarvestHub() {
 
               {/* Harvest Batch Image Upload */}
               <div>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Crop Photo *
                 </label>
                 <input
@@ -518,7 +529,7 @@ export default function HarvestHub() {
                 />
 
                 {cropImage ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-stone-800 bg-stone-950 p-2 group">
+                  <div className="relative rounded-2xl overflow-hidden border border-[#E3DFD5] bg-[#F2EFE8] p-2 group">
                     <img
                       src={cropImage}
                       alt="Harvest Crop Preview"
@@ -527,7 +538,7 @@ export default function HarvestHub() {
                     <button
                       type="button"
                       onClick={() => setCropImage(null)}
-                      className="absolute top-4 right-4 p-1.5 rounded-full bg-stone-950/80 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
+                      className="absolute top-4 right-4 p-1.5 rounded-full bg-white/80 text-stone-500 hover:text-stone-800 border border-[#E3DFD5] transition cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -535,13 +546,13 @@ export default function HarvestHub() {
                 ) : (
                   <div
                     onClick={() => imageInputRef.current?.click()}
-                    className="border-2 border-dashed border-stone-800 hover:border-emerald-500/50 bg-stone-950/80 rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group"
+                    className="border-2 border-dashed border-[#E3DFD5] hover:border-[#607D5B]/50 bg-[#F2EFE8]/50 rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group"
                   >
-                    <div className="p-3 bg-stone-900 rounded-xl text-stone-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition">
+                    <div className="p-3 bg-white rounded-xl text-stone-500 group-hover:text-[#607D5B] group-hover:bg-[#7CA971]/10 transition shadow-sm border border-[#E3DFD5]">
                       <UploadCloud className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition">
+                      <p className="text-xs font-bold text-stone-800 group-hover:text-[#607D5B] transition">
                         Click to upload crop photo
                       </p>
                       <p className="text-[10px] text-stone-500 mt-0.5">
@@ -556,7 +567,7 @@ export default function HarvestHub() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-2xl bg-[#7CA971] hover:bg-[#607D5B] text-white font-extrabold text-xs transition cursor-pointer shadow-md shadow-[#7CA971]/20 flex items-center justify-center gap-2"
                 >
                   <PlusCircle className="w-4.5 h-4.5" />
                   <span>Save & Register Harvest Batch</span>
@@ -566,75 +577,80 @@ export default function HarvestHub() {
             </form>
 
             {/* BATCH INFORMATION SECTION */}
-            <div className="mt-6 p-5 bg-stone-950 border border-stone-800 rounded-2xl space-y-4 shadow-xl transition-all duration-300">
-              <div className="flex items-center justify-between border-b border-stone-800/80 pb-3">
+            <details className="mt-6 group bg-[#F9F7F1] border border-[#E3DFD5] rounded-2xl shadow-sm transition-all duration-300">
+              <summary className="p-5 flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open:border-[#E3DFD5]">
                 <div className="flex items-center gap-2">
-                  <QrIcon className={`w-5 h-5 ${newBatchInfo ? "text-emerald-400" : "text-stone-600"}`} />
-                  <h3 className="text-sm font-extrabold text-white">Batch Information</h3>
+                  <QrIcon className={`w-5 h-5 ${newBatchInfo ? "text-[#607D5B]" : "text-stone-400"}`} />
+                  <h3 className="text-sm font-extrabold text-stone-800">Batch Information</h3>
                 </div>
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                  newBatchInfo 
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                    : "bg-stone-900 text-stone-500 border-stone-800"
-                }`}>
-                  {newBatchInfo ? "Generated & Live" : "Pending Save"}
-                </span>
-              </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    newBatchInfo 
+                      ? "bg-white text-[#607D5B] border-[#607D5B]/30" 
+                      : "bg-white text-stone-500 border-stone-200"
+                  }`}>
+                    {newBatchInfo ? "Generated & Live" : "Pending Save"}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-stone-500 transition-transform group-open:rotate-180" />
+                </div>
+              </summary>
+              
+              <div className="p-5 pt-0 mt-4">
+                <div className="flex flex-col sm:flex-row items-center gap-5">
+                  {newBatchInfo ? (
+                    <div className="p-2 bg-white rounded-2xl shadow-sm shrink-0 border border-[#E3DFD5] animate-in zoom-in-95 duration-200">
+                      <img src={newBatchInfo.qr} alt={`QR Code for ${newBatchInfo.id}`} className="w-28 h-28 object-contain" />
+                    </div>
+                  ) : (
+                    <div className="w-28 h-28 border-2 border-dashed border-[#E3DFD5] bg-white rounded-2xl shrink-0 flex items-center justify-center">
+                      <QrIcon className="w-10 h-10 text-stone-300" />
+                    </div>
+                  )}
 
-              <div className="flex flex-col sm:flex-row items-center gap-5">
-                {newBatchInfo ? (
-                  <div className="p-2 bg-white rounded-2xl shadow-md shrink-0 border border-stone-700 animate-in zoom-in-95 duration-200">
-                    <img src={newBatchInfo.qr} alt={`QR Code for ${newBatchInfo.id}`} className="w-28 h-28 object-contain" />
-                  </div>
-                ) : (
-                  <div className="w-28 h-28 border-2 border-dashed border-stone-800/80 bg-stone-950/80 rounded-2xl shrink-0 flex items-center justify-center">
-                    <QrIcon className="w-10 h-10 text-stone-700/70" />
-                  </div>
-                )}
-
-                <div className="space-y-2 flex-1 text-center sm:text-left">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase text-stone-500 block">Batch ID</span>
-                    {newBatchInfo ? (
-                      <span className="text-base font-extrabold text-emerald-400">{newBatchInfo.id}</span>
-                    ) : (
-                      <span className="text-sm font-bold text-stone-600">BATCH-ID-PENDING</span>
-                    )}
+                  <div className="space-y-2 flex-1 text-center sm:text-left">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-stone-500 block">Batch ID</span>
+                      {newBatchInfo ? (
+                        <span className="text-base font-extrabold text-stone-800">{newBatchInfo.id}</span>
+                      ) : (
+                        <span className="text-sm font-bold text-stone-500">BATCH-ID-PENDING</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </details>
           </div>
 
           {/* =========================================================================
               MY INVENTORY SECTION (RIGHT CARD - 6 COLS WITH SALES HISTORY TAB)
              ========================================================================= */}
-          <div className="lg:col-span-6 bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
-            <div className="pb-3 border-b border-stone-800">
-              <h2 className="text-base font-extrabold text-[#00d26a] flex items-center gap-2">
+          <div className="lg:col-span-6 bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-6 sm:p-7 shadow-sm space-y-5">
+            <div className="pb-3 border-b border-[#DADFCF]">
+              <h2 className="text-base font-extrabold text-[#607D5B] flex items-center gap-2">
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               {activeInventory.length === 0 ? (
-                <div className="col-span-full p-8 text-center text-stone-400 text-xs">
+                <div className="col-span-full p-8 text-center text-stone-500 text-xs">
                   No active harvest batches available. Log a batch using the form on the left.
                 </div>
               ) : (
-                activeInventory.map((item) => {
+                paginatedInventory.map((item) => {
                   const imgUrl = item.cropImage || getCropImage(item);
                   return (
                     <div
                       key={item.id}
-                      className={`bg-stone-900/90 border rounded-3xl p-4 space-y-3.5 shadow-sm transition-all duration-300 flex flex-col justify-between ${
+                      className={`bg-white border rounded-3xl p-4 space-y-3.5 shadow-sm transition-all duration-300 flex flex-col justify-between ${
                         item.isSold
-                          ? "border-emerald-500/20 bg-stone-950/60"
-                          : "border-stone-800 hover:border-emerald-500/40"
+                          ? "border-[#E3DFD5] bg-[#F2EFE8]/60 opacity-80"
+                          : "border-[#E3DFD5] hover:border-[#607D5B]/40 hover:shadow-xl hover:shadow-[#607D5B]/5"
                       }`}
                     >
                       {/* TOP IMAGE CONTAINER WITH OVERLAY BADGES */}
-                      <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-stone-950 border border-stone-800/80 group">
+                      <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-[#F2EFE8] border border-[#E3DFD5] group">
                         <img
                           src={imgUrl}
                           alt={item.cropName}
@@ -642,17 +658,17 @@ export default function HarvestHub() {
                         />
                         
                         {/* Batch ID Pill (Top-Left Overlay) */}
-                        <div className="absolute top-2.5 left-2.5 bg-stone-950/90 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 shadow-md">
+                        <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md text-[#607D5B] font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-[#E3DFD5] shadow-sm">
                           {item.id}
                         </div>
 
                         {/* Status Pill (Top-Right Overlay) */}
-                        <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-md ${
+                        <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-sm ${
                           item.isSold
-                            ? 'bg-blue-500/90 text-white border-blue-400 font-black'
+                            ? 'bg-blue-100 text-blue-600 border-blue-200 font-black'
                             : item.status === 'Listed'
-                            ? 'bg-emerald-500/90 text-black border-emerald-400 font-black'
-                            : 'bg-stone-900/90 text-stone-300 border-stone-700'
+                            ? 'bg-[#7CA971] text-white border-[#607D5B]/50'
+                            : 'bg-white/90 text-stone-500 border-[#E3DFD5]'
                         }`}>
                           {item.isSold ? 'Sold' : item.status}
                         </div>
@@ -661,10 +677,10 @@ export default function HarvestHub() {
                       {/* TITLE & CATEGORY */}
                       <div className="flex items-center justify-between gap-2 pt-0.5">
                         <div className="space-y-0.5 truncate">
-                          <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-400 block">
+                          <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-500 block">
                             {item.category}
                           </span>
-                          <h3 className="text-sm font-black text-white leading-tight truncate">
+                          <h3 className="text-sm font-black text-stone-800 leading-tight truncate">
                             {item.cropName}
                           </h3>
                         </div>
@@ -673,7 +689,7 @@ export default function HarvestHub() {
                           <div className="flex items-center gap-1.5 shrink-0">
                             <button
                               onClick={() => alert(`Editing ${item.cropName}`)}
-                              className="p-1.5 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 transition cursor-pointer"
+                              className="p-1.5 rounded-xl bg-[#F2EFE8] hover:bg-[#E3DFD5] text-stone-500 hover:text-stone-800 border border-[#E3DFD5] transition cursor-pointer"
                               title="Edit Batch"
                             >
                               <Pencil className="w-3.5 h-3.5" />
@@ -681,7 +697,7 @@ export default function HarvestHub() {
 
                             <button
                               onClick={() => handleDeleteItem(item.id)}
-                              className="p-1.5 rounded-xl bg-stone-950 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 transition cursor-pointer"
+                              className="p-1.5 rounded-xl bg-[#F2EFE8] hover:bg-red-50 text-stone-500 hover:text-red-500 border border-[#E3DFD5] transition cursor-pointer"
                               title="Delete Batch"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -691,54 +707,60 @@ export default function HarvestHub() {
                       </div>
 
                       {/* INNER DETAILS BOX */}
-                      <div className="p-3.5 bg-stone-950/80 border border-stone-800/90 rounded-2xl space-y-2 text-[11px]">
-                        <div className="flex justify-between items-center text-stone-300">
-                          <span className="text-stone-400 font-medium">Batch Volume:</span>
-                          <strong className="text-emerald-400 font-extrabold">{item.quantity}</strong>
-                        </div>
-                        <div className="flex justify-between items-center text-stone-300">
-                          <span className="text-stone-400 font-medium">Price per Unit:</span>
-                          <strong className="text-white font-bold">{item.pricePerKg}</strong>
-                        </div>
-
-                        {item.isSold ? (
-                          <>
-                            <div className="flex justify-between items-center text-stone-300 border-t border-stone-800/60 pt-1.5">
-                              <span className="text-stone-400 font-medium">Purchaser:</span>
-                              <strong className="text-emerald-400 font-bold text-[10px] truncate max-w-[120px]">
-                                {item.soldTo || "AgroProc Hub"}
-                              </strong>
-                            </div>
-                            <div className="flex justify-between items-center text-stone-300">
-                              <span className="text-stone-400 font-medium">Date Sold:</span>
-                              <span className="text-stone-300 font-mono text-[10px]">{item.soldDate || item.harvestDate}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-stone-300">
-                              <span className="text-stone-400 font-medium">Total Earned:</span>
-                              <strong className="text-amber-400 font-black text-xs">{item.totalSaleValue || "₹3,720"}</strong>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Harvest Date:</span>
-                            <span className="text-stone-300 font-mono text-[10px]">{item.harvestDate}</span>
+                      <details className="group mt-1">
+                        <summary className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-widest text-stone-500 hover:text-[#607D5B] cursor-pointer list-none [&::-webkit-details-marker]:hidden py-1 border-b border-[#E3DFD5]/50 transition-colors">
+                          <span>Batch Details</span>
+                          <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="mt-2 p-3.5 bg-[#F9F7F1] border border-[#E3DFD5] rounded-2xl space-y-2 text-[11px]">
+                          <div className="flex justify-between items-center text-stone-600">
+                            <span className="text-stone-500 font-medium">Batch Volume:</span>
+                            <strong className="text-stone-800 font-extrabold">{item.quantity}</strong>
                           </div>
-                        )}
-                      </div>
+                          <div className="flex justify-between items-center text-stone-600">
+                            <span className="text-stone-500 font-medium">Price per Unit:</span>
+                            <strong className="text-stone-800 font-bold">{item.pricePerKg}</strong>
+                          </div>
+
+                          {item.isSold ? (
+                            <>
+                              <div className="flex justify-between items-center text-stone-600 border-t border-[#E3DFD5] pt-1.5">
+                                <span className="text-stone-500 font-medium">Purchaser:</span>
+                                <strong className="text-[#607D5B] font-bold text-[10px] truncate max-w-[120px]">
+                                  {item.soldTo || "AgroProc Hub"}
+                                </strong>
+                              </div>
+                              <div className="flex justify-between items-center text-stone-600">
+                                <span className="text-stone-500 font-medium">Date Sold:</span>
+                                <span className="text-stone-600 font-mono text-[10px]">{item.soldDate || item.harvestDate}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-stone-600">
+                                <span className="text-stone-500 font-medium">Total Earned:</span>
+                                <strong className="text-stone-800 font-black text-xs">{item.totalSaleValue || "₹3,720"}</strong>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex justify-between items-center text-stone-600">
+                              <span className="text-stone-500 font-medium">Harvest Date:</span>
+                              <span className="text-stone-600 font-mono text-[10px]">{item.harvestDate}</span>
+                            </div>
+                          )}
+                        </div>
+                      </details>
 
                       {/* ACTION BAR */}
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <button
                           type="button"
                           onClick={() => handleInventoryQrClick(item)}
-                          className="py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-200 hover:text-white font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                          className="py-2.5 px-3 rounded-xl bg-[#F2EFE8] hover:bg-[#E3DFD5] border border-[#E3DFD5] text-stone-700 hover:text-stone-800 font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                         >
-                          <QrIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <QrIcon className="w-3.5 h-3.5 text-[#607D5B] shrink-0" />
                           <span className="truncate">View QR</span>
                         </button>
 
                         {item.isSold ? (
-                          <span className="py-2.5 px-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-extrabold text-[11px] flex items-center justify-center gap-1">
+                          <span className="py-2.5 px-3 rounded-xl bg-blue-50 text-blue-500 border border-blue-200 font-extrabold text-[11px] flex items-center justify-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Completed</span>
                           </span>
@@ -747,8 +769,8 @@ export default function HarvestHub() {
                             onClick={() => handleToggleListStatus(item.id)}
                             className={`py-2.5 px-3 rounded-xl text-[11px] font-extrabold transition cursor-pointer border flex items-center justify-center gap-1 truncate ${
                               item.status === 'Listed'
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-400 font-black shadow-md shadow-emerald-500/10'
+                                ? 'bg-orange-50 hover:bg-orange-100 text-[#F9A826] border-[#F9A826]/30'
+                                : 'bg-[#7CA971] hover:bg-[#607D5B] text-white border-[#7CA971] shadow-sm'
                             }`}
                           >
                             <span>{item.status === 'Listed' ? 'Unlist' : 'List Product'}</span>
@@ -760,6 +782,28 @@ export default function HarvestHub() {
                 })
               )}
             </div>
+
+            {totalPagesToRender > 1 && (
+              <div className="flex items-center justify-between border-t border-[#E3DFD5] pt-4 mt-6">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-xs font-bold rounded-xl border border-[#E3DFD5] text-stone-600 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+                >
+                  Previous
+                </button>
+                <span className="text-xs font-bold text-stone-500">
+                  Page {currentPage} of {totalPagesToRender}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPagesToRender, p + 1))}
+                  disabled={currentPage === totalPagesToRender}
+                  className="px-4 py-2 text-xs font-bold rounded-xl border border-[#E3DFD5] text-stone-600 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            )}
 
           </div>
 

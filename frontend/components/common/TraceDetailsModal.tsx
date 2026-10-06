@@ -1,24 +1,38 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { X, Copy, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShieldCheck, MapPin, Package, Clock, Award } from "lucide-react";
 
 export type StageType = "FARMER" | "PROCESSOR" | "DISTRIBUTOR" | "RETAILER";
 
-export interface StageDetailItem {
-  label: string;
-  value: string;
-}
-
 export interface StageData {
   stageType: StageType;
-  stageTitle: string;
+  stageTitle: string; // The role/stage label
   batchId: string;
-  badge: string;
-  generalInfo: StageDetailItem[];
-  locationInfo?: StageDetailItem[];
-  productInfo?: StageDetailItem[];
-  qualityInfo?: StageDetailItem[];
-  timelineInfo?: StageDetailItem[];
+  productName: string;
+  recordedStatus: string;
+  
+  overview: { label: string; value: string }[];
+  location: { label: string; value: string }[];
+  quantityAndProcessing: { label: string; value: string }[];
+  qualityAndDocuments: { 
+    type: 'measurement' | 'document';
+    label: string; 
+    value: string;
+    issuer?: string;
+    refNumber?: string;
+    date?: string;
+    link?: string;
+  }[];
+  activity: {
+    event: string;
+    timestamp: string;
+    responsibleParty: string;
+  }[];
+  blockchainRecord?: {
+    txHash: string;
+    network: string;
+    block: string;
+  };
 }
 
 interface TraceDetailsModalProps {
@@ -28,161 +42,222 @@ interface TraceDetailsModalProps {
 }
 
 export default function TraceDetailsModal({ isOpen, onClose, data }: TraceDetailsModalProps) {
+  const [showBlockchain, setShowBlockchain] = React.useState(false);
+
+  // Esc to close
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
   if (!isOpen || !data) return null;
 
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-stone-950/80 backdrop-blur-sm cursor-pointer"
-        />
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
 
-        {/* Modal Container */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="relative w-full max-w-3xl bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 z-10 max-h-[90vh] overflow-y-auto"
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between border-b border-stone-800 pb-5 gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] px-3 py-1 rounded-xl font-extrabold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                  {data.stageType} STAGE
-                </span>
-                <span className="text-xs font-mono text-emerald-400 bg-stone-950 px-2.5 py-0.5 rounded-lg border border-stone-800 font-bold">
-                  {data.batchId}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                {data.stageTitle}
-              </h2>
-            </div>
-
-            <button
-              onClick={onClose}
-              className="p-2 rounded-2xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-400 hover:text-white transition cursor-pointer shrink-0"
-              aria-label="Close Modal"
-            >
-              <X className="w-5 h-5" />
+  const panelContent = (
+    <div className="flex flex-col h-full bg-[#FFFCF5] lg:border lg:border-[#DADFCF] shadow-xl lg:shadow-none lg:rounded-xl">
+      {/* Sticky Header */}
+      <div className="sticky top-0 bg-[#FFFCF5] z-10 p-5 border-b border-[#DADFCF] flex flex-col gap-3 lg:rounded-t-xl">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-[12px] font-medium text-[#69705E] uppercase tracking-wider">{data.stageTitle}</span>
+            <h2 className="text-[18px] font-medium text-[#283025]">{data.productName}</h2>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-[#69705E] hover:bg-[#EDF0E6] rounded-lg transition shrink-0" aria-label="Close details">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="flex flex-col gap-2 mt-2">
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-[#69705E] shrink-0">Batch ID:</span>
+            <span className="font-mono text-[#283025] truncate">{data.batchId}</span>
+            <button onClick={() => handleCopy(data.batchId)} className="text-[#6F7D61] hover:text-[#4A573F] shrink-0" title="Copy Batch ID">
+              <Copy className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          {/* Grouped Information Sections */}
-          <div className="space-y-5 text-xs">
-            
-            {/* General Information */}
-            {data.generalInfo && data.generalInfo.length > 0 && (
-              <div className="space-y-2.5">
-                <h3 className="text-xs font-black text-stone-300 uppercase tracking-wider flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  General Stage Information
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {data.generalInfo.map((item, idx) => (
-                    <div key={idx} className="p-3.5 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                      <span className="text-[10px] text-stone-400 font-extrabold uppercase block">{item.label}</span>
-                      <span className="text-xs font-bold text-white">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Location Information */}
-            {data.locationInfo && data.locationInfo.length > 0 && (
-              <div className="space-y-2.5 pt-2 border-t border-stone-800/80">
-                <h3 className="text-xs font-black text-stone-300 uppercase tracking-wider flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-emerald-400" />
-                  Location & Address Details
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {data.locationInfo.map((item, idx) => (
-                    <div key={idx} className="p-3.5 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                      <span className="text-[10px] text-stone-400 font-extrabold uppercase block">{item.label}</span>
-                      <span className="text-xs font-bold text-white">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Product & Processing Information */}
-            {data.productInfo && data.productInfo.length > 0 && (
-              <div className="space-y-2.5 pt-2 border-t border-stone-800/80">
-                <h3 className="text-xs font-black text-stone-300 uppercase tracking-wider flex items-center gap-2">
-                  <Package className="w-4 h-4 text-emerald-400" />
-                  Product & Crop Specifications
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {data.productInfo.map((item, idx) => (
-                    <div key={idx} className="p-3.5 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                      <span className="text-[10px] text-stone-400 font-extrabold uppercase block">{item.label}</span>
-                      <span className="text-xs font-bold text-white">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quality & Lab Verification */}
-            {data.qualityInfo && data.qualityInfo.length > 0 && (
-              <div className="space-y-2.5 pt-2 border-t border-stone-800/80">
-                <h3 className="text-xs font-black text-stone-300 uppercase tracking-wider flex items-center gap-2">
-                  <Award className="w-4 h-4 text-emerald-400" />
-                  Quality & Lab Verification
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {data.qualityInfo.map((item, idx) => (
-                    <div key={idx} className="p-3.5 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                      <span className="text-[10px] text-stone-400 font-extrabold uppercase block">{item.label}</span>
-                      <span className="text-xs font-bold text-white">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Timeline & Status */}
-            {data.timelineInfo && data.timelineInfo.length > 0 && (
-              <div className="space-y-2.5 pt-2 border-t border-stone-800/80">
-                <h3 className="text-xs font-black text-stone-300 uppercase tracking-wider flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-emerald-400" />
-                  Timeline & Status Verification
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {data.timelineInfo.map((item, idx) => (
-                    <div key={idx} className="p-3.5 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                      <span className="text-[10px] text-stone-400 font-extrabold uppercase block">{item.label}</span>
-                      <span className="text-xs font-bold text-white">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-[#69705E] shrink-0">Status:</span>
+            <span className="bg-[#E2E8D8] text-[#58664C] px-2 py-0.5 rounded text-[12px] font-medium truncate">{data.recordedStatus}</span>
           </div>
-
-          {/* Modal Footer */}
-          <div className="pt-4 border-t border-stone-800 flex items-center justify-between">
-            <span className="text-[10px] text-stone-500 font-extrabold uppercase flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Public Provenance Record
-            </span>
-            <button
-              onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-300 font-bold text-xs transition cursor-pointer"
-            >
-              Close Record
-            </button>
-          </div>
-        </motion.div>
+        </div>
       </div>
-    </AnimatePresence>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        
+        {/* Overview */}
+        {data.overview?.length > 0 && (
+          <section>
+            <h3 className="text-[14px] font-medium text-[#283025] mb-3">Overview</h3>
+            <dl className="space-y-2.5">
+              {data.overview.map((item, i) => (
+                <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 text-[13px]">
+                  <dt className="text-[#69705E] sm:w-1/3 shrink-0">{item.label}</dt>
+                  <dd className="text-[#283025]">{item.value || "Not provided"}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        <div className="h-px bg-[#DADFCF]" />
+
+        {/* Location */}
+        {data.location?.length > 0 && (
+          <section>
+            <h3 className="text-[14px] font-medium text-[#283025] mb-3">Location</h3>
+            <dl className="space-y-2.5">
+              {data.location.map((item, i) => (
+                <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 text-[13px]">
+                  <dt className="text-[#69705E] sm:w-1/3 shrink-0">{item.label}</dt>
+                  <dd className="text-[#283025]">{item.value || "Not provided"}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        <div className="h-px bg-[#DADFCF]" />
+
+        {/* Quantity and processing */}
+        {data.quantityAndProcessing?.length > 0 && (
+          <section>
+            <h3 className="text-[14px] font-medium text-[#283025] mb-3">Quantity & Processing</h3>
+            <dl className="space-y-2.5">
+              {data.quantityAndProcessing.map((item, i) => (
+                <div key={i} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4 text-[13px]">
+                  <dt className="text-[#69705E] sm:w-1/3 shrink-0">{item.label}</dt>
+                  <dd className="text-[#283025]">{item.value || "Not provided"}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        <div className="h-px bg-[#DADFCF]" />
+
+        {/* Quality and documents */}
+        {data.qualityAndDocuments?.length > 0 && (
+          <section>
+            <h3 className="text-[14px] font-medium text-[#283025] mb-3">Quality & Documents</h3>
+            <div className="space-y-4">
+              {data.qualityAndDocuments.map((item, i) => (
+                <div key={i} className="flex flex-col gap-1 text-[13px] bg-[#EDF0E6] p-3 rounded-lg">
+                  <div className="font-medium text-[#283025]">{item.label}</div>
+                  <div className="text-[#69705E]">{item.value}</div>
+                  {item.issuer && <div className="text-[#69705E] mt-1">Issuer: <span className="text-[#283025]">{item.issuer}</span></div>}
+                  {item.refNumber && <div className="text-[#69705E]">Ref: <span className="text-[#283025]">{item.refNumber}</span></div>}
+                  {item.date && <div className="text-[#69705E]">Date: <span className="text-[#283025]">{item.date}</span></div>}
+                  {item.link && (
+                    <a href={item.link} target="_blank" rel="noreferrer" className="text-[#6F7D61] hover:underline flex items-center gap-1 mt-1 font-medium w-fit">
+                      View Document <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="h-px bg-[#DADFCF]" />
+
+        {/* Activity */}
+        {data.activity?.length > 0 && (
+          <section>
+            <h3 className="text-[14px] font-medium text-[#283025] mb-3">Activity</h3>
+            <div className="space-y-4">
+              {data.activity.map((act, i) => (
+                <div key={i} className="flex gap-3 text-[13px]">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#DADFCF] mt-1 shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-medium text-[#283025]">{act.event}</span>
+                    <span className="text-[#69705E]">{act.timestamp}</span>
+                    <span className="text-[#69705E]">By {act.responsibleParty}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Blockchain Record */}
+        {data.blockchainRecord && (
+          <section className="pt-2">
+            <button 
+              onClick={() => setShowBlockchain(!showBlockchain)}
+              className="flex items-center justify-between w-full text-left bg-[#F5F1E6] p-3 rounded-lg border border-[#DADFCF] hover:bg-[#EDF0E6] transition"
+            >
+              <span className="text-[14px] font-medium text-[#283025]">Blockchain Record</span>
+              {showBlockchain ? <ChevronUp className="w-4 h-4 text-[#69705E]" /> : <ChevronDown className="w-4 h-4 text-[#69705E]" />}
+            </button>
+            <AnimatePresence>
+              {showBlockchain && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-3 border border-t-0 border-[#DADFCF] rounded-b-lg bg-[#FFFCF5] space-y-2 text-[13px] -mt-1 pt-4">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[#69705E]">Network</span>
+                      <span className="text-[#283025]">{data.blockchainRecord.network}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[#69705E]">Transaction Hash</span>
+                      <span className="font-mono text-[#283025] break-all">{data.blockchainRecord.txHash}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[#69705E]">Block</span>
+                      <span className="text-[#283025]">{data.blockchainRecord.block}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop side panel wrapper */}
+      <div className="hidden lg:block w-[440px] shrink-0 sticky top-6 h-[calc(100vh-3rem)]">
+        {panelContent}
+      </div>
+
+      {/* Mobile/Tablet Drawer overlay */}
+      <div className="lg:hidden">
+        <AnimatePresence>
+          {isOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={onClose}
+                className="fixed inset-0 bg-[#283025]/40 z-40"
+              />
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed inset-x-0 bottom-0 top-12 z-50 md:top-24 md:left-auto md:right-0 md:w-[440px] md:rounded-l-xl bg-[#FFFCF5] shadow-2xl flex flex-col rounded-t-xl overflow-hidden"
+              >
+                {panelContent}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }

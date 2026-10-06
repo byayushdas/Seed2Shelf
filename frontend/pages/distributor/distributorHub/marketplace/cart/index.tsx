@@ -290,7 +290,7 @@ export default function DistributorCartPage() {
   };
 
   return (
-    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-[#283025] font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Checkout & Order Placement | Distributor Portal</title>
         <meta name="description" content="Review raw crop purchases and place B2B orders with farmers" />
@@ -306,13 +306,13 @@ export default function DistributorCartPage() {
         {/* =========================================================================
             HEADER & NAVIGATION
            ========================================================================= */}
-        <div className="flex items-center justify-between border-y border-stone-800/80 py-3.5">
+        <div className="flex items-center justify-between border-y border-[#CCD5AE] py-3.5">
           <div className="flex items-center gap-3.5">
-            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
+            <div className="p-2.5 bg-[#7BA05B]/10 border border-[#7BA05B]/20 rounded-[20px] text-[#58664C] shrink-0">
               <ShoppingCart className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#283025] tracking-tight">
                 Shopping Cart & Checkout
               </h1>
             </div>
@@ -320,7 +320,7 @@ export default function DistributorCartPage() {
 
           <Link
             href="/distributor/distributorHub/marketplace"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-800 text-xs font-semibold text-stone-300 hover:text-white transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[12px] bg-[#FEFAE0] hover:bg-[#FAEDCD] border border-[#CCD5AE] text-xs font-semibold text-[#69705E] hover:text-[#283025] transition"
           >
             <ArrowLeft className="h-4 w-4" /> Continue Shopping
           </Link>
@@ -330,7 +330,7 @@ export default function DistributorCartPage() {
             3-STEP PROGRESS STEPPER (WITHOUT NUMBERS)
            ========================================================================= */}
         {cartItems.length > 0 || checkoutStep === 3 ? (
-          <div className="bg-stone-900/90 border border-stone-800/90 py-4 px-6 rounded-3xl max-w-3xl mx-auto flex items-center justify-between shadow-lg">
+          <div className="bg-[#FEFAE0]/90 border border-[#CCD5AE]/90 py-4 px-6 rounded-[24px] max-w-3xl mx-auto flex items-center justify-between shadow-lg">
             {[
               { step: 1, label: "Warehouse Address", icon: MapPin },
               { step: 2, label: "Payment", icon: CreditCard },
@@ -343,19 +343,19 @@ export default function DistributorCartPage() {
                 <div key={item.step} className="flex items-center flex-1 last:flex-initial">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-9 h-9 rounded-2xl flex items-center justify-center font-extrabold text-xs transition-all duration-300 ${
+                      className={`w-9 h-9 rounded-[20px] flex items-center justify-center font-extrabold text-xs transition-all duration-300 ${
                         isActive
-                          ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/20 scale-105"
+                          ? "bg-[#7BA05B] text-[#FFFCF5] shadow-lg shadow-[#7BA05B]/20 scale-105"
                           : isPassed
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-stone-950 text-stone-500 border border-stone-800"
+                          ? "bg-[#7BA05B]/20 text-[#58664C] border border-[#7BA05B]/30"
+                          : "bg-[#FAEDCD] text-[#69705E] border border-[#CCD5AE]"
                       }`}
                     >
                       <Icon className="h-4 w-4" />
                     </div>
                     <span
                       className={`text-xs font-extrabold uppercase tracking-wider hidden md:inline ${
-                        isActive ? "text-emerald-400" : isPassed ? "text-stone-300" : "text-stone-500"
+                        isActive ? "text-[#58664C]" : isPassed ? "text-[#69705E]" : "text-[#69705E]"
                       }`}
                     >
                       {item.label}
@@ -364,7 +364,7 @@ export default function DistributorCartPage() {
                   {idx < 2 && (
                     <div
                       className={`h-[1px] flex-grow mx-4 transition-all duration-500 ${
-                        isPassed ? "bg-emerald-500" : "bg-stone-800"
+                        isPassed ? "bg-emerald-500" : "bg-[#FAEDCD]"
                       }`}
                     />
                   )}
@@ -378,13 +378,13 @@ export default function DistributorCartPage() {
             EMPTY CART STATE
            ========================================================================= */}
         {cartItems.length === 0 && checkoutStep !== 3 ? (
-          <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-12 text-center space-y-4">
-            <ShoppingCart className="h-12 w-12 text-stone-600 mx-auto" />
-            <h3 className="text-lg font-bold text-white">Your Shopping Cart is Empty</h3>
-            <p className="text-stone-400 text-xs">Browse the market place to add raw crops for processing.</p>
+          <div className="bg-[#FEFAE0]/90 border border-[#CCD5AE] rounded-[24px] p-12 text-center space-y-4">
+            <ShoppingCart className="h-12 w-12 text-[#69705E] mx-auto" />
+            <h3 className="text-lg font-bold text-[#283025]">Your Shopping Cart is Empty</h3>
+            <p className="text-[#69705E] text-xs">Browse the market place to add raw crops for processing.</p>
             <Link
               href="/distributor/distributorHub/marketplace"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-[20px] bg-[#7BA05B] hover:bg-[#688A4D] text-[#1F2A1A] font-bold text-xs transition shadow-md"
             >
               Browse Marketplace
             </Link>
@@ -397,11 +397,11 @@ export default function DistributorCartPage() {
         {checkoutStep === 1 && cartItems.length > 0 && (
           <div className="max-w-4xl mx-auto space-y-6">
             {/* FACTORY ADDRESS FORM */}
-            <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 space-y-5 shadow-sm">
+            <div className="bg-[#FEFAE0]/90 border border-[#CCD5AE] rounded-[24px] p-6 space-y-5 shadow-sm">
               {/* CARD HEADER WITH LOCATION ICON & INTEGRATED SAVED ADDRESS SELECTOR */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800/80 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#CCD5AE] pb-4">
                 <div>
-                  <h3 className="text-lg font-extrabold text-white">Factory & Delivery Destination</h3>
+                  <h3 className="text-lg font-extrabold text-[#283025]">Factory & Delivery Destination</h3>
                 </div>
 
                 {/* SLEEK COMPACT SAVED ADDRESS DROPDOWN */}
@@ -409,21 +409,21 @@ export default function DistributorCartPage() {
                   <button
                     type="button"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="bg-stone-950 border border-stone-800 hover:border-emerald-500/40 rounded-xl py-1.5 px-3 text-[11px] font-bold text-emerald-400 flex items-center justify-between gap-2 transition cursor-pointer shadow-sm max-w-[220px]"
+                    className="bg-[#FAEDCD] border border-[#CCD5AE] hover:border-[#7BA05B]/40 rounded-[12px] py-1.5 px-3 text-[11px] font-bold text-[#58664C] flex items-center justify-between gap-2 transition cursor-pointer shadow-sm max-w-[220px]"
                   >
                     <div className="flex items-center gap-1.5 truncate">
-                      <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <MapPin className="h-3.5 w-3.5 text-[#58664C] shrink-0" />
                       <span className="truncate">
                         {selectedAddressId === "custom"
                           ? "New Custom Address"
                           : savedAddresses.find(a => a.id === selectedAddressId)?.warehouseName || "Select Location"}
                       </span>
                     </div>
-                    <span className="text-[9px] text-stone-500 ml-1">▼</span>
+                    <span className="text-[9px] text-[#69705E] ml-1">▼</span>
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-1.5 w-72 bg-stone-900 border border-stone-800 rounded-xl shadow-2xl z-30 overflow-hidden py-1 divide-y divide-stone-800/50">
+                    <div className="absolute right-0 top-full mt-1.5 w-72 bg-[#FEFAE0] border border-[#CCD5AE] rounded-[12px] shadow-2xl z-30 overflow-hidden py-1 divide-y divide-[#CCD5AE]">
                       {savedAddresses.map((addr) => (
                         <div
                           key={addr.id}
@@ -431,17 +431,17 @@ export default function DistributorCartPage() {
                             handleSelectSavedAddress(addr);
                             setIsDropdownOpen(false);
                           }}
-                          className={`px-3 py-2 flex items-center justify-between gap-2 hover:bg-emerald-500/10 transition cursor-pointer text-[11px] group ${
-                            selectedAddressId === addr.id ? "bg-emerald-500/10 text-emerald-400 font-bold" : "text-stone-200"
+                          className={`px-3 py-2 flex items-center justify-between gap-2 hover:bg-[#7BA05B]/10 transition cursor-pointer text-[11px] group ${
+                            selectedAddressId === addr.id ? "bg-[#7BA05B]/10 text-[#58664C] font-bold" : "text-[#283025]"
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate flex-1">
-                            <MapPin className="h-3 w-3 text-emerald-400 shrink-0" />
+                            <MapPin className="h-3 w-3 text-[#58664C] shrink-0" />
                             <div className="truncate">
-                              <p className="truncate font-bold text-white text-[11px]">
-                                {addr.warehouseName} {addr.isDefault && <span className="text-[8px] text-emerald-400 font-extrabold ml-1">(Default)</span>}
+                              <p className="truncate font-bold text-[#283025] text-[11px]">
+                                {addr.warehouseName} {addr.isDefault && <span className="text-[8px] text-[#58664C] font-extrabold ml-1">(Default)</span>}
                               </p>
-                              <p className="text-[9px] text-stone-400 truncate">{addr.streetAddress}</p>
+                              <p className="text-[9px] text-[#69705E] truncate">{addr.streetAddress}</p>
                             </div>
                           </div>
 
@@ -449,7 +449,7 @@ export default function DistributorCartPage() {
                             type="button"
                             title="Delete Saved Location"
                             onClick={(e) => handleDeleteAddress(addr.id, e)}
-                            className="p-1 text-stone-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition shrink-0"
+                            className="p-1 text-[#69705E] hover:text-red-400 hover:bg-red-500/10 rounded-md transition shrink-0"
                           >
                             <Trash2 className="h-3 w-3" />
                           </button>
@@ -461,9 +461,9 @@ export default function DistributorCartPage() {
                           handleAddNewAddressOption();
                           setIsDropdownOpen(false);
                         }}
-                        className="px-3 py-2 flex items-center gap-2 hover:bg-emerald-500/10 transition cursor-pointer text-[11px] text-emerald-400 font-semibold"
+                        className="px-3 py-2 flex items-center gap-2 hover:bg-[#7BA05B]/10 transition cursor-pointer text-[11px] text-[#58664C] font-semibold"
                       >
-                        <Plus className="h-3 w-3 text-emerald-400 shrink-0" />
+                        <Plus className="h-3 w-3 text-[#58664C] shrink-0" />
                         <span>Enter New Custom Address</span>
                       </div>
                     </div>
@@ -475,7 +475,7 @@ export default function DistributorCartPage() {
               <form onSubmit={(e) => { e.preventDefault(); setCheckoutStep(2); }} className="space-y-4" autoComplete="off">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] text-[#69705E] font-bold uppercase tracking-wider mb-1.5">
                       Warehouse Name *
                     </label>
                     <input
@@ -488,11 +488,11 @@ export default function DistributorCartPage() {
                         setIsAddressSaved(false);
                       }}
                       placeholder="e.g. Central Processing Hub"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                      className="w-full bg-[#FAEDCD] border border-[#CCD5AE] rounded-[12px] px-4 py-2.5 text-xs text-[#283025] focus:outline-none focus:border-[#7BA05B] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] text-[#69705E] font-bold uppercase tracking-wider mb-1.5">
                       Contact Person *
                     </label>
                     <input
@@ -505,14 +505,14 @@ export default function DistributorCartPage() {
                         setIsAddressSaved(false);
                       }}
                       placeholder="e.g. Logistics Director"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                      className="w-full bg-[#FAEDCD] border border-[#CCD5AE] rounded-[12px] px-4 py-2.5 text-xs text-[#283025] focus:outline-none focus:border-[#7BA05B] transition"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] text-[#69705E] font-bold uppercase tracking-wider mb-1.5">
                       Contact Phone Number *
                     </label>
                     <input
@@ -525,11 +525,11 @@ export default function DistributorCartPage() {
                         setIsAddressSaved(false);
                       }}
                       placeholder="+91 9876543210"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                      className="w-full bg-[#FAEDCD] border border-[#CCD5AE] rounded-[12px] px-4 py-2.5 text-xs text-[#283025] focus:outline-none focus:border-[#7BA05B] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
+                    <label className="block text-[10px] text-[#69705E] font-bold uppercase tracking-wider mb-1.5">
                       Target Delivery Date *
                     </label>
                     <input
@@ -537,13 +537,13 @@ export default function DistributorCartPage() {
                       required
                       value={deliveryDate}
                       onChange={(e) => setDeliveryDate(e.target.value)}
-                      className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                      className="w-full bg-[#FAEDCD] border border-[#CCD5AE] rounded-[12px] px-4 py-2.5 text-xs text-[#283025] focus:outline-none focus:border-[#7BA05B] transition"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] text-[#69705E] font-bold uppercase tracking-wider mb-1.5">
                     Warehouse Street Address & Landmark *
                   </label>
                   <input
@@ -556,12 +556,12 @@ export default function DistributorCartPage() {
                       setIsAddressSaved(false);
                     }}
                     placeholder="e.g. Plot 42, Industrial Development Phase 2"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                    className="w-full bg-[#FAEDCD] border border-[#CCD5AE] rounded-[12px] px-4 py-2.5 text-xs text-[#283025] focus:outline-none focus:border-[#7BA05B] transition"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">
+                  <label className="block text-[10px] text-[#69705E] font-bold uppercase tracking-wider mb-1.5">
                     City, State & Pincode *
                   </label>
                   <input
@@ -574,29 +574,29 @@ export default function DistributorCartPage() {
                       setIsAddressSaved(false);
                     }}
                     placeholder="e.g. Nagpur, Maharashtra - 440001"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 transition"
+                    className="w-full bg-[#FAEDCD] border border-[#CCD5AE] rounded-[12px] px-4 py-2.5 text-xs text-[#283025] focus:outline-none focus:border-[#7BA05B] transition"
                   />
                 </div>
 
                 {/* SAVED ADDRESS ACTION BANNER */}
                 {selectedAddressId !== "custom" && (
-                  <div className="p-3.5 rounded-2xl bg-stone-950/80 border border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mt-2 shadow-inner">
-                    <div className="flex items-center gap-2 text-stone-300 font-medium">
+                  <div className="p-3.5 rounded-[20px] bg-[#FAEDCD]/80 border border-[#CCD5AE] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mt-2 shadow-inner">
+                    <div className="flex items-center gap-2 text-[#69705E] font-medium">
                       <span>Using saved warehouse profile. Edit any field below to modify.</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={handleUpdateSavedAddress}
-                        className={`px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center gap-1.5 ${
+                        className={`px-3.5 py-1.5 rounded-[12px] font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center gap-1.5 ${
                           isAddressSaved
-                            ? "bg-emerald-950 text-emerald-300 border border-emerald-700/80 shadow-emerald-950/50"
-                            : "bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/10"
+                            ? "bg-[#E2E8D8] text-[#58664C] border border-[#7BA05B]/80 shadow-[#7BA05B]/20"
+                            : "bg-emerald-500 hover:bg-[#688A4D] text-black shadow-[#7BA05B]/20"
                         }`}
                       >
                         {isAddressSaved ? (
                           <>
-                            <Save className="h-3.5 w-3.5 text-emerald-400" /> Saved
+                            <Save className="h-3.5 w-3.5 text-[#58664C]" /> Saved
                           </>
                         ) : (
                           <>
@@ -607,7 +607,7 @@ export default function DistributorCartPage() {
                       <button
                         type="button"
                         onClick={() => handleDeleteAddress(selectedAddressId)}
-                        className="px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-[12px] bg-[#FEFAE0] hover:bg-red-500/20 text-[#69705E] hover:text-red-400 border border-[#CCD5AE] font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Delete
                       </button>
@@ -622,9 +622,9 @@ export default function DistributorCartPage() {
                       id="saveAddressFuture"
                       checked={saveForFuture}
                       onChange={(e) => setSaveForFuture(e.target.checked)}
-                      className="rounded accent-emerald-500"
+                      className="rounded accent-[#7BA05B]"
                     />
-                    <label htmlFor="saveAddressFuture" className="text-xs text-stone-300 font-medium cursor-pointer">
+                    <label htmlFor="saveAddressFuture" className="text-xs text-[#69705E] font-medium cursor-pointer">
                       Save this warehouse address for future orders
                     </label>
                   </div>
@@ -634,7 +634,7 @@ export default function DistributorCartPage() {
 
             {/* CART ITEMS REVIEW LIST */}
             <div className="space-y-3">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider block px-1">
+              <span className="text-xs font-bold text-[#69705E] uppercase tracking-wider block px-1">
                 Selected Crop Batches ({cartItems.length})
               </span>
 
@@ -643,22 +643,22 @@ export default function DistributorCartPage() {
                 return (
                   <div
                     key={item.harvestItem.id}
-                    className="bg-stone-900/90 border border-stone-800 rounded-3xl p-4 flex items-center justify-between gap-4 shadow-sm"
+                    className="bg-[#FEFAE0]/90 border border-[#CCD5AE] rounded-[24px] p-4 flex items-center justify-between gap-4 shadow-sm"
                   >
                     <div className="flex items-center gap-3.5">
                       <img
                         src={item.harvestItem.imageUrl}
                         alt={item.harvestItem.cropName}
-                        className="w-14 h-14 rounded-2xl object-cover border border-stone-800 shrink-0"
+                        className="w-14 h-14 rounded-[20px] object-cover border border-[#CCD5AE] shrink-0"
                       />
                       <div className="space-y-0.5 text-xs">
-                        <span className="text-[10px] font-mono text-emerald-400 font-bold block">
+                        <span className="text-[10px] font-mono text-[#58664C] font-bold block">
                           {item.harvestItem.batchId}
                         </span>
-                        <h4 className="font-bold text-white text-sm">
+                        <h4 className="font-bold text-[#283025] text-sm">
                           {item.harvestItem.cropName}
                         </h4>
-                        <span className="text-[11px] text-stone-400 block font-medium">
+                        <span className="text-[11px] text-[#69705E] block font-medium">
                           Trade Batch • Verified Origin
                         </span>
                       </div>
@@ -666,11 +666,11 @@ export default function DistributorCartPage() {
 
                     <div className="flex items-center gap-4 text-right">
                       {/* Quantity Selector */}
-                      <div className="flex items-center gap-2 bg-stone-950 border border-stone-800 rounded-2xl p-1 shadow-inner">
+                      <div className="flex items-center gap-2 bg-[#FAEDCD] border border-[#CCD5AE] rounded-[20px] p-1 shadow-inner">
                         <button
                           type="button"
                           onClick={() => handleUpdateQty(item.harvestItem.id, -5, item.selectedQuantity)}
-                          className="w-7 h-7 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 hover:text-emerald-400 flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
+                          className="w-7 h-7 rounded-[12px] bg-[#FEFAE0] hover:bg-[#FAEDCD] text-[#69705E] hover:text-[#58664C] flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
                         >
                           <Minus className="h-3 w-3" />
                         </button>
@@ -698,9 +698,9 @@ export default function DistributorCartPage() {
                                 cartService.updateQuantity(item.harvestItem.id, 1);
                               }
                             }}
-                            className="w-12 bg-transparent text-center text-xs font-bold text-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-12 bg-transparent text-center text-xs font-bold text-[#283025] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <span className="text-[11px] font-bold text-stone-400 select-none ml-0.5">
+                          <span className="text-[11px] font-bold text-[#69705E] select-none ml-0.5">
                             {item.harvestItem.unit}
                           </span>
                         </div>
@@ -708,21 +708,21 @@ export default function DistributorCartPage() {
                         <button
                           type="button"
                           onClick={() => handleUpdateQty(item.harvestItem.id, 5, item.selectedQuantity)}
-                          className="w-7 h-7 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
+                          className="w-7 h-7 rounded-[12px] bg-[#7BA05B]/10 hover:bg-[#7BA05B]/20 text-[#58664C] flex items-center justify-center transition cursor-pointer active:scale-95 shrink-0"
                         >
                           <Plus className="h-3 w-3" />
                         </button>
                       </div>
 
                       <div>
-                        <strong className="text-emerald-400 font-extrabold text-sm block">
+                        <strong className="text-[#58664C] font-extrabold text-sm block">
                           ₹ {itemTotal.toLocaleString("en-IN")}
                         </strong>
                       </div>
 
                       <button
                         onClick={() => handleRemove(item.harvestItem.id)}
-                        className="p-1.5 text-stone-500 hover:text-red-400 transition cursor-pointer"
+                        className="p-1.5 text-[#69705E] hover:text-red-400 transition cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -733,39 +733,39 @@ export default function DistributorCartPage() {
             </div>
 
             {/* COST BREAKDOWN (INTEGRATED AT BOTTOM OF SINGLE COLUMN) */}
-            <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 space-y-5 shadow-sm">
-              <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider">
+            <div className="bg-[#FEFAE0]/90 border border-[#CCD5AE] rounded-[24px] p-6 space-y-5 shadow-sm">
+              <h3 className="text-xs font-bold text-[#69705E] uppercase tracking-wider">
                 Order Financial Summary
               </h3>
 
-              <div className="space-y-2.5 text-xs text-stone-300">
+              <div className="space-y-2.5 text-xs text-[#69705E]">
                 <div className="flex justify-between">
                   <span>Crop Subtotal:</span>
-                  <strong className="text-white">₹ {totals.subtotal.toLocaleString("en-IN")}</strong>
+                  <strong className="text-[#283025]">₹ {totals.subtotal.toLocaleString("en-IN")}</strong>
                 </div>
                 <div className="flex justify-between">
                   <span>GST (5%):</span>
-                  <strong className="text-white">₹ {totals.tax.toLocaleString("en-IN")}</strong>
+                  <strong className="text-[#283025]">₹ {totals.tax.toLocaleString("en-IN")}</strong>
                 </div>
                 <div className="flex justify-between">
                   <span>Platform Fee (2%):</span>
-                  <strong className="text-white">₹ {(totals.platformFee || 0).toLocaleString("en-IN")}</strong>
+                  <strong className="text-[#283025]">₹ {(totals.platformFee || 0).toLocaleString("en-IN")}</strong>
                 </div>
 
-                <div className="pt-3 border-t border-stone-800 flex justify-between items-center text-sm font-extrabold text-white">
+                <div className="pt-3 border-t border-[#CCD5AE] flex justify-between items-center text-sm font-extrabold text-[#283025]">
                   <span>Total Amount:</span>
-                  <span className="text-emerald-400 text-lg">₹ {totals.total.toLocaleString("en-IN")}</span>
+                  <span className="text-[#58664C] text-lg">₹ {totals.total.toLocaleString("en-IN")}</span>
                 </div>
               </div>
 
-              <div className="pt-3 flex justify-end border-t border-stone-800/80">
+              <div className="pt-3 flex justify-end border-t border-[#CCD5AE]">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.preventDefault();
                     setCheckoutStep(2);
                   }}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-8 py-3.5 rounded-2xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto bg-[#7BA05B] hover:bg-[#688A4D] text-[#1F2A1A] font-extrabold px-8 py-3.5 rounded-[20px] text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Proceed to Payment
                   <ChevronRight className="h-4 w-4" />
@@ -780,81 +780,81 @@ export default function DistributorCartPage() {
            ========================================================================= */}
         {checkoutStep === 2 && cartItems.length > 0 && (
           <div className="max-w-4xl mx-auto space-y-6">
-            <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 space-y-5 shadow-sm">
-              <div className="flex items-center gap-3 border-b border-stone-800/80 pb-4">
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+            <div className="bg-[#FEFAE0]/90 border border-[#CCD5AE] rounded-[24px] p-6 space-y-5 shadow-sm">
+              <div className="flex items-center gap-3 border-b border-[#CCD5AE] pb-4">
+                <div className="p-2.5 bg-[#7BA05B]/10 border border-[#7BA05B]/20 rounded-[12px] text-[#58664C]">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-white">Choose Payment Method</h3>
+                  <h3 className="text-lg font-extrabold text-[#283025]">Choose Payment Method</h3>
                 </div>
               </div>
 
               {/* SINGLE RAZORPAY PAYMENT MODE */}
-              <div className="p-4 rounded-2xl border border-emerald-500 bg-emerald-500/10 flex items-center justify-between gap-3">
+              <div className="p-4 rounded-[20px] border border-[#7BA05B] bg-[#7BA05B]/10 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-emerald-400 shrink-0" />
+                  <CreditCard className="h-5 w-5 text-[#58664C] shrink-0" />
                   <div>
-                    <h4 className="font-extrabold text-sm text-white">Online Payment (Razorpay)</h4>
-                    <p className="text-xs text-stone-400">UPI, Corporate NetBanking, Credit & Debit Cards</p>
+                    <h4 className="font-extrabold text-sm text-[#283025]">Online Payment (Razorpay)</h4>
+                    <p className="text-xs text-[#69705E]">UPI, Corporate NetBanking, Credit & Debit Cards</p>
                   </div>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500 text-black">
+                <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#7BA05B] text-[#FFFCF5]">
                   Active
                 </span>
               </div>
 
               {/* FACTORY ADDRESS PREVIEW CARD */}
-              <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-1.5">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+              <div className="p-4 bg-[#FAEDCD] rounded-[20px] border border-[#CCD5AE] space-y-1.5">
+                <span className="text-[10px] font-bold text-[#69705E] uppercase tracking-wider block">
                   Confirmed Delivery Destination
                 </span>
-                <div className="flex items-start gap-2 text-xs text-stone-300">
-                  <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 text-xs text-[#69705E]">
+                  <MapPin className="h-4 w-4 text-[#58664C] shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-white block">{warehouseName}</strong>
+                    <strong className="text-[#283025] block">{warehouseName}</strong>
                     <p>{streetAddress}, {cityState}</p>
-                    <p className="text-stone-400 text-[11px] mt-0.5">Contact: {contactPerson} ({contactPhone})</p>
+                    <p className="text-[#69705E] text-[11px] mt-0.5">Contact: {contactPerson} ({contactPhone})</p>
                   </div>
                 </div>
               </div>
 
               {/* FINAL COST BREAKDOWN SUMMARY */}
-              <div className="pt-4 border-t border-stone-800/80 space-y-3">
-                <div className="space-y-2 text-xs text-stone-300">
+              <div className="pt-4 border-t border-[#CCD5AE] space-y-3">
+                <div className="space-y-2 text-xs text-[#69705E]">
                   <div className="flex justify-between">
                     <span>Crop Subtotal:</span>
-                    <strong className="text-white">₹ {totals.subtotal.toLocaleString("en-IN")}</strong>
+                    <strong className="text-[#283025]">₹ {totals.subtotal.toLocaleString("en-IN")}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>GST (5%):</span>
-                    <strong className="text-white">₹ {totals.tax.toLocaleString("en-IN")}</strong>
+                    <strong className="text-[#283025]">₹ {totals.tax.toLocaleString("en-IN")}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>Platform Fee (2%):</span>
-                    <strong className="text-white">₹ {(totals.platformFee || 0).toLocaleString("en-IN")}</strong>
+                    <strong className="text-[#283025]">₹ {(totals.platformFee || 0).toLocaleString("en-IN")}</strong>
                   </div>
-                  <div className="pt-2 border-t border-stone-800 flex justify-between items-center text-sm font-extrabold text-white">
+                  <div className="pt-2 border-t border-[#CCD5AE] flex justify-between items-center text-sm font-extrabold text-[#283025]">
                     <span>Total Payable:</span>
-                    <span className="text-emerald-400 text-lg">₹ {totals.total.toLocaleString("en-IN")}</span>
+                    <span className="text-[#58664C] text-lg">₹ {totals.total.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
               </div>
 
               {paymentError && (
-                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs font-semibold flex items-center justify-between">
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-[12px] text-red-400 text-xs font-semibold flex items-center justify-between">
                   <span>{paymentError}</span>
-                  <button onClick={() => setPaymentError(null)} className="text-stone-400 hover:text-white text-xs">Dismiss</button>
+                  <button onClick={() => setPaymentError(null)} className="text-[#69705E] hover:text-[#283025] text-xs">Dismiss</button>
                 </div>
               )}
 
               {/* BOTTOM ACTION TOOLBAR */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-stone-800">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#CCD5AE]">
                 <button
                   type="button"
                   onClick={() => setCheckoutStep(1)}
                   disabled={isProcessingPayment}
-                  className="w-full sm:w-auto bg-stone-900 hover:bg-stone-800 border border-stone-800 text-stone-300 font-bold px-6 py-3 rounded-2xl text-xs transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full sm:w-auto bg-[#FEFAE0] hover:bg-[#FAEDCD] border border-[#CCD5AE] text-[#69705E] font-bold px-6 py-3 rounded-[20px] text-xs transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <ArrowLeft className="h-4 w-4" /> Back
                 </button>
@@ -862,7 +862,7 @@ export default function DistributorCartPage() {
                   type="button"
                   onClick={handleFinalizeOrder}
                   disabled={isProcessingPayment}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-8 py-3.5 rounded-2xl text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full sm:w-auto bg-[#7BA05B] hover:bg-[#688A4D] text-[#1F2A1A] font-extrabold px-8 py-3.5 rounded-[20px] text-xs transition shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isProcessingPayment ? (
                     <>
@@ -885,49 +885,49 @@ export default function DistributorCartPage() {
             STEP 3: ORDER CONFIRMATION & INSTITUTIONAL TRADE RECEIPT
            ========================================================================= */}
         {checkoutStep === 3 && confirmedOrder && (
-          <div className="bg-stone-900/90 border border-emerald-500/30 rounded-3xl p-8 space-y-7 shadow-2xl max-w-3xl mx-auto">
+          <div className="bg-[#FEFAE0]/90 border border-[#7BA05B]/30 rounded-[24px] p-8 space-y-7 shadow-2xl max-w-3xl mx-auto">
             
             {/* SUCCESS HEADER */}
-            <div className="text-center space-y-3 border-b border-stone-800/80 pb-6">
-              <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+            <div className="text-center space-y-3 border-b border-[#CCD5AE] pb-6">
+              <div className="w-16 h-16 bg-[#7BA05B]/20 text-[#58664C] rounded-full border border-[#7BA05B]/30 flex items-center justify-center mx-auto shadow-lg shadow-[#7BA05B]/20">
                 <CheckCircle2 className="h-10 w-10" />
               </div>
 
               <div>
-                <span className="text-emerald-400 font-mono text-xs font-extrabold uppercase tracking-widest block">
+                <span className="text-[#58664C] font-mono text-xs font-extrabold uppercase tracking-widest block">
                   Trade Settlement Escrow Secured
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#283025] mt-1">
                   Order Successfully Placed!
                 </h2>
-                <p className="text-stone-400 text-xs mt-1">
-                  Trade Reference ID: <strong className="text-emerald-400 font-mono">{confirmedOrder.orderId}</strong>
+                <p className="text-[#69705E] text-xs mt-1">
+                  Trade Reference ID: <strong className="text-[#58664C] font-mono">{confirmedOrder.orderId}</strong>
                 </p>
                 {confirmedOrder.razorpayPaymentId && (
-                  <p className="text-stone-400 text-[11px] mt-0.5">
-                    Razorpay Transaction ID: <strong className="text-stone-300 font-mono">{confirmedOrder.razorpayPaymentId}</strong>
+                  <p className="text-[#69705E] text-[11px] mt-0.5">
+                    Razorpay Transaction ID: <strong className="text-[#69705E] font-mono">{confirmedOrder.razorpayPaymentId}</strong>
                   </p>
                 )}
               </div>
             </div>
 
             {/* FACTORY DESTINATION SUMMARY */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-stone-950 p-5 rounded-2xl border border-stone-800 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#FAEDCD] p-5 rounded-[20px] border border-[#CCD5AE] text-xs">
               <div>
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+                <span className="text-[10px] font-bold text-[#69705E] uppercase tracking-wider block mb-1">
                   Factory Delivery Location
                 </span>
-                <strong className="text-white text-sm block">{confirmedOrder.warehouseName}</strong>
-                <p className="text-stone-300 mt-0.5">{confirmedOrder.streetAddress}</p>
-                <p className="text-stone-300">{confirmedOrder.cityState}</p>
+                <strong className="text-[#283025] text-sm block">{confirmedOrder.warehouseName}</strong>
+                <p className="text-[#69705E] mt-0.5">{confirmedOrder.streetAddress}</p>
+                <p className="text-[#69705E]">{confirmedOrder.cityState}</p>
               </div>
-              <div className="sm:border-l sm:border-stone-800 sm:pl-4">
-                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+              <div className="sm:border-l sm:border-[#CCD5AE] sm:pl-4">
+                <span className="text-[10px] font-bold text-[#69705E] uppercase tracking-wider block mb-1">
                   Receiver Contact Info
                 </span>
-                <p className="text-stone-200 font-medium">{confirmedOrder.contactPerson}</p>
-                <p className="text-stone-400 font-mono mt-0.5">{confirmedOrder.contactPhone}</p>
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full mt-2 border border-emerald-500/20">
+                <p className="text-[#283025] font-medium">{confirmedOrder.contactPerson}</p>
+                <p className="text-[#69705E] font-mono mt-0.5">{confirmedOrder.contactPhone}</p>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#58664C] bg-[#7BA05B]/10 px-2 py-0.5 rounded-full mt-2 border border-[#7BA05B]/20">
                   <Lock className="h-3 w-3" /> ₹ {confirmedOrder.totals.total.toLocaleString("en-IN")} Escrow Locked
                 </span>
               </div>
@@ -935,26 +935,26 @@ export default function DistributorCartPage() {
 
             {/* ORDERED ITEMS TABLE */}
             <div className="space-y-2">
-              <span className="text-xs font-bold text-stone-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-[#69705E] uppercase tracking-wider block">
                 Purchased Crop Batches
               </span>
-              <div className="bg-stone-950 rounded-2xl border border-stone-800 overflow-hidden divide-y divide-stone-800/80">
+              <div className="bg-[#FAEDCD] rounded-[20px] border border-[#CCD5AE] overflow-hidden divide-y divide-[#CCD5AE]">
                 {confirmedOrder.items.map((item) => (
                   <div key={item.harvestItem.id} className="p-3.5 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
                       <img
                         src={item.harvestItem.imageUrl}
                         alt={item.harvestItem.cropName}
-                        className="w-10 h-10 rounded-xl object-cover border border-stone-800"
+                        className="w-10 h-10 rounded-[12px] object-cover border border-[#CCD5AE]"
                       />
                       <div>
-                        <h5 className="font-bold text-white">{item.harvestItem.cropName}</h5>
-                        <span className="text-[10px] font-mono text-stone-400">{item.harvestItem.batchId}</span>
+                        <h5 className="font-bold text-[#283025]">{item.harvestItem.cropName}</h5>
+                        <span className="text-[10px] font-mono text-[#69705E]">{item.harvestItem.batchId}</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <strong className="text-white font-bold block">{item.selectedQuantity} {item.harvestItem.unit}</strong>
-                      <span className="text-emerald-400 font-semibold text-[11px]">
+                      <strong className="text-[#283025] font-bold block">{item.selectedQuantity} {item.harvestItem.unit}</strong>
+                      <span className="text-[#58664C] font-semibold text-[11px]">
                         ₹ {(item.harvestItem.pricePerUnit * item.selectedQuantity).toLocaleString("en-IN")}
                       </span>
                     </div>
@@ -967,13 +967,13 @@ export default function DistributorCartPage() {
             <div className="pt-2 flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 href="/processor/processorHub/shipments"
-                className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg text-center flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-[20px] bg-[#7BA05B] hover:bg-[#688A4D] text-[#1F2A1A] font-bold text-xs transition shadow-lg text-center flex items-center justify-center gap-2"
               >
                 <FileText className="h-4 w-4" /> Track Order Status
               </Link>
               <Link
                 href="/distributor/distributorHub/marketplace"
-                className="px-6 py-3 rounded-2xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs transition border border-stone-700 text-center flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-[20px] bg-[#FEFAE0] border border-[#CCD5AE] hover:bg-[#FAEDCD] text-[#283025] font-semibold text-xs transition border border-[#CCD5AE] text-center flex items-center justify-center gap-2"
               >
                 Back to Marketplace
               </Link>

@@ -189,7 +189,7 @@ export default function DistributorDashboard() {
 
 
   return (
-    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen text-[#283025] font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Distributor Dashboard | Seed2Shelf</title>
         <meta name="description" content="View distributor analytics and total revenue summaries." />
@@ -198,13 +198,13 @@ export default function DistributorDashboard() {
       <div className="max-w-6xl mx-auto space-y-7">
         
         {/* HEADER WITH TIMEFRAME SELECTOR ON RIGHT */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-[#DADFCF] py-3.5">
           <div className="flex items-center gap-3.5">
-            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
+            <div className="p-2.5 bg-[#7BA05B]/10 border border-[#6F7D61]/20 rounded-[20px] text-[#58664C] shrink-0">
               <BarChart3 className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#283025] tracking-tight">
                 Dashboard
               </h1>
             </div>
@@ -212,20 +212,20 @@ export default function DistributorDashboard() {
 
           <div className="flex items-center gap-3">
             {isLoading && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+              <div className="flex items-center gap-1.5 text-xs text-[#58664C] font-semibold">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Generating...</span>
               </div>
             )}
 
             {/* TIMEFRAME SWITCHING OPTIONS */}
-            <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+            <div className="flex items-center bg-[#F5F1E6] p-1.5 rounded-[20px] border border-[#DADFCF] text-xs font-extrabold">
               <button
                 onClick={() => setTimeframe("WEEKLY")}
-                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-[12px] transition cursor-pointer flex items-center gap-1.5 ${
                   timeframe === "WEEKLY"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
+                    ? "bg-[#7BA05B] text-[#1F2A1A] shadow-md font-black"
+                    : "text-[#69705E] hover:text-[#283025]"
                 }`}
               >
                 <span>Weekly</span>
@@ -235,10 +235,10 @@ export default function DistributorDashboard() {
 
               <button
                 onClick={() => setTimeframe("MONTHLY")}
-                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-[12px] transition cursor-pointer flex items-center gap-1.5 ${
                   timeframe === "MONTHLY"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
+                    ? "bg-[#7BA05B] text-[#1F2A1A] shadow-md font-black"
+                    : "text-[#69705E] hover:text-[#283025]"
                 }`}
               >
                 <span>Monthly</span>
@@ -248,10 +248,10 @@ export default function DistributorDashboard() {
 
               <button
                 onClick={() => setTimeframe("YEARLY")}
-                className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                className={`px-4 py-2 rounded-[12px] transition cursor-pointer flex items-center gap-1.5 ${
                   timeframe === "YEARLY"
-                    ? "bg-emerald-600 text-white shadow-md font-black"
-                    : "text-stone-400 hover:text-stone-200"
+                    ? "bg-[#7BA05B] text-[#1F2A1A] shadow-md font-black"
+                    : "text-[#69705E] hover:text-[#283025]"
                 }`}
               >
                 <span>Yearly</span>
@@ -261,17 +261,17 @@ export default function DistributorDashboard() {
         </div>
 
         {downloadSuccess && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold flex items-center gap-2 animate-in fade-in duration-300">
+          <div className="p-4 bg-[#7BA05B]/10 border border-[#6F7D61]/20 rounded-[20px] text-xs text-[#58664C] font-bold flex items-center gap-2 animate-in fade-in duration-300">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{downloadSuccess}</span>
           </div>
         )}
 
         {/* TIMEFRAME SUB-HEADER BANNER */}
-        <div className="flex flex-wrap items-center justify-between bg-stone-900/90 border border-stone-800/90 rounded-2xl p-4 sm:p-5 gap-3 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between bg-[#FFFCF5] border border-[#DADFCF] rounded-[20px] p-4 sm:p-5 gap-3 shadow-sm">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-bold text-stone-200">
+            <Calendar className="w-4 h-4 text-[#58664C]" />
+            <span className="text-sm font-bold text-[#283025]">
               {timeframe === "WEEKLY" ? "Current Week Report" : timeframe === "MONTHLY" ? "Monthly Summary" : "Annual Summary"}
             </span>
           </div>
@@ -279,59 +279,59 @@ export default function DistributorDashboard() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleExportReport("CSV")}
-              className="px-3.5 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-xl text-xs font-bold text-stone-300 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 bg-[#F5F1E6] hover:bg-[#EDF0E6] border border-[#DADFCF] rounded-[12px] text-xs font-bold text-[#283025] transition flex items-center gap-1.5 cursor-pointer"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-[#58664C]" />
               <span>Export CSV</span>
             </button>
             <button
               onClick={() => handleExportReport("PDF")}
-              className="px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl text-xs font-bold text-emerald-400 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 bg-[#7BA05B]/20 hover:bg-[#7BA05B]/30 border border-[#6F7D61]/30 rounded-[12px] text-xs font-bold text-[#58664C] transition flex items-center gap-1.5 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
+              <Download className="w-3.5 h-3.5 text-[#58664C]" />
               <span>Download PDF</span>
             </button>
           </div>
         </div>
 
         {/* UNIFIED 4-METRIC SQUARE CONTAINER */}
-        <div className="bg-stone-900/90 border border-stone-800/90 rounded-3xl p-3.5 sm:p-5 shadow-sm">
+        <div className="bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-3.5 sm:p-5 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
             
             {/* Cell 1: Items Moved */}
-            <div className="p-6 bg-stone-950/80 border border-stone-800/70 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/30 transition duration-300">
+            <div className="p-6 bg-[#F5F1E6]/80 border border-[#DADFCF]/70 rounded-[20px] space-y-4 flex flex-col justify-between hover:border-[#6F7D61]/30 transition duration-300">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-stone-400 uppercase tracking-wider block">
+                <span className="text-xs font-black text-[#69705E] uppercase tracking-wider block">
                   ITEMS MOVED
                 </span>
-                <div className="p-2.5 bg-stone-900 border border-stone-800 rounded-xl text-stone-300">
+                <div className="p-2.5 bg-[#FFFCF5] border border-[#DADFCF] rounded-[12px] text-[#283025]">
                   <Package className="w-4 h-4" />
                 </div>
               </div>
               
               <div className="space-y-1">
-                <p className="text-3xl font-extrabold text-white tracking-tight">{currentStats.produceTransformed}</p>
-                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <p className="text-3xl font-extrabold text-[#283025] tracking-tight">{currentStats.produceTransformed}</p>
+                <div className="text-[11px] text-[#69705E] flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#58664C] shrink-0" />
                   <span>{currentStats.successfulShipments} Dispatched Batches</span>
                 </div>
               </div>
             </div>
 
             {/* Cell 2: Total Revenue */}
-            <div className="p-6 bg-stone-950/80 border border-emerald-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-emerald-500/40 transition duration-300">
+            <div className="p-6 bg-[#F5F1E6]/80 border border-emerald-900/30 rounded-[20px] space-y-4 flex flex-col justify-between hover:border-emerald-500/40 transition duration-300">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-wider block">
+                <span className="text-xs font-black text-[#58664C] uppercase tracking-wider block">
                   TOTAL REVENUE
                 </span>
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                <div className="p-2.5 bg-[#7BA05B]/10 border border-[#6F7D61]/20 rounded-[12px] text-[#58664C]">
                   <IndianRupee className="w-4 h-4" />
                 </div>
               </div>
               
               <div className="space-y-1">
-                <p className="text-3xl font-extrabold text-emerald-400 tracking-tight">{currentStats.totalRevenue}</p>
-                <div className="text-[11px] text-emerald-400/90 flex items-center gap-1.5 font-medium">
+                <p className="text-3xl font-extrabold text-[#58664C] tracking-tight">{currentStats.totalRevenue}</p>
+                <div className="text-[11px] text-[#58664C]/90 flex items-center gap-1.5 font-medium">
                   <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
                   <span>Settled Escrow Earnings</span>
                 </div>
@@ -339,19 +339,19 @@ export default function DistributorDashboard() {
             </div>
 
             {/* Cell 3: Escrow Locked */}
-            <div className="p-6 bg-stone-950/80 border border-amber-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-amber-500/40 transition duration-300">
+            <div className="p-6 bg-[#F5F1E6]/80 border border-amber-900/30 rounded-[20px] space-y-4 flex flex-col justify-between hover:border-amber-500/40 transition duration-300">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-amber-400 uppercase tracking-wider block">
                   ESCROW LOCKED
                 </span>
-                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-[12px] text-amber-400">
                   <Lock className="w-4 h-4" />
                 </div>
               </div>
               
               <div className="space-y-1">
                 <p className="text-3xl font-extrabold text-amber-400 tracking-tight">{currentStats.escrowLocked}</p>
-                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
+                <div className="text-[11px] text-[#69705E] flex items-center gap-1.5 font-medium">
                   <Activity className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                   <span>In-Transit Protection</span>
                 </div>
@@ -359,20 +359,20 @@ export default function DistributorDashboard() {
             </div>
 
             {/* Cell 4: Dispute Rate */}
-            <div className="p-6 bg-stone-950/80 border border-rose-900/30 rounded-2xl space-y-4 flex flex-col justify-between hover:border-rose-500/40 transition duration-300">
+            <div className="p-6 bg-[#F5F1E6]/80 border border-orange-800/20 rounded-[20px] space-y-4 flex flex-col justify-between hover:border-orange-400/30 transition duration-300">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-stone-400 uppercase tracking-wider block">
+                <span className="text-xs font-black text-[#69705E] uppercase tracking-wider block">
                   DISPUTE RATE
                 </span>
-                <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400">
+                <div className="p-2.5 bg-orange-400/10 border border-orange-400/20 rounded-[12px] text-orange-400">
                   <AlertTriangle className="w-4 h-4" />
                 </div>
               </div>
               
               <div className="space-y-1">
-                <p className="text-3xl font-extrabold text-rose-400 tracking-tight">{currentStats.disputeRate}</p>
-                <div className="text-[11px] text-stone-400 flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <p className="text-3xl font-extrabold text-orange-400 tracking-tight">{currentStats.disputeRate}</p>
+                <div className="text-[11px] text-[#69705E] flex items-center gap-1.5 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#58664C] shrink-0" />
                   <span>Quality Assurance Approved</span>
                 </div>
               </div>

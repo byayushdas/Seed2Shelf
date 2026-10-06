@@ -20,6 +20,8 @@ import {
   History,
   Clock
 } from "lucide-react";
+import ShipmentCard from "@/components/shared/ShipmentCard";
+import Pagination from "@/components/shared/Pagination";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5001";
 
@@ -211,8 +213,20 @@ export default function DistributorShipmentsPage() {
 
   const filteredList = currentList;
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
+  const totalItems = filteredList.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const paginatedShipments = filteredList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen bg-[#F5F1E6] text-[#283025] font-sans pb-24 pt-24 px-4 sm:px-6 lg:px-8 relative z-20">
       <Head>
         <title>Shipments & Logistics | Seed2Shelf Distributor</title>
         <meta name="description" content="Distributor B2B incoming processor deliveries and outgoing retailer shipments." />
@@ -223,26 +237,26 @@ export default function DistributorShipmentsPage() {
       <div className="max-w-6xl mx-auto space-y-7">
         
         {/* HEADER WITH TOP RIGHT SIGNAL TABS MATCHING FARMER LOGISTICS */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-stone-800/80 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-[#DADFCF] py-3.5">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
+            <div className="p-2.5 bg-[#EDF0E6] border border-[#6F7D61]/20 rounded-[20px] text-[#58664C] shrink-0">
               <Truck className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#283025] tracking-tight">
                 Shipments & Logistics
               </h1>
             </div>
           </div>
 
           {/* MAIN TAB SWITCHER IN TOP RIGHT HEADER (INCOMING vs OUTGOING) */}
-          <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
+          <div className="flex items-center bg-[#FFFCF5] p-1.5 rounded-[20px] border border-[#DADFCF] text-xs font-bold">
             <button
-              onClick={() => setActiveSignal("INCOMING")}
-              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+              onClick={() => { setActiveSignal("INCOMING"); setCurrentPage(1); }}
+              className={`px-4 py-2 rounded-[12px] transition cursor-pointer flex items-center ${
                 activeSignal === "INCOMING"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
+                  ? "bg-[#7BA05B] text-[#FFFCF5] shadow-md font-bold"
+                  : "text-[#69705E] hover:text-[#283025]"
               }`}
             >
               <span>Incoming Shipments</span>
@@ -251,11 +265,11 @@ export default function DistributorShipmentsPage() {
             <div className="w-[1px] h-4 bg-stone-800 mx-1 shrink-0"></div>
 
             <button
-              onClick={() => setActiveSignal("OUTGOING")}
-              className={`px-4 py-2 rounded-xl transition cursor-pointer flex items-center ${
+              onClick={() => { setActiveSignal("OUTGOING"); setCurrentPage(1); }}
+              className={`px-4 py-2 rounded-[12px] transition cursor-pointer flex items-center ${
                 activeSignal === "OUTGOING"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
+                  ? "bg-[#7BA05B] text-[#FFFCF5] shadow-md font-bold"
+                  : "text-[#69705E] hover:text-[#283025]"
               }`}
             >
               <span>Outgoing Shipments</span>
@@ -264,7 +278,7 @@ export default function DistributorShipmentsPage() {
         </div>
 
         {notification && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold flex items-center gap-2 animate-in fade-in duration-300 shadow-lg">
+          <div className="p-4 bg-[#EDF0E6] border border-[#6F7D61]/20 rounded-[20px] text-xs text-[#58664C] font-bold flex items-center gap-2 animate-in fade-in duration-300 shadow-lg">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <span>{notification}</span>
           </div>
@@ -275,279 +289,33 @@ export default function DistributorShipmentsPage() {
         {/* SHIPMENT CARDS LIST */}
         <div className="space-y-6">
           {filteredList.length === 0 ? (
-            <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-12 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-stone-950 border border-stone-800 flex items-center justify-center mx-auto text-stone-500">
+            <div className="bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-12 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#FFFCF5] border border-[#DADFCF] flex items-center justify-center mx-auto text-[#69705E]">
                 <Truck className="w-6 h-6" />
               </div>
-              <p className="text-stone-400 text-xs font-medium">
+              <p className="text-[#69705E] text-xs font-medium">
                 No shipments found in {activeSignal.toLowerCase()} records.
               </p>
             </div>
           ) : (
-            filteredList.map((shp) => (
-              <div
-                key={shp.id}
-                className={`bg-stone-900/90 border rounded-3xl p-6 sm:p-7 shadow-sm transition-all duration-200 space-y-6 ${
-                  shp.status === 'REJECTED' 
-                    ? 'border-red-900/50' 
-                    : shp.status === 'DELIVERED' 
-                    ? 'border-emerald-900/40' 
-                    : 'border-stone-800'
-                }`}
-              >
-                {/* HEADER META LINE: IDs, Dates & Status Badge */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-800">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="text-xs text-stone-200 font-extrabold bg-stone-950 px-3 py-1 rounded-xl border border-stone-800">
-                      {shp.id}
-                    </span>
-                    <span className="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
-                      Batch: {shp.batchId}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-stone-400 font-medium flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-stone-500" />
-                      Dispatched: {shp.dispatchedDate}
-                    </span>
-
-                    {/* STATUS BADGE MATCHING USER SCREENSHOTS */}
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1.5 ${
-                      shp.status === 'DELIVERED'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        : shp.status === 'REJECTED'
-                        ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                        : shp.status === 'ACCEPTED'
-                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        : 'bg-blue-500/10 text-blue-400 border-blue-500/20 animate-pulse'
-                    }`}>
-                      {shp.status === 'DELIVERED' ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>ACCEPTED & PAID</span>
-                        </>
-                      ) : shp.status === 'REJECTED' ? (
-                        <>
-                          <XCircle className="w-3.5 h-3.5 text-red-400" />
-                          <span>REJECTED & RETURNED</span>
-                        </>
-                      ) : shp.status === 'ACCEPTED' ? (
-                        <>
-                          <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                          <span>AWAITING DISPATCH</span>
-                        </>
-                      ) : (
-                        <>
-                          <Truck className="w-3.5 h-3.5 text-blue-400" />
-                          <span>IN TRANSIT</span>
-                        </>
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                {/* MAIN CONTENT GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                  
-                  {/* Left Column: Shipment Cargo & Destination */}
-                  <div className="md:col-span-7 space-y-2.5">
-                    <div>
-                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Shipment Cargo</span>
-                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                        {shp.productName} <span className="text-stone-400 text-sm font-semibold">({shp.quantity})</span>
-                      </h3>
-                    </div>
-
-                    <div className="flex items-start gap-2 text-xs text-stone-300">
-                      <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-stone-400">Destination: </span>
-                        <span className="font-extrabold text-white">{shp.sourceOrDestination}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Cargo Value & Dates */}
-                  <div className="md:col-span-5 bg-stone-950/60 border border-stone-800/80 rounded-2xl p-4 flex flex-col justify-center space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-stone-400 font-medium">Total Cargo Value:</span>
-                      <span className="text-base font-black text-emerald-400">{shp.value}</span>
-                    </div>
-
-                    {shp.status === 'DELIVERED' && shp.acceptedDate && (
-                      <div className="flex items-center justify-between text-xs border-t border-stone-800/60 pt-2">
-                        <span className="text-stone-400 font-medium">Accepted Date:</span>
-                        <span className="font-bold text-white font-mono">{shp.acceptedDate}</span>
-                      </div>
-                    )}
-
-                    {shp.status === 'REJECTED' && shp.rejectedDate && (
-                      <div className="flex items-center justify-between text-xs border-t border-stone-800/60 pt-2">
-                        <span className="text-stone-400 font-medium">Rejected Date:</span>
-                        <span className="font-bold text-red-400 font-mono">{shp.rejectedDate}</span>
-                      </div>
-                    )}
-
-                    {shp.status === 'IN_TRANSIT' && (
-                      <div className="flex items-center justify-between text-xs border-t border-stone-800/60 pt-2">
-                        <span className="text-stone-400 font-medium">Estimated Arrival:</span>
-                        <span className="font-bold text-white font-mono">{shp.estimatedDelivery}</span>
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-
-                {/* 3-STEP TIMELINE ROUTE TRACKER MATCHING IMAGE 1 & IMAGE 2 EXACTLY */}
-                <div className="space-y-3 pt-2 bg-stone-950/40 p-4 sm:p-5 rounded-2xl border border-stone-800/60">
-                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                    LIVE LOGISTICS ROUTE TRACKING
-                  </span>
-
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 relative">
-                    
-                    {/* Step 1: Origin Hub */}
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center border bg-stone-900 border-stone-700 text-stone-200 shadow-sm">
-                        <Package className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-white">
-                          {activeSignal === "INCOMING" ? "Processor Hub" : "Distributor Hub"}
-                        </p>
-                        <p className="text-[10px] text-stone-400 font-medium">Dispatched</p>
-                      </div>
-                    </div>
-
-                    {/* Step 1 to 2 Connector Line */}
-                    <div className="flex-1 h-[2px] mx-4 hidden sm:block bg-emerald-500/60" />
-
-                    {/* Step 2: Transit Status */}
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
-                        shp.status === 'REJECTED'
-                          ? 'bg-amber-950/40 border-amber-800/60 text-amber-400'
-                          : shp.status === 'ACCEPTED'
-                          ? 'bg-stone-900 border-stone-800 text-stone-500'
-                          : 'bg-emerald-950/40 border-emerald-800/60 text-emerald-400'
-                      }`}>
-                        {shp.status === 'REJECTED' ? <RotateCcw className="w-4 h-4" /> : <Truck className="w-4 h-4" />}
-                      </div>
-                      <div>
-                        <p className={`text-xs font-bold ${shp.status === 'ACCEPTED' ? 'text-stone-500' : 'text-white'}`}>
-                          {shp.status === 'REJECTED' ? "Return Transit" : shp.status === 'ACCEPTED' ? "Pending Dispatch" : "In Transit"}
-                        </p>
-                        <p className="text-[10px] text-stone-400 font-medium">
-                          {shp.status === 'REJECTED' ? "En-route to Seller" : shp.status === 'ACCEPTED' ? "Waiting for Origin Hub" : "GPS En-route"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Step 2 to 3 Connector Line */}
-                    <div className={`flex-1 h-[2px] mx-4 hidden sm:block ${
-                      shp.status === 'REJECTED'
-                        ? 'bg-red-500/60'
-                        : shp.status === 'DELIVERED'
-                        ? 'bg-emerald-500/60'
-                        : 'bg-stone-800'
-                    }`} />
-
-                    {/* Step 3: Final Delivery Decision Node */}
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${
-                        shp.status === 'DELIVERED'
-                          ? 'bg-emerald-950 border-emerald-500 text-emerald-400'
-                          : shp.status === 'REJECTED'
-                          ? 'bg-red-950 border-red-500 text-red-400'
-                          : 'bg-stone-900 border-stone-800 text-stone-500'
-                      }`}>
-                        {shp.status === 'DELIVERED' ? (
-                          <CheckCircle2 className="w-4 h-4" />
-                        ) : shp.status === 'REJECTED' ? (
-                          <XCircle className="w-4 h-4" />
-                        ) : (
-                          <ShieldCheck className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div>
-                        <p className={`text-xs font-extrabold ${
-                          shp.status === 'DELIVERED'
-                            ? 'text-emerald-400'
-                            : shp.status === 'REJECTED'
-                            ? 'text-red-400'
-                            : 'text-stone-300'
-                        }`}>
-                          {shp.status === 'DELIVERED'
-                            ? "Delivery Accepted"
-                            : shp.status === 'REJECTED'
-                            ? "Delivery Rejected"
-                            : "Awaiting Inspection"}
-                        </p>
-                        <p className="text-[10px] text-stone-400 font-medium">
-                          {shp.status === 'DELIVERED'
-                            ? "Verified & Accepted"
-                            : shp.status === 'REJECTED'
-                            ? "Inspection Failed"
-                            : "Inspection Pending"}
-                        </p>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                {/* REJECTION REASON DISPLAY BOX MATCHING IMAGE 3 EXACTLY */}
-                {shp.status === 'REJECTED' && shp.rejectionReason && (
-                  <div className="p-4 bg-red-950/20 border border-red-900/40 rounded-2xl space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-black text-red-400">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>{activeSignal === 'INCOMING' ? 'Distributor Rejection Details & Reason' : 'Retailer Rejection Details & Reason'}</span>
-                    </div>
-
-                    <div className="p-3.5 bg-stone-950/80 rounded-xl border border-stone-800/80 text-xs text-stone-300 leading-relaxed font-medium">
-                      {shp.rejectionReason}
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-stone-400 pt-1">
-                      <span className="flex items-center gap-1 font-bold text-red-400">
-                        <RotateCcw className="w-3.5 h-3.5" /> Status: Cargo Returned to Seller
-                      </span>
-                      {shp.rejectedDate && (
-                        <span>Rejected on: {shp.rejectedDate}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* BOTTOM FOOTER WITH ESCROW STATUS & ACTIONS */}
-                <div className="pt-2 border-t border-stone-800/80 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-xs text-stone-400 font-bold">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Protected by Smart Contract Escrow System</span>
-                  </div>
-
-                  {activeSignal === 'INCOMING' && shp.status === 'IN_TRANSIT' && (
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => handleAcceptDelivery(shp.id)}
-                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition shadow-md cursor-pointer flex items-center justify-center"
-                      >
-                        <span>Accept Delivery</span>
-                      </button>
-
-                      <button
-                        onClick={() => setRejectModalItem(shp)}
-                        className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-xs transition cursor-pointer flex items-center justify-center"
-                      >
-                        <span>Reject Delivery</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            ))
+            <>
+              {paginatedShipments.map((shp) => (
+              <ShipmentCard 
+                key={shp.id} 
+                shipment={{ ...shp, productName: (shp as any).cropName || (shp as any).productName, destination: (shp as any).destination || (shp as any).buyerName || (shp as any).sourceOrDestination } as any} 
+                activeSignal={typeof activeSignal !== "undefined" ? activeSignal : "NONE"}
+                onAccept={typeof handleAcceptDelivery !== "undefined" ? handleAcceptDelivery : undefined}
+                onReject={typeof setRejectModalItem !== "undefined" ? (id) => setRejectModalItem(filteredList.find(s => s.id === id) || null) : undefined}
+              />
+            ))}
+              <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={handlePageChange}
+              />
+            </>
           )}
         </div>
 
@@ -555,44 +323,44 @@ export default function DistributorShipmentsPage() {
 
       {/* REJECTION REASON MODAL WITH PROFESSIONAL UI & WRITTEN SECTION FOR OTHER */}
       {rejectModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/85 backdrop-blur-md">
-          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 max-w-xl w-full space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#FFFCF5]/85 backdrop-blur-md">
+          <div className="bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-6 sm:p-8 max-w-xl w-full space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-stone-800 pb-4">
+            <div className="flex items-center justify-between border-b border-[#DADFCF] pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 shrink-0">
+                <div className="p-2.5 bg-red-500/10 border border-[#F87171]/20 rounded-[20px] text-[#DC2626] shrink-0">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-white tracking-tight">Reject Delivery & Return Cargo</h3>
-                  <p className="text-[11px] text-stone-400 font-medium">Select or specify the official inspection failure reason</p>
+                  <h3 className="text-lg font-bold text-[#283025] tracking-tight">Reject Delivery & Return Cargo</h3>
+                  <p className="text-[11px] text-[#69705E] font-medium">Select or specify the official inspection failure reason</p>
                 </div>
               </div>
               <button
                 onClick={() => setRejectModalItem(null)}
-                className="p-2 rounded-xl text-stone-400 hover:text-white bg-stone-950 border border-stone-800 transition cursor-pointer"
+                className="p-2 rounded-[12px] text-[#69705E] hover:text-[#283025] bg-[#FFFCF5] border border-[#DADFCF] transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Shipment Summary Info Callout */}
-            <div className="bg-stone-950/90 border border-stone-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="bg-[#FFFCF5]/90 border border-[#DADFCF] rounded-[20px] p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div>
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Target Cargo</span>
-                <span className="font-extrabold text-white text-sm">{rejectModalItem.productName}</span>
-                <span className="text-stone-400 block font-mono text-[11px]">ID: {rejectModalItem.id} | Batch: {rejectModalItem.batchId}</span>
+                <span className="text-[10px] font-bold text-[#69705E] uppercase tracking-tight block">Target Cargo</span>
+                <span className="font-bold text-[#283025] text-sm">{rejectModalItem.productName}</span>
+                <span className="text-[#69705E] block font-sans text-[11px]">ID: {rejectModalItem.id} | Batch: {rejectModalItem.batchId}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Cargo Value</span>
-                <span className="font-extrabold text-emerald-400 text-sm">{rejectModalItem.value}</span>
+                <span className="text-[10px] font-bold text-[#69705E] uppercase tracking-tight block">Cargo Value</span>
+                <span className="font-bold text-[#58664C] text-sm">{rejectModalItem.value}</span>
               </div>
             </div>
 
             {/* Radio Options List */}
             <div className="space-y-3">
-              <span className="text-xs font-extrabold text-stone-300 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-[#283025] uppercase tracking-tight block">
                 Select Rejection Reason Category:
               </span>
 
@@ -607,10 +375,10 @@ export default function DistributorShipmentsPage() {
                   return (
                     <label
                       key={reasonOption}
-                      className={`flex items-start gap-3 p-3.5 rounded-2xl border text-xs font-bold transition cursor-pointer ${
+                      className={`flex items-start gap-3 p-3.5 rounded-[20px] border text-xs font-bold transition cursor-pointer ${
                         isSelected
-                          ? "bg-red-950/20 border-red-500/40 text-white shadow-sm"
-                          : "bg-stone-950/70 border-stone-800 text-stone-300 hover:border-stone-700 hover:bg-stone-950"
+                          ? "bg-[#FEF2F2] border-[#F87171]/40 text-[#283025] shadow-sm"
+                          : "bg-[#FFFCF5]/70 border-[#DADFCF] text-[#283025] hover:border-[#DADFCF] hover:bg-[#FFFCF5]"
                       }`}
                     >
                       <input
@@ -628,7 +396,7 @@ export default function DistributorShipmentsPage() {
 
               {/* DETAILED WRITTEN REJECTION TEXTAREA - AVAILABLE FOR ALL OPTIONS */}
               <div className="space-y-2 pt-2 animate-in fade-in duration-200">
-                <label className="text-xs font-extrabold text-red-400 block">
+                <label className="text-xs font-bold text-[#DC2626] block">
                   Detailed Written Explanation of Rejection Problem:
                 </label>
                 <textarea
@@ -637,22 +405,22 @@ export default function DistributorShipmentsPage() {
                   placeholder="Provide a detailed written explanation of the rejection problem (e.g. Moisture level exceeded 18%, produce damaged during transport, or quality grade mismatch)..."
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 focus:border-red-500/80 rounded-2xl p-4 text-xs text-white placeholder-stone-500 focus:outline-none transition font-medium min-h-[100px] leading-relaxed shadow-inner"
+                  className="w-full bg-[#FFFCF5] border border-[#DADFCF] focus:border-[#F87171]/80 rounded-[20px] p-4 text-xs text-[#283025] placeholder-stone-500 focus:outline-none transition font-medium min-h-[100px] leading-relaxed shadow-inner"
                 />
               </div>
             </div>
 
             {/* Modal Actions */}
-            <div className="pt-4 border-t border-stone-800 flex items-center justify-end gap-3">
+            <div className="pt-4 border-t border-[#DADFCF] flex items-center justify-end gap-3">
               <button
                 onClick={() => setRejectModalItem(null)}
-                className="px-5 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-300 font-bold text-xs border border-stone-800 transition cursor-pointer"
+                className="px-5 py-2.5 rounded-[12px] bg-[#FFFCF5] hover:bg-stone-800 text-[#283025] font-bold text-xs border border-[#DADFCF] transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmReject}
-                className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs transition shadow-lg shadow-red-950/40 cursor-pointer"
+                className="px-6 py-2.5 rounded-[12px] bg-red-600 hover:bg-red-500 text-[#283025] font-bold text-xs transition shadow-lg shadow-red-950/40 cursor-pointer"
               >
                 Confirm Rejection & Return Cargo
               </button>

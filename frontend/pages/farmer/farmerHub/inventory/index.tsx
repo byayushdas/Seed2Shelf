@@ -10,7 +10,7 @@ export default function FarmerInventory() {
   ];
 
   return (
-    <div className="min-h-screen relative text-white pt-6 pb-20">
+    <div className="min-h-screen relative text-[#1F2A1A] pt-6 pb-20">
       <Head>
         <title>Inventory | Seed2Shelf</title>
       </Head>
@@ -20,26 +20,26 @@ export default function FarmerInventory() {
         <div className="flex items-center gap-4 mb-8">
           <Link
             href="/farmer"
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-stone-300 hover:text-white transition"
+            className="p-2.5 rounded-[12px] bg-[#FFFCF5]/5 hover:bg-[#FFFCF5]/10 border border-white/10 text-[#DADFCF] hover:text-[#1F2A1A] transition"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-black text-white flex items-center gap-2">
+            <h1 className="text-3xl font-black text-[#1F2A1A] flex items-center gap-2">
               <Package className="w-8 h-8 text-[#00d26a]" />
               Crop Inventory
             </h1>
-            <p className="text-stone-400 text-xs font-medium mt-1">
+            <p className="text-[#69705E] text-xs font-medium mt-1">
               View and manage your registered farm produce inventory batches.
             </p>
           </div>
         </div>
 
-        <div className="matte-glass p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
+        <div className="matte-glass p-8 rounded-[24px] border border-white/10 shadow-2xl space-y-6">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-stone-400 text-xs font-black uppercase">
+                <tr className="border-b border-white/10 text-[#69705E] text-xs font-black uppercase">
                   <th className="pb-4">Batch ID</th>
                   <th className="pb-4">Crop Name</th>
                   <th className="pb-4">Quantity (kg)</th>
@@ -49,11 +49,11 @@ export default function FarmerInventory() {
               </thead>
               <tbody>
                 {mockInventory.map((item) => (
-                  <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="py-4 font-mono font-bold text-white text-xs">{item.id}</td>
-                    <td className="py-4 text-stone-200 font-bold">{item.name}</td>
-                    <td className="py-4 text-stone-300">{item.quantity} kg</td>
-                    <td className="py-4 text-stone-400 text-xs">{item.date}</td>
+                  <tr key={item.id} className="border-b border-white/5 hover:bg-[#FFFCF5]/5 transition-colors">
+                    <td className="py-4 font-mono font-bold text-[#1F2A1A] text-xs">{item.id}</td>
+                    <td className="py-4 text-[#DADFCF] font-bold">{item.name}</td>
+                    <td className="py-4 text-[#DADFCF]">{item.quantity} kg</td>
+                    <td className="py-4 text-[#69705E] text-xs">{item.date}</td>
                     <td className="py-4">
                       <span className={`text-[10px] px-2.5 py-1 rounded-full font-black border ${
                         item.status === 'AVAILABLE' 

@@ -1,36 +1,156 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Head from "next/head";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  MapPin, 
-  ShieldCheck,
-  Sparkles,
-  RefreshCw,
-  Check,
-  ArrowDown,
-  GitBranch,
-  Award,
-  ExternalLink
-} from "lucide-react";
+import { Search, RefreshCw, ZoomIn, ZoomOut, Maximize, MapPin, X } from "lucide-react";
 import TraceDetailsModal, { StageData } from "../../components/common/TraceDetailsModal";
 
-interface TraceRecord {
-  batchId: string;
-  cropName: string;
-  currentOwnerName: string;
-  totalVolume: string;
-  harvestDate: string;
-  qualityIndex: string;
-  organicCertified: boolean;
-  parentBatches: {
-    batchId: string;
-    cropName: string;
-    farmerName: string;
-    quantity: string;
-    location: string;
-  }[];
-}
+// Pre-packaged 5-level stages data conforming to the new StageData interface
+const STAGE_LEVELS_DATA: StageData[] = [
+  {
+    stageType: "FARMER",
+    stageTitle: "Farm Harvest & Soil Origin",
+    batchId: "BATCH2026000001",
+    productName: "Grade-A Alphonso Mangoes",
+    recordedStatus: "Harvest Completed",
+    overview: [
+      { label: "Responsible Party", value: "Farmer Ramesh Kumar" },
+      { label: "Recorded Status", value: "Harvest Completed & Certified" },
+      { label: "Latest Update", value: "14/07/2026" }
+    ],
+    location: [
+      { label: "Farm Name", value: "GreenAcres Organic Orchard" },
+      { label: "Address", value: "Ratnagiri Orchard Plot #4, Ratnagiri, Maharashtra, India" }
+    ],
+    quantityAndProcessing: [
+      { label: "Harvest Quantity", value: "550 kg Raw Mangoes" },
+      { label: "Farming Method", value: "Organic & Regenerative Agriculture" },
+      { label: "Crop Variety", value: "Alphonso" }
+    ],
+    qualityAndDocuments: [
+      {
+        type: 'document',
+        label: "Organic Certification",
+        value: "Certified Organic",
+        issuer: "NPOP",
+        refNumber: "#NPOP-8821"
+      },
+      {
+        type: 'measurement',
+        label: "Soil Quality Score",
+        value: "100% Chemical Spray Free (Brix: 18.5°)"
+      }
+    ],
+    activity: [
+      { event: "Harvest Started", timestamp: "12/07/2026 • 05:30 AM", responsibleParty: "Ramesh Kumar" },
+      { event: "Harvest Completed", timestamp: "14/07/2026 • 06:00 AM", responsibleParty: "Ramesh Kumar" }
+    ],
+    blockchainRecord: {
+      txHash: "0x8f2a1b...391c",
+      network: "Polygon POS",
+      block: "5829103"
+    }
+  },
+  {
+    stageType: "PROCESSOR",
+    stageTitle: "Factory Processing",
+    batchId: "BATCH2026000003",
+    productName: "Organic Alphonso Mango Pulp",
+    recordedStatus: "Aseptic Pulping Completed",
+    overview: [
+      { label: "Responsible Party", value: "Heritage Food Processing Corp" },
+      { label: "Recorded Status", value: "Aseptic Pulping Completed" },
+      { label: "Latest Update", value: "16/07/2026" }
+    ],
+    location: [
+      { label: "Factory Name", value: "Mandya Agro Processing Line A" },
+      { label: "Address", value: "Plot #12, Agro Industrial Zone, Mandya, Karnataka, India" }
+    ],
+    quantityAndProcessing: [
+      { label: "Input Quantity", value: "550 kg Raw Produce" },
+      { label: "Output Quantity", value: "450 Liters Concentrated Pulp" },
+      { label: "Processing Method", value: "Cold-press extraction and aseptic packing" }
+    ],
+    qualityAndDocuments: [
+      {
+        type: 'document',
+        label: "Quality Certification",
+        value: "Cleanroom Approved",
+        issuer: "FSSAI",
+        link: "#"
+      },
+      {
+        type: 'measurement',
+        label: "Lab Verification",
+        value: "99.2% Purity Score Passed"
+      }
+    ],
+    activity: [
+      { event: "Received Raw Material", timestamp: "15/07/2026 • 09:00 AM", responsibleParty: "Heritage Food Corp" },
+      { event: "Processing Completed", timestamp: "16/07/2026 • 11:15 AM", responsibleParty: "Heritage Food Corp" }
+    ],
+    blockchainRecord: {
+      txHash: "0x3b1c9f...7a21",
+      network: "Polygon POS",
+      block: "5830214"
+    }
+  },
+  {
+    stageType: "DISTRIBUTOR",
+    stageTitle: "Cold-Chain Logistics",
+    batchId: "BATCH2026000003-DIST",
+    productName: "Organic Alphonso Mango Pulp",
+    recordedStatus: "In Transit",
+    overview: [
+      { label: "Responsible Party", value: "Metro Express Logistics" },
+      { label: "Recorded Status", value: "In Transit to Retail Outlet" },
+      { label: "Latest Update", value: "19/07/2026" }
+    ],
+    location: [
+      { label: "Current Location", value: "NH-48 Transport Corridor" },
+      { label: "Origin Warehouse", value: "Logistics Corridor #4, Gurgaon Hub, India" }
+    ],
+    quantityAndProcessing: [
+      { label: "Storage Method", value: "Refrigerated Container (4.2°C Constant)" },
+      { label: "Transport Method", value: "IoT Telemetry Truck Fleet" }
+    ],
+    qualityAndDocuments: [],
+    activity: [
+      { event: "Dispatched from Processor", timestamp: "18/07/2026 • 04:00 PM", responsibleParty: "Heritage Food Corp" },
+      { event: "In Transit", timestamp: "19/07/2026 • 02:30 PM", responsibleParty: "Metro Express Logistics" }
+    ],
+    blockchainRecord: {
+      txHash: "0x9c2d4f...1e33",
+      network: "Polygon POS",
+      block: "5835612"
+    }
+  },
+  {
+    stageType: "RETAILER",
+    stageTitle: "Retail Store",
+    batchId: "BATCH2026000003-RTL",
+    productName: "Organic Alphonso Mango Pulp",
+    recordedStatus: "Available for Purchase",
+    overview: [
+      { label: "Responsible Party", value: "FreshMart Mega Superstore" },
+      { label: "Recorded Status", value: "Stocked on Organic Produce Shelf" },
+      { label: "Latest Update", value: "22/07/2026" }
+    ],
+    location: [
+      { label: "Store Name", value: "Gurgaon CyberHub Outlet #14" },
+      { label: "Address", value: "CyberHub Retail Complex, Sector 24, Gurgaon, Haryana" }
+    ],
+    quantityAndProcessing: [],
+    qualityAndDocuments: [],
+    activity: [
+      { event: "Received at Store", timestamp: "22/07/2026 • 10:00 AM", responsibleParty: "FreshMart Mega Superstore" }
+    ],
+    blockchainRecord: {
+      txHash: "0x1a2b3c...4d5e",
+      network: "Polygon POS",
+      block: "5841200"
+    }
+  }
+];
 
 const DEMO_PARENT_BATCHES = [
   {
@@ -38,132 +158,78 @@ const DEMO_PARENT_BATCHES = [
     cropName: "Grade-A Alphonso Mangoes",
     farmerName: "Ramesh Kumar (GreenAcres)",
     quantity: "300 kg",
-    location: "Ratnagiri Orchard Plot #4"
+    location: "Ratnagiri, MH",
+    stageData: STAGE_LEVELS_DATA[0]
   },
   {
     batchId: "BATCH2026000002",
     cropName: "Grade-A Alphonso Mangoes",
     farmerName: "Suresh Patil (GoldenFields)",
     quantity: "250 kg",
-    location: "Devgad Orchard Plot #2"
-  }
-];
-
-// Pre-packaged 5-level stages data with strict privacy filtering (No MongoDB IDs, No Tx Hashes, No Financials)
-const STAGE_LEVELS_DATA: StageData[] = [
-  {
-    stageType: "FARMER",
-    stageTitle: "Farm Harvest & Soil Origin",
-    batchId: "BATCH2026000001",
-    badge: "100% Organic Soil",
-    generalInfo: [
-      { label: "Product Name", value: "Grade-A Alphonso Mangoes" },
-      { label: "Batch ID", value: "BATCH2026000001" },
-      { label: "Farmer Name", value: "Farmer Ramesh Kumar" },
-      { label: "Farm Name", value: "GreenAcres Organic Orchard" },
-      { label: "Current Status", value: "Harvest Completed & Certified" }
-    ],
-    locationInfo: [
-      { label: "Farm Address", value: "Ratnagiri Orchard Plot #4" },
-      { label: "District", value: "Ratnagiri" },
-      { label: "State", value: "Maharashtra" },
-      { label: "Country", value: "India" }
-    ],
-    productInfo: [
-      { label: "Harvest Quantity", value: "550 kg Raw Mangoes" },
-      { label: "Farming Method", value: "Organic & Regenerative Agriculture" },
-      { label: "Harvest Season", value: "Monsoon Peak Harvest 2026" }
-    ],
-    qualityInfo: [
-      { label: "Certification", value: "NPOP Certified Organic (#NPOP-8821)" },
-      { label: "Soil Quality Score", value: "100% Chemical Spray Free (Brix: 18.5°)" }
-    ],
-    timelineInfo: [
-      { label: "Harvest Date", value: "14/07/2026 • 06:00 AM" }
-    ]
-  },
-  {
-    stageType: "PROCESSOR",
-    stageTitle: "Factory Processing & Extraction",
-    batchId: "BATCH2026000003",
-    badge: "Lab Quality Pass",
-    generalInfo: [
-      { label: "Processed Product", value: "Organic Alphonso Mango Pulp" },
-      { label: "New Batch ID", value: "BATCH2026000003" },
-      { label: "Processor Name", value: "Heritage Food Processing Corp" },
-      { label: "Factory Name", value: "Mandya Agro Processing Line A" },
-      { label: "Current Status", value: "Aseptic Pulping Completed" }
-    ],
-    locationInfo: [
-      { label: "Factory Address", value: "Plot #12, Agro Industrial Zone, Mandya, Karnataka, India" }
-    ],
-    productInfo: [
-      { label: "Raw Material Used", value: "Fresh Organic Alphonso Mangoes" },
-      { label: "Input Quantity", value: "550 kg Raw Produce" },
-      { label: "Output Quantity", value: "450 Liters Concentrated Pulp" },
-      { label: "Parent Batch Count", value: "2 Harvest Batches Merged" },
-      { label: "Product Category", value: "Processed Fruit Pulp" }
-    ],
-    qualityInfo: [
-      { label: "Quality Certification", value: "FSSAI Cleanroom Approved" },
-      { label: "Lab Verification Status", value: "99.2% Purity Score Passed" }
-    ],
-    timelineInfo: [
-      { label: "Processing Date", value: "16/07/2026 • 11:15 AM" }
-    ]
-  },
-  {
-    stageType: "DISTRIBUTOR",
-    stageTitle: "Cold-Chain Logistics Transit",
-    batchId: "BATCH2026000003-DIST",
-    badge: "IoT Telemetry Active",
-    generalInfo: [
-      { label: "Distributor Name", value: "Metro Express Logistics" },
-      { label: "Warehouse Name", value: "Central Refrigerated Hub Fleet #RF-90" },
-      { label: "Shipment Status", value: "In Transit to Retail Outlet" },
-      { label: "Current Location", value: "NH-48 Transport Corridor" }
-    ],
-    locationInfo: [
-      { label: "Warehouse Address", value: "Logistics Corridor #4, Gurgaon Hub, India" }
-    ],
-    productInfo: [
-      { label: "Storage Method", value: "Refrigerated Container (4.2°C Constant)" },
-      { label: "Transport Method", value: "IoT Telemetry Truck Fleet" }
-    ],
-    timelineInfo: [
-      { label: "Dispatch Date", value: "19/07/2026 • 02:30 PM" },
-      { label: "Arrival Date", value: "21/07/2026 • 08:00 AM" }
-    ]
-  },
-  {
-    stageType: "RETAILER",
-    stageTitle: "Retail Store & Consumer Display",
-    batchId: "BATCH2026000003-RTL",
-    badge: "Scan QR Verified",
-    generalInfo: [
-      { label: "Retail Store", value: "FreshMart Mega Superstore" },
-      { label: "Branch Name", value: "Gurgaon CyberHub Outlet #14" },
-      { label: "Product Status", value: "Stocked on Organic Produce Shelf" },
-      { label: "Shelf Availability", value: "Available for Purchase" }
-    ],
-    locationInfo: [
-      { label: "Store Address", value: "CyberHub Retail Complex, Sector 24, Gurgaon, Haryana" },
-      { label: "Store Contact", value: "+91 98765 43210 (Customer Desk)" }
-    ],
-    timelineInfo: [
-      { label: "Received Date", value: "22/07/2026 • 10:00 AM" }
-    ]
+    location: "Devgad, MH",
+    // Reuse the same farmer template for demo
+    stageData: {
+      ...STAGE_LEVELS_DATA[0],
+      batchId: "BATCH2026000002",
+      overview: [
+        { label: "Responsible Party", value: "Farmer Suresh Patil" },
+        { label: "Recorded Status", value: "Harvest Completed & Certified" },
+        { label: "Latest Update", value: "15/07/2026" }
+      ],
+      location: [
+        { label: "Farm Name", value: "GoldenFields Orchard" },
+        { label: "Address", value: "Devgad, Maharashtra, India" }
+      ]
+    }
   }
 ];
 
 export default function TraceBatch() {
   const [batchId, setBatchId] = useState("BATCH2026000003");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"TREE" | "PASSPORT">("TREE");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // Reusable Details Modal State
-  const [selectedStageModal, setSelectedStageModal] = useState<StageData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStageModal, setSelectedStageModal] = useState<StageData | null>(STAGE_LEVELS_DATA[1]);
+  const [fullscreenStageModal, setFullscreenStageModal] = useState<StageData | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const activeModal = isFullscreen ? fullscreenStageModal : selectedStageModal;
+  const setActiveModal = (data: StageData | null) => {
+    if (isFullscreen) setFullscreenStageModal(data);
+    else setSelectedStageModal(data);
+  };
+
+  const fitToView = useCallback(() => {
+    if (!containerRef.current || !contentRef.current) return;
+    const container = containerRef.current;
+    const content = contentRef.current;
+    
+    // Calculate natural size
+    const naturalWidth = content.scrollWidth;
+    const naturalHeight = content.scrollHeight;
+    
+    const modalWidth = (isFullscreen && fullscreenStageModal) && window.innerWidth >= 768 ? 440 : 0;
+    const availableWidth = container.clientWidth - modalWidth;
+    const availableHeight = container.clientHeight;
+    
+    const paddingX = 64;
+    const paddingY = 64;
+    
+    const scaleX = (availableWidth - paddingX) / (naturalWidth || 1);
+    const scaleY = (availableHeight - paddingY) / (naturalHeight || 1);
+    
+    const newScale = Math.min(scaleX, scaleY, 1.2);
+    setZoomLevel(Math.max(0.2, newScale));
+  }, [isFullscreen, fullscreenStageModal]);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      requestAnimationFrame(() => fitToView());
+    }
+  }, [isFullscreen, fullscreenStageModal, fitToView]);
 
   const fetchTrace = async (id: string) => {
     const cleanId = id.trim().toUpperCase();
@@ -172,406 +238,327 @@ export default function TraceBatch() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 300);
+      // Reset selected item on new search
+      setActiveModal(STAGE_LEVELS_DATA[1]);
+    }, 400);
   };
 
   useEffect(() => {
     fetchTrace("BATCH2026000003");
   }, []);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+        document.body.style.overflow = "";
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [isFullscreen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchTrace(batchId);
   };
 
-  const handleOpenModal = (stageData: StageData) => {
-    setSelectedStageModal(stageData);
-    setIsModalOpen(true);
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.2, 1.5));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
+  const handleResetZoom = () => fitToView();
+  
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      setFullscreenStageModal(null);
+      setIsFullscreen(true);
+      document.body.style.overflow = "hidden";
+    } else {
+      setIsFullscreen(false);
+      document.body.style.overflow = "";
+    }
   };
 
-  return (
-    <div className="min-h-screen text-stone-100 font-sans pt-20 pb-24 relative z-20">
-      <Head>
-        <title>Farm to Shelf Product Journey | Seed2Shelf</title>
-        <meta name="description" content="Decentralized farm to shelf product provenance tree." />
-      </Head>
-
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 relative z-10">
-        
-        {/* HEADER BAR (CLEAN TITLE & BATCH ID - NO DESCRIPTION LINE & NO SHARE/REFRESH BUTTONS) */}
-        <div className="bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
-          <div className="space-y-1.5 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-extrabold">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Decentralized On-Chain Provenance</span>
+  const renderGraphNodes = () => (
+    <>
+      {/* Level 1: Farmers */}
+      <div className="flex flex-col justify-around gap-8 relative z-10 py-4">
+        {DEMO_PARENT_BATCHES.map((parent, idx) => (
+          <button
+            key={idx}
+            onClick={() => setActiveModal(parent.stageData)}
+            className={`w-[260px] p-4 bg-[#FFFCF5] rounded-lg border text-left transition-all ${
+              activeModal?.batchId === parent.batchId
+                ? "border-[#6F7D61] bg-[#E2E8D8] ring-1 ring-[#6F7D61]"
+                : "border-[#DADFCF] hover:border-[#69705E]"
+            }`}
+          >
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#EDF0E6] text-[#69705E] border border-[#DADFCF]">Harvest</span>
+              <span className="text-[12px] font-mono text-[#69705E]">{parent.batchId}</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Farm to Shelf Product Journey
-            </h1>
-          </div>
-
-          <div className="text-right font-mono text-xs text-stone-400 bg-stone-950 p-3 rounded-2xl border border-stone-800 shrink-0">
-            <span className="block text-[10px] text-stone-500 uppercase font-sans font-bold">Active Batch</span>
-            <strong className="text-emerald-400 font-black text-sm">{batchId}</strong>
-          </div>
-        </div>
-
-        {/* SEARCH DOCK & QUICK DEMO SEEDS */}
-        <div className="bg-stone-900/90 border border-stone-800 p-6 rounded-3xl space-y-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-extrabold text-stone-300 uppercase tracking-wider flex items-center gap-2">
-              <Search className="w-4 h-4 text-emerald-400" />
-              Query Batch Traceability Code
-            </h3>
-            <span className="text-xs font-bold text-stone-400 tracking-wider uppercase">Immutable Ledger Index</span>
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <div className="relative flex-grow">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-stone-500" />
-              </span>
-              <input
-                type="text"
-                required
-                placeholder="Enter Batch ID (e.g. BATCH2026000003)"
-                value={batchId}
-                onChange={(e) => setBatchId(e.target.value)}
-                className="w-full bg-stone-950 border border-stone-800 rounded-2xl pl-11 pr-4 py-3.5 text-xs font-bold text-white focus:outline-none focus:border-emerald-500 transition"
-              />
+            <h4 className="text-[14px] font-medium text-[#283025] mb-1 truncate">{parent.cropName}</h4>
+            <p className="text-[13px] text-[#69705E] truncate">{parent.farmerName}</p>
+            <div className="flex justify-between items-end mt-3">
+                <span className="text-[12px] font-medium text-[#283025]">{parent.quantity}</span>
+                <span className="flex items-center gap-1 text-[11px] text-[#69705E]"><MapPin className="w-3 h-3" /> {parent.location}</span>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black px-6 sm:px-8 rounded-2xl text-xs transition shadow-md flex items-center justify-center cursor-pointer gap-2 shrink-0"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Querying...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Trace Produce</span>
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="space-y-2.5 pt-2 border-t border-stone-800/80">
-            <span className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider block">
-              Quick Demo Lineage Seeds:
-            </span>
-            <div className="flex flex-wrap gap-2.5">
-              {[
-                { id: "BATCH2026000003", label: "Processor Alphonso Mango Pulp (Merged)" },
-                { id: "BATCH2026000001", label: "Farmer Ratnagiri Organic Harvest" },
-                { id: "BATCH2026000005", label: "Retail Mango Nectar Jars (Split)" }
-              ].map((demo) => (
-                <button
-                  key={demo.id}
-                  onClick={() => {
-                    setBatchId(demo.id);
-                    fetchTrace(demo.id);
-                  }}
-                  className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
-                    batchId === demo.id 
-                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400" 
-                      : "bg-stone-950 hover:bg-stone-800 border-stone-800 text-stone-300"
-                  }`}
-                >
-                  <span className="font-mono text-[10px] font-black text-emerald-400 bg-stone-900 px-1.5 py-0.5 rounded border border-stone-800">
-                    {demo.id}
-                  </span>
-                  <span>{demo.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* VIEW SWITCHER TAB BAR (TOGGLE BETWEEN TREE & CERTIFICATION PASSPORT) */}
-        <div className="flex items-center justify-between border-b border-stone-800 pb-3 flex-wrap gap-4">
-          <div className="flex items-center bg-stone-950 p-1.5 rounded-2xl border border-stone-800 text-xs font-extrabold">
-            <button
-              onClick={() => setActiveTab("TREE")}
-              className={`px-5 py-2.5 rounded-xl transition cursor-pointer flex items-center gap-2 ${
-                activeTab === "TREE"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <GitBranch className="w-4 h-4" />
-              <span>Supply Chain Lineage Tree</span>
-            </button>
-
-            <div className="w-[1px] h-4 bg-stone-800 mx-2 shrink-0"></div>
-
-            <button
-              onClick={() => setActiveTab("PASSPORT")}
-              className={`px-5 py-2.5 rounded-xl transition cursor-pointer flex items-center gap-2 ${
-                activeTab === "PASSPORT"
-                  ? "bg-emerald-600 text-white shadow-md font-black"
-                  : "text-stone-400 hover:text-stone-200"
-              }`}
-            >
-              <Award className="w-4 h-4" />
-              <span>Digital Certificate Passport</span>
-            </button>
-          </div>
-        </div>
-
-        {/* TAB CONTENTS */}
-        <AnimatePresence mode="wait">
-          {activeTab === "TREE" && (
-            <motion.div
-              key="tree-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="bg-stone-900/90 border border-stone-800 p-6 sm:p-8 rounded-3xl space-y-8 shadow-sm"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-800 pb-4">
-                <div>
-                  <h2 className="text-lg font-black text-white tracking-tight">
-                    Supply Chain Lineage Tree
-                  </h2>
-                  <p className="text-xs text-stone-400">
-                    Interactive farm-to-shelf provenance network & parent harvest batch mergers.
-                  </p>
-                </div>
-              </div>
-
-              {/* 5-LEVEL VISUAL HIERARCHICAL TREE GRAPH WITH SECTION LEVEL HEADERS & TOP BATCH ID PILL */}
-              <div className="space-y-6 py-4 max-w-4xl mx-auto">
-                
-                {/* LEVEL 1: FARM HARVEST ORIGIN (FARMER) */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-black text-stone-300 uppercase tracking-widest text-center border-b border-stone-800 pb-2">
-                    LEVEL 1: FARM HARVEST ORIGIN (FARMER)
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {DEMO_PARENT_BATCHES.map((parent, idx) => (
-                      <div key={idx} className="p-5 bg-stone-950 rounded-2xl border border-emerald-500/30 space-y-3 relative shadow-md">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-xs font-black text-emerald-400 bg-stone-900 px-3 py-1 rounded-xl border border-stone-800">
-                            {parent.batchId}
-                          </span>
-                        </div>
-
-                        <div className="space-y-1">
-                          <h4 className="text-sm font-black text-white">{parent.cropName}</h4>
-                          <p className="text-xs text-stone-300">Farmer: <strong className="text-emerald-400 font-bold">{parent.farmerName}</strong></p>
-                          <p className="text-[11px] text-stone-400 flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-stone-500 shrink-0" />
-                            {parent.location}
-                          </p>
-                        </div>
-
-                        <div className="pt-2 border-t border-stone-900 flex items-center justify-end">
-                          <button
-                            onClick={() => handleOpenModal(STAGE_LEVELS_DATA[0])}
-                            className="px-3.5 py-1.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 font-extrabold text-[11px] transition cursor-pointer flex items-center gap-1"
-                          >
-                            <span>View Details</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* CONNECTOR LINE 1 */}
-                <div className="flex flex-col items-center justify-center my-1">
-                  <div className="w-[2px] h-6 bg-purple-500/50" />
-                  <ArrowDown className="w-4 h-4 text-purple-400 my-0.5" />
-                  <div className="w-[2px] h-6 bg-purple-500/50" />
-                </div>
-
-                {/* LEVEL 2: FACTORY PROCESSING (PROCESSOR) */}
-                <div className="max-w-2xl mx-auto space-y-3">
-                  <h3 className="text-xs font-black text-stone-300 uppercase tracking-widest text-center border-b border-stone-800 pb-2">
-                    LEVEL 2: FACTORY PROCESSING & EXTRACTION (PROCESSOR)
-                  </h3>
-
-                  <div className="p-6 bg-stone-950 rounded-2xl border border-purple-500/40 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-black text-purple-400 bg-stone-900 px-3 py-1 rounded-xl border border-stone-800">
-                        {batchId}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h4 className="text-base font-black text-white">Organic Alphonso Mango Pulp</h4>
-                      <p className="text-xs text-purple-400 font-extrabold">Heritage Food Processing Corp</p>
-                      <p className="text-xs text-stone-400">Mandya Agro Processing Zone, Karnataka</p>
-                    </div>
-
-                    <div className="pt-3 border-t border-stone-900 flex items-center justify-end">
-                      <button
-                        onClick={() => handleOpenModal(STAGE_LEVELS_DATA[1])}
-                        className="px-3.5 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-400 font-extrabold text-[11px] transition cursor-pointer flex items-center gap-1"
-                      >
-                        <span>View Details</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CONNECTOR LINE 2 */}
-                <div className="flex flex-col items-center justify-center my-1">
-                  <div className="w-[2px] h-6 bg-blue-500/50" />
-                  <ArrowDown className="w-4 h-4 text-blue-400 my-0.5" />
-                  <div className="w-[2px] h-6 bg-blue-500/50" />
-                </div>
-
-                {/* LEVEL 3: LOGISTICS TRANSIT (DISTRIBUTOR) */}
-                <div className="max-w-2xl mx-auto space-y-3">
-                  <h3 className="text-xs font-black text-stone-300 uppercase tracking-widest text-center border-b border-stone-800 pb-2">
-                    LEVEL 3: COLD-CHAIN LOGISTICS TRANSIT (DISTRIBUTOR)
-                  </h3>
-
-                  <div className="p-6 bg-stone-950 rounded-2xl border border-blue-500/40 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-black text-blue-400 bg-stone-900 px-3 py-1 rounded-xl border border-stone-800">
-                        {batchId}-DIST
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h4 className="text-base font-black text-white">Metro Express Logistics</h4>
-                      <p className="text-xs text-stone-300">Central Refrigerated Hub Fleet #RF-90</p>
-                      <p className="text-xs text-stone-400">NH-48 Cargo Transport Corridor</p>
-                    </div>
-
-                    <div className="pt-3 border-t border-stone-900 flex items-center justify-end">
-                      <button
-                        onClick={() => handleOpenModal(STAGE_LEVELS_DATA[2])}
-                        className="px-3.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 font-extrabold text-[11px] transition cursor-pointer flex items-center gap-1"
-                      >
-                        <span>View Details</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* CONNECTOR LINE 3 */}
-                <div className="flex flex-col items-center justify-center my-1">
-                  <div className="w-[2px] h-6 bg-amber-500/50" />
-                  <ArrowDown className="w-4 h-4 text-amber-400 my-0.5" />
-                  <div className="w-[2px] h-6 bg-amber-500/50" />
-                </div>
-
-                {/* LEVEL 4: RETAIL STORE (RETAILER) */}
-                <div className="max-w-2xl mx-auto space-y-3">
-                  <h3 className="text-xs font-black text-stone-300 uppercase tracking-widest text-center border-b border-stone-800 pb-2">
-                    LEVEL 4: RETAIL STORE & CONSUMER DISPLAY (RETAILER)
-                  </h3>
-
-                  <div className="p-6 bg-stone-950 rounded-2xl border border-amber-500/40 space-y-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-black text-amber-400 bg-stone-900 px-3 py-1 rounded-xl border border-stone-800">
-                        {batchId}-RTL
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <h4 className="text-base font-black text-white">FreshMart Mega Superstore</h4>
-                      <p className="text-xs text-stone-300">Gurgaon CyberHub Retail Complex</p>
-                      <p className="text-xs text-stone-400">Gurgaon CyberHub, Haryana</p>
-                    </div>
-
-                    <div className="pt-3 border-t border-stone-900 flex items-center justify-end">
-                      <button
-                        onClick={() => handleOpenModal(STAGE_LEVELS_DATA[3])}
-                        className="px-3.5 py-1.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-400 font-extrabold text-[11px] transition cursor-pointer flex items-center gap-1"
-                      >
-                        <span>View Details</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === "PASSPORT" && (
-            <motion.div
-              key="passport-tab"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="max-w-3xl mx-auto bg-stone-900/90 border border-emerald-500/30 p-8 sm:p-10 rounded-3xl space-y-7 shadow-2xl relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-bl-full pointer-events-none" />
-
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-800 pb-6">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                    Blockchain Produce Passport
-                  </h2>
-                  <p className="text-xs text-emerald-400 font-bold">
-                    Official Seed2Shelf Provenance Certificate
-                  </p>
-                </div>
-
-                <div className="text-right font-mono text-xs text-stone-400 bg-stone-950 p-2.5 rounded-2xl border border-stone-800">
-                  <span className="block text-[10px] text-stone-500 uppercase font-sans font-bold">Batch Registry Code</span>
-                  <strong className="text-emerald-400 font-black">{batchId}</strong>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                  <span className="text-[10px] font-extrabold text-stone-500 uppercase">Produce Name</span>
-                  <p className="text-sm font-black text-white">Organic Alphonso Mango Pulp</p>
-                </div>
-
-                <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                  <span className="text-[10px] font-extrabold text-stone-500 uppercase">Total Harvest Volume</span>
-                  <p className="text-sm font-black text-emerald-400">450 Liters</p>
-                </div>
-
-                <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                  <span className="text-[10px] font-extrabold text-stone-500 uppercase">Current Custodian</span>
-                  <p className="text-sm font-black text-white">FreshMart Mega Superstore</p>
-                </div>
-
-                <div className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-1">
-                  <span className="text-[10px] font-extrabold text-stone-500 uppercase">Authenticity Guarantee</span>
-                  <p className="text-xs font-bold text-emerald-400">5-Level Provenance Verified</p>
-                </div>
-              </div>
-
-              <div className="p-5 bg-stone-950/80 rounded-2xl border border-emerald-500/20 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black text-white">Immutable Ledger Guarantee</p>
-                  <p className="text-[11px] text-stone-400 font-medium">Smart contract verifies 100% farm-to-table authenticity.</p>
-                </div>
-                
-                <span className="px-3.5 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1">
-                  <Check className="w-4 h-4" /> Verified Valid
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+          </button>
+        ))}
       </div>
 
-      {/* REUSABLE DETAILS MODAL */}
-      <TraceDetailsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        data={selectedStageModal}
-      />
+      {/* Connectors to Level 2 */}
+      <div className="w-16 flex flex-col justify-center py-[4.5rem]">
+          <div className="w-full h-[calc(100%-1rem)] border-t-2 border-b-2 border-r-2 border-[#DADFCF] rounded-r-xl" />
+      </div>
+      <div className="w-6 flex flex-col justify-center">
+          <div className="w-full h-0.5 bg-[#DADFCF]" />
+      </div>
+
+      {/* Level 2: Processor */}
+      <div className="flex flex-col justify-center relative z-10">
+        <button
+          onClick={() => setActiveModal(STAGE_LEVELS_DATA[1])}
+          className={`w-[260px] p-4 bg-[#FFFCF5] rounded-lg border text-left transition-all ${
+            activeModal?.batchId === STAGE_LEVELS_DATA[1].batchId
+              ? "border-[#6F7D61] bg-[#E2E8D8] ring-1 ring-[#6F7D61]"
+              : "border-[#DADFCF] hover:border-[#69705E]"
+          }`}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#EDF0E6] text-[#69705E] border border-[#DADFCF]">Processing</span>
+            <span className="text-[12px] font-mono text-[#69705E]">{STAGE_LEVELS_DATA[1].batchId}</span>
+          </div>
+          <h4 className="text-[14px] font-medium text-[#283025] mb-1 truncate">{STAGE_LEVELS_DATA[1].productName}</h4>
+          <p className="text-[13px] text-[#69705E] truncate">{STAGE_LEVELS_DATA[1].overview[0].value}</p>
+          <div className="flex justify-between items-end mt-3">
+              <span className="text-[12px] font-medium text-[#283025]">450 Liters</span>
+              <span className="flex items-center gap-1 text-[11px] text-[#69705E]"><MapPin className="w-3 h-3" /> Mandya, KA</span>
+          </div>
+        </button>
+      </div>
+
+      {/* Connector to Level 3 */}
+      <div className="w-16 flex flex-col justify-center">
+          <div className="w-full h-0.5 bg-[#DADFCF]" />
+      </div>
+
+      {/* Level 3: Distributor */}
+      <div className="flex flex-col justify-center relative z-10">
+        <button
+          onClick={() => setActiveModal(STAGE_LEVELS_DATA[2])}
+          className={`w-[260px] p-4 bg-[#FFFCF5] rounded-lg border text-left transition-all ${
+            activeModal?.batchId === STAGE_LEVELS_DATA[2].batchId
+              ? "border-[#6F7D61] bg-[#E2E8D8] ring-1 ring-[#6F7D61]"
+              : "border-[#DADFCF] hover:border-[#69705E]"
+          }`}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#EDF0E6] text-[#69705E] border border-[#DADFCF]">Transport</span>
+            <span className="text-[12px] font-mono text-[#69705E] truncate w-24">{STAGE_LEVELS_DATA[2].batchId}</span>
+          </div>
+          <h4 className="text-[14px] font-medium text-[#283025] mb-1 truncate">{STAGE_LEVELS_DATA[2].productName}</h4>
+          <p className="text-[13px] text-[#69705E] truncate">{STAGE_LEVELS_DATA[2].overview[0].value}</p>
+          <div className="flex justify-between items-end mt-3">
+              <span className="text-[12px] font-medium text-[#283025]">In Transit</span>
+              <span className="flex items-center gap-1 text-[11px] text-[#69705E]"><MapPin className="w-3 h-3" /> NH-48</span>
+          </div>
+        </button>
+      </div>
+
+      {/* Connector to Level 4 */}
+      <div className="w-16 flex flex-col justify-center">
+          <div className="w-full h-0.5 bg-[#DADFCF]" />
+      </div>
+
+      {/* Level 4: Retailer */}
+      <div className="flex flex-col justify-center relative z-10">
+        <button
+          onClick={() => setActiveModal(STAGE_LEVELS_DATA[3])}
+          className={`w-[260px] p-4 bg-[#FFFCF5] rounded-lg border text-left transition-all ${
+            activeModal?.batchId === STAGE_LEVELS_DATA[3].batchId
+              ? "border-[#6F7D61] bg-[#E2E8D8] ring-1 ring-[#6F7D61]"
+              : "border-[#DADFCF] hover:border-[#69705E]"
+          }`}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-[#EDF0E6] text-[#69705E] border border-[#DADFCF]">Retail</span>
+            <span className="text-[12px] font-mono text-[#69705E] truncate w-24">{STAGE_LEVELS_DATA[3].batchId}</span>
+          </div>
+          <h4 className="text-[14px] font-medium text-[#283025] mb-1 truncate">{STAGE_LEVELS_DATA[3].productName}</h4>
+          <p className="text-[13px] text-[#69705E] truncate">{STAGE_LEVELS_DATA[3].overview[0].value}</p>
+          <div className="flex justify-between items-end mt-3">
+              <span className="text-[12px] font-medium text-[#283025]">Available</span>
+              <span className="flex items-center gap-1 text-[11px] text-[#69705E]"><MapPin className="w-3 h-3" /> Gurgaon</span>
+          </div>
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+    <div className="min-h-screen bg-[#F5F1E6] text-[#283025] font-sans pb-24 -mt-16 pt-16">
+      <Head>
+        <title>Batch Traceability | Seed2Shelf</title>
+      </Head>
+
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        
+        {/* Hero Image Banner */}
+        <div className="w-full h-48 md:h-64 lg:h-80 rounded-2xl overflow-hidden relative shadow-sm border border-[#DADFCF] bg-[#FFFCF5]">
+          <img 
+            src="/journey-banner.jpg" 
+            alt="Agricultural Supply Chain Journey" 
+            className="w-full h-full object-cover object-center"
+          />
+        </div>
+
+        {/* Compact Header */}
+        <div className="bg-[#FFFCF5] border border-[#DADFCF] rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-[28px] font-medium text-[#283025] tracking-tight">Batch Traceability</h1>
+            <p className="text-[14px] text-[#69705E]">Explore where this batch came from and how it moved.</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
+            <select 
+              value={batchId}
+              onChange={(e) => {
+                setBatchId(e.target.value);
+                fetchTrace(e.target.value);
+              }}
+              className="bg-[#FFFCF5] border border-[#DADFCF] text-[#283025] text-[13px] rounded-lg px-3 py-2 focus:outline-none focus:border-[#6F7D61]"
+            >
+              <option value="BATCH2026000003">Sample: Processor (Merged)</option>
+              <option value="BATCH2026000001">Sample: Farmer Harvest</option>
+              <option value="BATCH2026000003-RTL">Sample: Retail Split</option>
+            </select>
+
+            <form onSubmit={handleSubmit} className="flex gap-2 w-full sm:w-auto">
+              <div className="relative flex-grow sm:w-[200px]">
+                <Search className="absolute inset-y-0 left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#69705E]" />
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter Batch ID..."
+                  value={batchId}
+                  onChange={(e) => setBatchId(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-[#FFFCF5] border border-[#DADFCF] rounded-lg text-[14px] text-[#283025] focus:outline-none focus:border-[#6F7D61] transition"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-[#7BA05B] hover:bg-[#688A4D] disabled:opacity-50 text-[#FFFCF5] font-medium px-4 py-2 rounded-lg text-[14px] transition flex items-center gap-2 shrink-0"
+              >
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Search"}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Product Summary */}
+        <div className="bg-[#FFFCF5] border border-[#DADFCF] rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+           <div className="flex flex-col gap-1">
+             <div className="text-[12px] font-medium text-[#69705E] uppercase tracking-wider">Product Summary</div>
+             <div className="text-[18px] font-medium text-[#283025]">Organic Alphonso Mango Pulp</div>
+           </div>
+           <div className="flex flex-wrap gap-x-8 gap-y-3">
+             <div className="flex flex-col gap-1">
+               <span className="text-[12px] text-[#69705E]">Batch ID</span>
+               <span className="text-[14px] font-medium text-[#283025] font-mono">{batchId}</span>
+             </div>
+             <div className="flex flex-col gap-1">
+               <span className="text-[12px] text-[#69705E]">Recorded Status</span>
+               <span className="text-[14px] font-medium text-[#283025]">Aseptic Pulping Completed</span>
+             </div>
+             <div className="flex flex-col gap-1">
+               <span className="text-[12px] text-[#69705E]">Current Custodian</span>
+               <span className="text-[14px] font-medium text-[#283025]">Heritage Food Processing Corp</span>
+             </div>
+             <div className="flex flex-col gap-1">
+               <span className="text-[12px] text-[#69705E]">Quantity</span>
+               <span className="text-[14px] font-medium text-[#283025]">450 Liters</span>
+             </div>
+           </div>
+        </div>
+
+        {/* Main Workspace */}
+        <div className="flex flex-col lg:flex-row gap-6 relative">
+          
+          <div className="flex-1 bg-[#FFFCF5] overflow-hidden flex flex-col relative min-h-[500px] border border-[#DADFCF] rounded-xl shadow-sm">
+            {/* Graph Controls */}
+            <div className="absolute top-4 left-4 z-10 flex flex-col gap-1 bg-[#FFFCF5] border border-[#DADFCF] p-1 rounded-lg shadow-sm">
+               <button onClick={handleZoomIn} title="Zoom in" className="p-1.5 hover:bg-[#EDF0E6] rounded text-[#69705E]"><ZoomIn className="w-4 h-4" /></button>
+               <button onClick={handleResetZoom} title="Fit to view" className="p-1.5 hover:bg-[#EDF0E6] rounded text-[#69705E]"><Maximize className="w-4 h-4" /></button>
+               <button onClick={handleZoomOut} title="Zoom out" className="p-1.5 hover:bg-[#EDF0E6] rounded text-[#69705E]"><ZoomOut className="w-4 h-4" /></button>
+            </div>
+            
+            <div className="absolute top-4 right-4 z-10">
+              <button onClick={toggleFullscreen} title="Expand lineage" className="p-2 bg-[#FFFCF5] hover:bg-[#EDF0E6] border border-[#DADFCF] rounded-lg shadow-sm text-[#69705E]">
+                <Maximize className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Interactive Graph Canvas */}
+            <div ref={containerRef} className="flex-1 overflow-auto p-8 md:pl-24 flex items-center justify-start bg-[#EDF0E6] cursor-grab active:cursor-grabbing relative">
+              <div 
+                ref={contentRef}
+                className="flex items-center gap-0 transition-transform origin-left"
+                style={{ transform: `scale(${zoomLevel})` }}
+              >
+                {renderGraphNodes()}
+              </div>
+            </div>
+
+
+          </div>
+          <TraceDetailsModal
+            isOpen={!!selectedStageModal}
+            onClose={() => setSelectedStageModal(null)}
+            data={selectedStageModal}
+          />
+          
+        </div>
+      </div>
     </div>
+
+
+      {/* Expanded Viewport Overlay */}
+      {isFullscreen && typeof window !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] bg-[#FFFCF5] flex flex-col">
+          {/* Expanded Controls */}
+          <div className="absolute top-6 left-6 z-10 flex flex-col gap-1 bg-[#FFFCF5] border border-[#DADFCF] p-1 rounded-lg shadow-sm">
+            <button onClick={handleZoomIn} title="Zoom in" className="p-1.5 hover:bg-[#EDF0E6] rounded text-[#69705E]"><ZoomIn className="w-4 h-4" /></button>
+            <button onClick={handleResetZoom} title="Fit to view" className="p-1.5 hover:bg-[#EDF0E6] rounded text-[#69705E]"><Maximize className="w-4 h-4" /></button>
+            <button onClick={handleZoomOut} title="Zoom out" className="p-1.5 hover:bg-[#EDF0E6] rounded text-[#69705E]"><ZoomOut className="w-4 h-4" /></button>
+          </div>
+          
+          <div className="absolute top-6 right-6 z-10">
+            <button onClick={toggleFullscreen} title="Exit full screen" className="p-3 bg-[#FFFCF5] hover:bg-[#EDF0E6] border border-[#DADFCF] rounded-lg shadow-lg text-[#69705E]">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div ref={containerRef} className="flex-1 overflow-auto p-8 md:pl-24 flex items-center justify-start bg-[#EDF0E6] cursor-grab active:cursor-grabbing relative">
+            <div 
+              ref={contentRef}
+              className="flex items-center gap-0 transition-transform origin-left"
+              style={{ transform: `scale(${zoomLevel})` }}
+            >
+              {renderGraphNodes()}
+            </div>
+          </div>
+          
+          <TraceDetailsModal
+            isOpen={!!fullscreenStageModal}
+            onClose={() => setFullscreenStageModal(null)}
+            data={fullscreenStageModal}
+          />
+        </div>,
+        document.body
+      )}
+
+    </>
   );
 }

@@ -23,6 +23,7 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
+import { VoiceInput } from "@/components/shared/VoiceInput";
 
 export interface InventoryItem {
   id: string; // e.g. DIST-2026-001 or BATCH-2026-0079
@@ -51,6 +52,12 @@ export default function SupplyHubPage() {
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
+
 
   useEffect(() => {
     if (!distributorId) return;
@@ -400,27 +407,28 @@ export default function SupplyHubPage() {
   // Open modal to set custom quantity/limit for processing
 
   return (
-    <div className="min-h-screen text-stone-100 font-sans pb-24 pt-6 px-4 sm:px-6 lg:px-8 relative z-20">
+    <div className="min-h-screen bg-[#F5F1E6] text-[#283025] font-sans pb-24 pt-24 -mt-16 relative z-20">
       <Head>
         <title>Supply Hub | Seed2Shelf Distributor</title>
         <meta name="description" content="Transform raw farmer crops into processed goods with blockchain traceability." />
       </Head>
 
-      {/* Solid Dark Background Overlay */}
 
-      <div className="max-w-6xl mx-auto space-y-7">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-7">
         
         {/* =========================================================================
             HEADER (BORDER TOP & BOTTOM - MATCHING PURCHASE ORDERS STYLE)
            ========================================================================= */}
-        <div className="flex items-center gap-3.5 border-y border-stone-800/80 py-3.5">
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 shrink-0">
-            <Boxes className="h-7 w-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Supply Hub
-            </h1>
+        <div className="flex flex-wrap items-center justify-between gap-4 border-y border-[#DADFCF] py-3.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#EDF0E6] border border-[#6F7D61]/20 rounded-[20px] text-[#58664C] shrink-0">
+              <Boxes className="h-7 w-7" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#283025] tracking-tight">
+                Supply Hub
+              </h1>
+            </div>
           </div>
         </div>
 
@@ -431,15 +439,15 @@ export default function SupplyHubPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
           
           {/* =========================================================================
               LOG NEW DISTRIBUTED ITEM FORM (LEFT CARD - 6 COLS)
              ========================================================================= */}
-          <div className="lg:col-span-6 bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
-            <div className="pb-3 border-b border-stone-800">
-              <h2 className="text-base font-extrabold text-emerald-400 flex items-center gap-2">
-                <PlusCircle className="w-5 h-5" /> Log New Distributed Item
+          <div className="lg:col-span-6 bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-6 sm:p-7 shadow-sm space-y-5">
+            <div className="pb-3 border-b border-[#DADFCF]">
+              <h2 className="text-base font-extrabold text-[#607D5B] flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-[#607D5B]" /> Log New Distributed Item
               </h2>
             </div>
 
@@ -447,14 +455,14 @@ export default function SupplyHubPage() {
               
               {/* FIELD 1: Product Category Dropdown */}
               <div>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Product Category *
                 </label>
                 <div className="relative">
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl pl-4 pr-10 py-3 text-white focus:outline-none focus:border-emerald-500 transition cursor-pointer appearance-none text-xs font-semibold"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-10 py-3 text-stone-800 focus:outline-none focus:border-[#607D5B] transition cursor-pointer appearance-none text-xs font-semibold"
                   >
                     <option value="Processed Grains">Processed Grains</option>
                     <option value="Fruit Extracts">Fruit Extracts</option>
@@ -463,41 +471,51 @@ export default function SupplyHubPage() {
                     <option value="Organic Oils">Organic Oils</option>
                     <option value="Others">Others</option>
                   </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                    <ChevronDown className="w-4 h-4 text-stone-400" />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-500">
+                    <ChevronDown className="w-4 h-4 text-stone-500" />
                   </div>
                 </div>
 
                 {category === "Others" && (
                   <div className="mt-2.5">
-                    <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                    <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                       Specify Custom Category *
                     </label>
-                    <input
-                      type="text"
-                      value={customCategory}
-                      onChange={(e) => setCustomCategory(e.target.value)}
-                      placeholder="e.g. Spices & Seasonings"
-                      className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        placeholder="e.g. Spices & Seasonings"
+                        className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
+                        required
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <VoiceInput onResult={setCustomCategory} />
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* FIELD 2: Product Name */}
               <div>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Product Name *
                 </label>
-                <input
-                  type="text"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  placeholder="e.g. Refined Basmati Flour (5kg Bags)"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="e.g. Refined Basmati Flour (5kg Bags)"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
+                    required
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <VoiceInput onResult={setProductName} />
+                  </div>
+                </div>
               </div>
 
               {/* FIELD 3: Linked Parent Batches (Batch Combination) */}
@@ -505,7 +523,7 @@ export default function SupplyHubPage() {
                 <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Source Batches (Select multiple to combine) *
                 </label>
-                <div className="bg-stone-950 border border-stone-800 rounded-2xl p-4 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                <div className="bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl p-4 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                   {inventory.filter(i => i.itemType === "RAW" && i.processingStatus !== "Fully Distributed").length === 0 ? (
                     <div className="text-stone-500 text-xs italic">No purchased batches available</div>
                   ) : (
@@ -522,9 +540,9 @@ export default function SupplyHubPage() {
                               setParentRawBatchIds(parentRawBatchIds.filter(id => id !== raw.id));
                             }
                           }}
-                          className="w-4 h-4 rounded border-stone-700 text-emerald-500 focus:ring-emerald-500/30 bg-stone-900 cursor-pointer"
+                          className="w-4 h-4 rounded border-stone-300 bg-white text-[#7CA971] focus:ring-[#7CA971]/30 cursor-pointer"
                         />
-                        <span className="text-white text-xs font-semibold group-hover:text-emerald-400 transition">
+                        <span className="text-stone-800 text-xs font-semibold group-hover:text-[#607D5B] transition">
                           {raw.parentRawBatchId || raw.id} - {raw.productName} ({raw.quantity})
                         </span>
                       </label>
@@ -556,7 +574,7 @@ export default function SupplyHubPage() {
               {/* Quantity & Price */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                  <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                     Distributed Volume (kg) *
                   </label>
                   <input
@@ -564,13 +582,13 @@ export default function SupplyHubPage() {
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
                     placeholder="e.g. 100"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl px-4 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                  <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                     Selling Price (₹/kg) *
                   </label>
                   <input
@@ -578,7 +596,7 @@ export default function SupplyHubPage() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="e.g. 65"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white placeholder-stone-600 focus:outline-none focus:border-emerald-500 transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl px-4 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     required
                   />
                 </div>
@@ -586,23 +604,23 @@ export default function SupplyHubPage() {
 
               {/* CUSTOM DATE PICKER */}
               <div className="relative" ref={calendarRef}>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Distribution Date *
                 </label>
                 
                 <div
                   onClick={() => setIsCalendarOpen(!isCalendarOpen)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-2xl px-4 py-3 text-white flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition text-xs"
+                  className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-[#607D5B]/50 transition text-xs"
                 >
-                  <span className="font-semibold text-stone-200">{formattedDateDisplay}</span>
-                  <CalendarIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-semibold text-stone-800">{formattedDateDisplay}</span>
+                  <CalendarIcon className="w-4 h-4 text-stone-500 shrink-0" />
                 </div>
 
                 {isCalendarOpen && (
-                  <div className="absolute left-0 top-full mt-2 z-50 w-72 bg-stone-900 border border-stone-800 rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-0 top-full mt-2 z-50 w-72 bg-white border border-[#E3DFD5] rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
                     
-                    <div className="flex items-center justify-between pb-2 border-b border-stone-800">
-                      <span className="font-extrabold text-white text-xs sm:text-sm">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#E3DFD5]">
+                      <span className="font-extrabold text-stone-800 text-xs sm:text-sm">
                         {monthNames[selectedMonth]}, {selectedYear}
                       </span>
 
@@ -610,7 +628,7 @@ export default function SupplyHubPage() {
                         <button
                           type="button"
                           onClick={handlePrevMonth}
-                          className="p-1 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition cursor-pointer"
+                          className="p-1 text-stone-500 hover:text-stone-800 rounded-lg hover:bg-stone-100 transition cursor-pointer"
                           title="Previous Month"
                         >
                           <ChevronLeft className="w-4 h-4" />
@@ -619,7 +637,7 @@ export default function SupplyHubPage() {
                         <button
                           type="button"
                           onClick={handleNextMonth}
-                          className="p-1 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition cursor-pointer"
+                          className="p-1 text-stone-500 hover:text-stone-800 rounded-lg hover:bg-stone-100 transition cursor-pointer"
                           title="Next Month"
                         >
                           <ChevronRight className="w-4 h-4" />
@@ -627,7 +645,7 @@ export default function SupplyHubPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-stone-400">
+                    <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-stone-500">
                       <span>Su</span>
                       <span>Mo</span>
                       <span>Tu</span>
@@ -657,10 +675,10 @@ export default function SupplyHubPage() {
                             }}
                             className={`py-1.5 rounded-xl font-semibold transition cursor-pointer ${
                               isSelected
-                                ? "bg-emerald-600 text-white font-extrabold shadow-sm"
+                                ? "bg-[#7CA971] text-white font-extrabold shadow-sm"
                                 : isToday
-                                ? "border border-emerald-500/50 text-emerald-400"
-                                : "text-stone-300 hover:bg-stone-800 hover:text-white"
+                                ? "border border-[#607D5B]/50 text-[#607D5B]"
+                                : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
                             }`}
                           >
                             {dayNum}
@@ -669,7 +687,7 @@ export default function SupplyHubPage() {
                       })}
                     </div>
 
-                    <div className="pt-2 border-t border-stone-800 flex items-center justify-between text-[11px]">
+                    <div className="pt-2 border-t border-[#E3DFD5] flex items-center justify-between text-[11px]">
                       <button
                         type="button"
                         onClick={() => {
@@ -678,7 +696,7 @@ export default function SupplyHubPage() {
                           setSelectedYear(today.getFullYear());
                           setIsCalendarOpen(false);
                         }}
-                        className="text-emerald-400 hover:text-emerald-300 font-bold"
+                        className="text-[#607D5B] hover:text-[#7CA971] font-bold"
                       >
                         Today
                       </button>
@@ -686,7 +704,7 @@ export default function SupplyHubPage() {
                       <button
                         type="button"
                         onClick={() => setIsCalendarOpen(false)}
-                        className="text-stone-400 hover:text-stone-200"
+                        className="text-stone-500 hover:text-stone-800"
                       >
                         Close
                       </button>
@@ -698,7 +716,7 @@ export default function SupplyHubPage() {
 
               {/* Distributed Product Photo Upload */}
               <div>
-                <label className="text-stone-400 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
+                <label className="text-stone-500 font-bold uppercase text-[10px] tracking-wider block mb-1.5">
                   Distributed Product Photo *
                 </label>
                 <input
@@ -710,7 +728,7 @@ export default function SupplyHubPage() {
                 />
 
                 {productImage ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-stone-800 bg-stone-950 p-2 group">
+                  <div className="relative rounded-2xl overflow-hidden border border-[#E3DFD5] bg-[#F2EFE8] p-2 group">
                     <img
                       src={productImage}
                       alt="Distributed Product Preview"
@@ -719,7 +737,7 @@ export default function SupplyHubPage() {
                     <button
                       type="button"
                       onClick={() => setProductImage(null)}
-                      className="absolute top-4 right-4 p-1.5 rounded-full bg-stone-950/80 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
+                      className="absolute top-4 right-4 p-1.5 rounded-full bg-white/80 text-stone-500 hover:text-stone-800 border border-[#E3DFD5] transition cursor-pointer"
                       title="Remove Image"
                     >
                       <X className="w-4 h-4" />
@@ -728,13 +746,13 @@ export default function SupplyHubPage() {
                 ) : (
                   <div
                     onClick={() => imageInputRef.current?.click()}
-                    className="border-2 border-dashed border-stone-800 hover:border-emerald-500/50 bg-stone-950/80 rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group"
+                    className="border-2 border-dashed border-[#E3DFD5] hover:border-[#607D5B]/50 bg-[#F2EFE8]/50 rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group"
                   >
-                    <div className="p-3 bg-stone-900 rounded-xl text-stone-400 group-hover:text-emerald-400 group-hover:bg-emerald-500/10 transition">
+                    <div className="p-3 bg-white rounded-xl text-stone-500 group-hover:text-[#607D5B] group-hover:bg-[#7CA971]/10 transition shadow-sm border border-[#E3DFD5]">
                       <UploadCloud className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition">
+                      <p className="text-xs font-bold text-stone-800 group-hover:text-[#607D5B] transition">
                         Click to upload product image photo
                       </p>
                       <p className="text-[10px] text-stone-500 mt-0.5">
@@ -749,7 +767,7 @@ export default function SupplyHubPage() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-2xl bg-[#7CA971] hover:bg-[#607D5B] text-white font-extrabold text-xs transition cursor-pointer shadow-md shadow-[#7CA971]/20 flex items-center justify-center gap-2"
                 >
                   <PlusCircle className="w-4.5 h-4.5" />
                   <span>
@@ -781,97 +799,102 @@ export default function SupplyHubPage() {
                 : "NEW-BATCH-GEN";
 
               return (
-                <div className="mt-6 p-5 bg-stone-950 border border-stone-800 rounded-2xl space-y-4 shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between border-b border-stone-800/80 pb-3">
+                <details className="mt-6 group bg-[#F9F7F1] border border-[#E3DFD5] rounded-2xl shadow-sm transition-all duration-300">
+                  <summary className="p-5 flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden border-b border-transparent group-open:border-[#E3DFD5]">
                     <div className="flex items-center gap-2">
-                      <QrIcon className={`w-5 h-5 ${displayedQrUrl ? "text-emerald-400" : "text-stone-600"}`} />
-                      <h3 className="text-sm font-extrabold text-white">Batch Information</h3>
+                      <QrIcon className={`w-5 h-5 ${displayedQrUrl ? "text-[#607D5B]" : "text-stone-400"}`} />
+                      <h3 className="text-sm font-extrabold text-stone-800">Batch Information</h3>
                     </div>
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                      newBatchInfo || selectedParentRaw
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                        : "bg-stone-900 text-stone-500 border-stone-800"
-                    }`}>
-                      {newBatchInfo ? "Generated & Live" : selectedParentRaw ? "Loaded Previous QR" : "Pending Selection"}
-                    </span>
-                  </div>
-
-                  {/* DYNAMIC LINEAGE CALLOUT FOR PREVIOUS BATCH */}
-                  {selectedParentRaw && (
-                    <div className="p-3.5 bg-stone-900 border border-emerald-500/30 rounded-xl text-xs space-y-1.5 animate-in fade-in duration-150">
-                      <div className="flex items-center justify-between text-emerald-400 font-bold">
-                        <span>Source Batch Lineage: {selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</span>
-                        <span className="text-[10px] text-stone-400">Previous Data Loaded</span>
-                      </div>
-                      <p className="text-stone-300 text-[11px] leading-relaxed">
-                        Previous data stored under <strong className="text-white font-mono">{selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</strong> ({selectedParentRaw.productName}) has been loaded. Clicking <strong className="text-emerald-400">Update the Batch</strong> will save the new distributed run under this batch ID.
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                        newBatchInfo || selectedParentRaw
+                          ? "bg-white text-[#607D5B] border-[#607D5B]/30" 
+                          : "bg-white text-stone-500 border-stone-200"
+                      }`}>
+                        {newBatchInfo ? "Generated & Live" : selectedParentRaw ? "Loaded Previous QR" : "Pending Selection"}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-stone-500 transition-transform group-open:rotate-180" />
                     </div>
-                  )}
+                  </summary>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-5">
-                    {displayedQrUrl ? (
-                      <div className="p-2 bg-white rounded-2xl shadow-md shrink-0 border border-stone-700 animate-in zoom-in-95 duration-200">
-                        <img src={displayedQrUrl} alt={`QR Code for ${displayedBatchId}`} className="w-28 h-28 object-contain" />
-                      </div>
-                    ) : (
-                      <div className="w-28 h-28 border-2 border-dashed border-stone-800/80 bg-stone-950/80 rounded-2xl shrink-0 flex items-center justify-center">
-                        <QrIcon className="w-10 h-10 text-stone-700/70" />
+                  <div className="p-5 pt-0 mt-4 space-y-4">
+                    {/* DYNAMIC LINEAGE CALLOUT FOR PREVIOUS BATCH */}
+                    {selectedParentRaw && (
+                      <div className="p-3.5 bg-white border border-[#7CA971]/30 rounded-xl text-xs space-y-1.5 animate-in fade-in duration-150">
+                        <div className="flex items-center justify-between text-[#607D5B] font-bold">
+                          <span>Source Batch Lineage: {selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</span>
+                          <span className="text-[10px] text-stone-500">Previous Data Loaded</span>
+                        </div>
+                        <p className="text-stone-600 text-[11px] leading-relaxed">
+                          Previous data stored under <strong className="text-stone-800 font-mono">{selectedParentRaw.parentRawBatchId || selectedParentRaw.id}</strong> ({selectedParentRaw.productName}) has been loaded. Clicking <strong className="text-[#607D5B]">Update the Batch</strong> will save the new distributed run under this batch ID.
+                        </p>
                       </div>
                     )}
 
-                    <div className="space-y-2 flex-1 text-center sm:text-left">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase text-stone-500 block">Batch ID</span>
-                        <span className={`font-extrabold ${displayedQrUrl ? "text-base text-emerald-400" : "text-sm text-stone-600"}`}>
-                          {displayedBatchId}
-                        </span>
-                      </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-5">
+                      {displayedQrUrl ? (
+                        <div className="p-2 bg-white rounded-2xl shadow-sm shrink-0 border border-[#E3DFD5] animate-in zoom-in-95 duration-200">
+                          <img src={displayedQrUrl} alt={`QR Code for ${displayedBatchId}`} className="w-28 h-28 object-contain" />
+                        </div>
+                      ) : (
+                        <div className="w-28 h-28 border-2 border-dashed border-[#E3DFD5] bg-white rounded-2xl shrink-0 flex items-center justify-center">
+                          <QrIcon className="w-10 h-10 text-stone-300" />
+                        </div>
+                      )}
 
-                      <div className="flex flex-wrap gap-2 pt-2 justify-center sm:justify-start">
-                        {displayedQrUrl ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedQrModal(inventory.find(i => i.id === displayedBatchId) || ({ id: displayedBatchId, qrCodeUrl: displayedQrUrl, productName, category: "Processed", quantity: `${quantity} kg`, pricePerUnit: `₹${price}/kg`, date: formattedDateDisplay, status: "In Stock" } as any))}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View QR</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => downloadQrCode(displayedQrUrl, displayedBatchId)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-extrabold text-xs transition cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              <span>Download QR</span>
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              disabled
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900 text-stone-600 border border-stone-800 text-xs font-bold cursor-not-allowed opacity-70"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View QR</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900 text-stone-600 border border-stone-800 text-xs font-bold cursor-not-allowed opacity-70"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              <span>Download QR</span>
-                            </button>
-                          </>
-                        )}
+                      <div className="space-y-2 flex-1 text-center sm:text-left">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-stone-500 block">Batch ID</span>
+                          <span className={`font-extrabold ${displayedQrUrl ? "text-base text-stone-800" : "text-sm text-stone-500"}`}>
+                            {displayedBatchId}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 pt-2 justify-center sm:justify-start">
+                          {displayedQrUrl ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedQrModal(inventory.find(i => i.id === displayedBatchId) || ({ id: displayedBatchId, qrCodeUrl: displayedQrUrl, productName, category: "Processed", quantity: `${quantity} kg`, pricePerUnit: `₹${price}/kg`, date: formattedDateDisplay, status: "In Stock" } as any))}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E3DFD5] hover:bg-[#F2EFE8] text-stone-700 font-extrabold text-xs transition cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-stone-500" />
+                                <span>View QR</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => downloadQrCode(displayedQrUrl, displayedBatchId)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E3DFD5] hover:bg-[#F2EFE8] text-stone-700 font-extrabold text-xs transition cursor-pointer"
+                              >
+                                <Download className="w-3.5 h-3.5 text-stone-500" />
+                                <span>Download QR</span>
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                disabled
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-stone-400 border border-[#E3DFD5] text-xs font-bold cursor-not-allowed opacity-70"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View QR</span>
+                              </button>
+                              <button
+                                type="button"
+                                disabled
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-stone-400 border border-[#E3DFD5] text-xs font-bold cursor-not-allowed opacity-70"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Download QR</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </details>
               );
             })()}
           </div>
@@ -879,17 +902,17 @@ export default function SupplyHubPage() {
           {/* =========================================================================
               MY INVENTORY SECTION (RIGHT CARD - 6 COLS)
              ========================================================================= */}
-          <div className="lg:col-span-6 bg-stone-900/90 border border-stone-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-5">
-            <div className="pb-3 border-b border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-base font-extrabold text-[#00d26a] flex items-center gap-2">
+          <div className="lg:col-span-6 bg-[#FFFCF5] border border-[#DADFCF] rounded-[24px] p-6 sm:p-7 shadow-sm space-y-5">
+            <div className="pb-3 border-b border-[#DADFCF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-base font-extrabold text-[#607D5B] flex items-center gap-2">
                 <Package className="w-5 h-5" /> My Inventory
               </h2>
             </div>
 
             {/* MAIN TAB CONTENT */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                 {inventory.filter(i => i.itemType === "DISTRIBUTED" && i.status !== "Dispatched" && i.status !== "Archived").length === 0 ? (
-                  <div className="col-span-full p-8 text-center text-stone-400 text-xs">
+                  <div className="col-span-full p-8 text-center text-stone-500 text-xs">
                     No active processed product items registered yet.
                   </div>
                 ) : (
@@ -898,21 +921,21 @@ export default function SupplyHubPage() {
                     return (
                       <div
                         key={item.id}
-                        className="bg-stone-900/90 border border-stone-800 hover:border-emerald-500/40 rounded-3xl p-4 space-y-3.5 shadow-sm hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 flex flex-col justify-between"
+                        className="bg-white border border-[#E3DFD5] hover:border-[#607D5B]/40 rounded-3xl p-4 space-y-3.5 shadow-sm hover:shadow-xl hover:shadow-[#607D5B]/5 transition-all duration-300 flex flex-col justify-between"
                       >
-                        <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-stone-950 border border-stone-800/80 group">
+                        <div className="relative rounded-2xl overflow-hidden h-44 w-full bg-[#F2EFE8] border border-[#E3DFD5] group">
                           {imgUrl && <img
                             src={imgUrl}
                             alt={item.productName}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />}
-                          <div className="absolute top-2.5 left-2.5 bg-stone-950/90 backdrop-blur-md text-emerald-400 font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 shadow-md">
+                          <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-md text-[#607D5B] font-mono text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-[#E3DFD5] shadow-sm">
                             {item.id}
                           </div>
-                          <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-md ${
+                          <div className={`absolute top-2.5 right-2.5 text-[9px] font-extrabold px-2.5 py-1 rounded-full border backdrop-blur-md shadow-sm ${
                             item.status === 'Listed'
-                              ? 'bg-emerald-500/90 text-black border-emerald-400 font-black'
-                              : 'bg-stone-900/90 text-stone-300 border-stone-700'
+                              ? 'bg-[#7CA971] text-white border-[#607D5B]/50'
+                              : 'bg-white/90 text-stone-500 border-[#E3DFD5]'
                           }`}>
                             {item.status}
                           </div>
@@ -920,24 +943,24 @@ export default function SupplyHubPage() {
 
                         <div className="flex items-center justify-between gap-2 pt-0.5">
                           <div className="space-y-0.5 truncate">
-                            <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-400 block">
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest text-stone-500 block">
                               {item.category}
                             </span>
-                            <h3 className="text-sm font-black text-white leading-tight truncate">
+                            <h3 className="text-sm font-black text-stone-800 leading-tight truncate">
                               {item.productName}
                             </h3>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
                             <button
                               onClick={() => alert(`Editing ${item.productName}`)}
-                              className="p-1.5 rounded-xl bg-stone-950 hover:bg-stone-800 text-stone-400 hover:text-white border border-stone-800 transition cursor-pointer"
+                              className="p-1.5 rounded-xl bg-[#F2EFE8] hover:bg-[#E3DFD5] text-stone-500 hover:text-stone-800 border border-[#E3DFD5] transition cursor-pointer"
                               title="Edit Item"
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleDeleteItem(item.id)}
-                              className="p-1.5 rounded-xl bg-stone-950 hover:bg-red-500/20 text-stone-400 hover:text-red-400 border border-stone-800 transition cursor-pointer"
+                              className="p-1.5 rounded-xl bg-[#F2EFE8] hover:bg-red-50 text-stone-500 hover:text-red-500 border border-[#E3DFD5] transition cursor-pointer"
                               title="Delete Item"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -945,42 +968,48 @@ export default function SupplyHubPage() {
                           </div>
                         </div>
 
-                        <div className="p-3.5 bg-stone-950/80 border border-stone-800/90 rounded-2xl space-y-2 text-[11px]">
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Batch Volume:</span>
-                            <strong className="text-emerald-400 font-extrabold">{item.quantity}</strong>
-                          </div>
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Price per Unit:</span>
-                            <strong className="text-white font-bold">{item.pricePerUnit}</strong>
-                          </div>
-                          {item.parentRawBatchId && (
-                            <div className="flex justify-between items-center text-stone-300">
-                              <span className="text-stone-400 font-medium">Linked Raw Batch:</span>
-                              <strong className="font-mono text-stone-200 text-[10px]">{item.parentRawBatchId}</strong>
+                          <details className="group mt-1">
+                            <summary className="flex items-center justify-between text-[10px] font-extrabold uppercase tracking-widest text-stone-500 hover:text-[#607D5B] cursor-pointer list-none [&::-webkit-details-marker]:hidden py-1 border-b border-[#E3DFD5]/50 transition-colors">
+                              <span>Batch Details</span>
+                              <ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+                            </summary>
+                          <div className="mt-2 p-3.5 bg-[#F9F7F1] border border-[#E3DFD5] rounded-2xl space-y-2 text-[11px]">
+                            <div className="flex justify-between items-center text-stone-600">
+                              <span className="text-stone-500 font-medium">Batch Volume:</span>
+                              <strong className="text-stone-800 font-extrabold">{item.quantity}</strong>
                             </div>
-                          )}
-                          <div className="flex justify-between items-center text-stone-300">
-                            <span className="text-stone-400 font-medium">Date:</span>
-                            <span className="text-stone-300 font-mono text-[10px]">{item.date}</span>
-                          </div>
-                        </div>
+                            <div className="flex justify-between items-center text-stone-600">
+                              <span className="text-stone-500 font-medium">Price per Unit:</span>
+                              <strong className="text-stone-800 font-bold">{item.pricePerUnit}</strong>
+                            </div>
+                            {item.parentRawBatchId && (
+                              <div className="flex justify-between items-center text-stone-600">
+                                <span className="text-stone-500 font-medium">Linked Raw Batch:</span>
+                                <strong className="font-mono text-stone-800 text-[10px]">{item.parentRawBatchId}</strong>
+                              </div>
+                            )}
+                            <div className="flex justify-between items-center text-stone-600">
+                              <span className="text-stone-500 font-medium">Date:</span>
+                              <span className="text-stone-600 font-mono text-[10px]">{item.date}</span>
+                            </div>
+                            </div>
+                          </details>
 
                         <div className="grid grid-cols-2 gap-2 pt-1">
                           <button
                             type="button"
                             onClick={() => setSelectedQrModal(item)}
-                            className="py-2.5 px-3 rounded-xl bg-stone-950 hover:bg-stone-800 border border-stone-800 text-stone-200 hover:text-white font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                            className="py-2.5 px-3 rounded-xl bg-[#F2EFE8] hover:bg-[#E3DFD5] border border-[#E3DFD5] text-stone-700 hover:text-stone-800 font-extrabold text-[11px] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                           >
-                            <QrIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <QrIcon className="w-3.5 h-3.5 text-[#607D5B] shrink-0" />
                             <span className="truncate">View QR</span>
                           </button>
                           <button
                             onClick={() => handleToggleListStatus(item.id)}
                             className={`py-2.5 px-3 rounded-xl text-[11px] font-extrabold transition cursor-pointer border flex items-center justify-center gap-1 truncate ${
                               item.status === 'Listed'
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30'
-                                : 'bg-emerald-500 hover:bg-emerald-400 text-black border-emerald-400 font-black shadow-md shadow-emerald-500/10'
+                                ? 'bg-orange-50 hover:bg-orange-100 text-[#F9A826] border-[#F9A826]/30'
+                                : 'bg-[#7CA971] hover:bg-[#607D5B] text-white border-[#7CA971] shadow-sm'
                             }`}
                           >
                             <span>{item.status === 'Listed' ? 'Unlist' : 'List Product'}</span>
