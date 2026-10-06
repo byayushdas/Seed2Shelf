@@ -23,7 +23,7 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
-import { VoiceInput } from "@/components/shared/VoiceInput";
+
 
 export interface InventoryItem {
   id: string; // e.g. PROC-2026-001 or BATCH-2026-0079
@@ -558,9 +558,7 @@ export default function ProductionHubPage() {
                         className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
                         required
                       />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                        <VoiceInput onResult={setCustomCategory} />
-                      </div>
+
                     </div>
                   </div>
                 )}
@@ -580,9 +578,7 @@ export default function ProductionHubPage() {
                     className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
                     required
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <VoiceInput onResult={setProductName} />
-                  </div>
+
                 </div>
               </div>
 

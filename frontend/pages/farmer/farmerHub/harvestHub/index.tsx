@@ -26,7 +26,7 @@ import {
   Check
 } from "lucide-react";
 import QRCode from "qrcode";
-import { VoiceInput } from "@/components/shared/VoiceInput";
+
 
 interface InventoryItem {
   id: string;
@@ -398,9 +398,7 @@ export default function HarvestHub() {
                     className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
                     required
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <VoiceInput onResult={setCropName} />
-                  </div>
+
                 </div>
               </div>
 

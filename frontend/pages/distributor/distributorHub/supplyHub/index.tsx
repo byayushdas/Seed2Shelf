@@ -23,7 +23,7 @@ import {
   Package,
   ArrowRight
 } from "lucide-react";
-import { VoiceInput } from "@/components/shared/VoiceInput";
+
 
 export interface InventoryItem {
   id: string; // e.g. DIST-2026-001 or BATCH-2026-0079
@@ -52,9 +52,6 @@ export default function SupplyHubPage() {
 
   // Initial inventory initialized as empty array
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
@@ -490,9 +487,7 @@ export default function SupplyHubPage() {
                         className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
                         required
                       />
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                        <VoiceInput onResult={setCustomCategory} />
-                      </div>
+
                     </div>
                   </div>
                 )}
@@ -512,9 +507,7 @@ export default function SupplyHubPage() {
                     className="w-full bg-[#F2EFE8] border border-[#E3DFD5] rounded-2xl pl-4 pr-12 py-3 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-[#607D5B] transition text-xs font-semibold"
                     required
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <VoiceInput onResult={setProductName} />
-                  </div>
+
                 </div>
               </div>
 

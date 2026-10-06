@@ -23,7 +23,7 @@ import { marketplaceService } from "@/services/processor/marketplaceService";
 import { cartService } from "@/services/processor/cartService";
 import { FarmerHarvestItem } from "@/types/processor";
 import { useToast } from "@/context/ToastContext";
-import { VoiceInput } from "@/components/shared/VoiceInput";
+
 
 export default function RetailerMarketplace() {
   const { data: session } = useSession();
@@ -126,9 +126,7 @@ export default function RetailerMarketplace() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#FEFAE0] border border-[#CCD5AE] rounded-[20px] pl-10 pr-12 py-2.5 text-xs text-[#283025] placeholder-[#69705E] focus:outline-none focus:border-[#7BA05B]/50 transition"
           />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <VoiceInput onResult={setSearchQuery} translateToEnglish={true} />
-          </div>
+
         </div>
 
         {/* =========================================================================
