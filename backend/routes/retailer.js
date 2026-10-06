@@ -270,7 +270,7 @@ router.get('/shipments/incoming', async (req, res) => {
       ...( /^[0-9a-fA-F]{24}$/.test(userId) ? { buyerId: userId } : { buyerRoleId: userId } ),
       buyerRole: 'RETAILER',
       $or: [
-        { deliveryStatus: { $in: ['ACCEPTED', 'DISPATCHED', 'DELIVERED'] } },
+        { deliveryStatus: { $in: ['DISPATCHED', 'DELIVERED'] } },
         { deliveryStatus: 'REJECTED', dispatchedAt: { $exists: true, $ne: null } }
       ]
     }).sort({ updatedAt: -1 });
