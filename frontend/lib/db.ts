@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const DEFAULT_MONGODB_URI = "mongodb+srv://ayushdas20241_db_user:WBkwqMWEiyRp82Yy@cluster0.jjsco4e.mongodb.net/?appName=Cluster0";
+const DEFAULT_MONGODB_URI = "mongodb+srv://ayushxdas2005_db_user:1234@cluster0.xfqmncr.mongodb.net/?appName=Cluster0";
 
 let cached = (global as any).mongoose;
 
